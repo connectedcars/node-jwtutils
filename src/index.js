@@ -1,3 +1,5 @@
+'use strict'
+
 const jwtEncode = require('./jwtencode')
 const jwtDecode = require('./jwtdecode')
 

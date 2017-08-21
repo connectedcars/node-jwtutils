@@ -1,3 +1,5 @@
+'use strict'
+
 function JwtVerifyError(message) {
   this.name = 'JwtVerifyError'
   this.message = message

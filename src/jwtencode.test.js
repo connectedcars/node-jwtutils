@@ -1,8 +1,7 @@
+'use strict'
+
 const expect = require('unexpected')
 const jwtUtils = require('./index')
-
-const pubKeys = {}
-const audiences = []
 
 describe('jwtUtils', () => {
   describe('decode', () => {

@@ -1,3 +1,5 @@
+'use strict'
+
 const expect = require('unexpected')
 const jwtUtils = require('./index')
 

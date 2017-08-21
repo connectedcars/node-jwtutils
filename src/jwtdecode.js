@@ -1,3 +1,5 @@
+'use strict'
+
 const crypto = require('crypto')
 const JwtVerifyError = require('./jwtverifyerror')
 
@@ -105,7 +107,7 @@ function jwtDecode(jwt, publicKeys, audiences = [], nbfIatSkrew = 300) {
 }
 
 function base64DecodeUrlSafe(base64StringUrlSafe) {
-  base64String = base64StringUrlSafe.replace(/-/g, '+').replace(/_/g, '/')
+  let base64String = base64StringUrlSafe.replace(/-/g, '+').replace(/_/g, '/')
   switch (base64String.length % 4) {
     case 2:
       base64String += '=='
