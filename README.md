@@ -1,6 +1,6 @@
 # node-jwtutils
 
-[![Build Status](https://travis-ci.org/connectedcars/node-jwtutils.svg?branch=master)(https://travis-ci.org/connectedcars/node-jwtutils)
+[![Build Status](https://travis-ci.org/connectedcars/node-jwtutils.svg?branch=master)](https://travis-ci.org/connectedcars/node-jwtutils)
 
 Zero dependency JWT encoding and decoding
 
