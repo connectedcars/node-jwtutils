@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/connectedcars/node-jwtutils.svg?branch=master)](https://travis-ci.org/connectedcars/node-jwtutils)
 
-Zero dependency JWT encoding and decoding
+Zero dependency JWT encoding and decoding for Node 6.x and 8.x
 
 This module only supports asymmetric encryption algorithms such as RS256,
 RS384, RS512, ES256, ES384 and ES512 as using symmetric encryption for JWT
