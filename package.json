@@ -1,0 +1,33 @@
+{
+  "name": "jwtutils",
+  "version": "1.0.0",
+  "description": "Zero dependency JWT encoding/decoding for Node",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "mocha \"src/**/*.test.js\"",
+    "coverage": "istanbul cover node_modules/.bin/_mocha -- \"src/**/*.test.js\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/connectedcars/node-jwtutils.git"
+  },
+  "keywords": [
+    "jwt"
+  ],
+  "author": "Connected Cars <oss@connectedcars.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/connectedcars/node-jwtutils/issues"
+  },
+  "homepage": "https://github.com/connectedcars/node-jwtutils#readme",
+  "devDependencies": {
+    "babel-eslint": "^7.2.3",
+    "eslint": "^4.5.0",
+    "eslint-config-prettier": "^2.3.0",
+    "eslint-plugin-prettier": "^2.2.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.5.0",
+    "prettier": "^1.5.3",
+    "unexpected": "^10.33.2"
+  }
+}
