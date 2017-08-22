@@ -3,7 +3,7 @@
 const crypto = require('crypto')
 const JwtVerifyError = require('./jwtverifyerror')
 
-function jwtDecode(jwt, publicKeys, audiences = [], nbfIatSkrew = 300) {
+function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
   if (typeof jwt !== 'string') {
     throw new Error('jwt needs to a string')
   }
@@ -42,7 +42,7 @@ function jwtDecode(jwt, publicKeys, audiences = [], nbfIatSkrew = 300) {
       algo = 'sha512'
       break
     default:
-      throw new Error(
+      throw new JwtVerifyError(
         'Only alg RS256, RS384, RS512, ES256, ES384 and ES512 are supported'
       )
   }

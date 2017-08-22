@@ -77,3 +77,41 @@ try {
   }
 }
 ```
+
+## Express authentication middleware
+
+``` javascript
+const express = require('express')
+
+// Configuration
+const audiences = ['https://api.domain.tld']
+const pubKeys = {
+  'https://auth.domain.tld': {
+    '1@RS256': publicKey // Fx. use key from before
+  }
+}
+
+const app = express()
+
+// Register the middleware
+app.use(jwtAuthMiddleware(pubKeys, audiences))
+
+// Register an error handler to return 401 errors
+app.use((err, req, res, next) => {
+  if (err instanceof JwtVerifyError) {
+    if (err.innerError) {
+      console.error(`Failed with: ${err.innerError.message}`)
+    }
+    res.status(401).send(err.message)
+  } else {
+    res.status(500).send('Unknown error')
+  }
+})
+
+app.get('/', (req, res) => {
+  res.send(`Hello ${req.user.subject}`)
+})
+app.listen(3000, () => {
+  console.log('Example app listening on port 3000!')
+})
+```

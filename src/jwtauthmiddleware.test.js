@@ -4,6 +4,7 @@ const http = require('http')
 const jwtUtils = require('./index')
 const jwtAuthMiddleware = require('./jwtauthmiddleware')
 const expect = require('unexpected')
+const JwtVerifyError = require('./jwtverifyerror')
 
 const ecPrivateKey =
   '-----BEGIN EC PRIVATE KEY-----\n' +
@@ -47,12 +48,14 @@ describe('jwtMiddleware', () => {
     let server = http.createServer(app).listen(() => {
       port = server.address().port
       app.set('port', port)
-      //console.log(`Example app listening on port ${port}`)
       // Register endponts
       app.use(jwtAuthMiddleware(pubKeys, ['http://localhost/']))
       app.use((err, req, res, next) => {
-        console.log(err.message)
-        res.status(500).send(err.message)
+        if (err instanceof JwtVerifyError) {
+          res.status(401).send(err.message)
+        } else {
+          res.status(500).send('Unknown error')
+        }
       })
       app.get('/', function(req, res) {
         res.send(`Hello ${req.user.subject}`)
@@ -73,6 +76,56 @@ describe('jwtMiddleware', () => {
       return expect(responsePromise, 'to be fulfilled with value satisfying', {
         statusCode: 200,
         data: 'Hello subject@domain.tld'
+      })
+    })
+    it('should fail because of missing sub', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      delete customJwtBody.sub
+      let jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
+      let responsePromise = doRequest('GET', 'localhost', port, '/', {
+        Authorization: 'Bearer ' + jwt,
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 401,
+        data: "Missing 'sub' in body"
+      })
+    })
+    it('should fail because of malform JSON', () => {
+      let jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
+      let responsePromise = doRequest('GET', 'localhost', port, '/', {
+        Authorization: 'Bearer ' + jwt.substr(2),
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 401,
+        data: 'Unknown error'
+      })
+    })
+    it('should fail with unknown pubkey id', () => {
+      let customJwtHeader = Object.assign({}, jwtHeader)
+      customJwtHeader.kid = 2
+      let jwt = jwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
+      let responsePromise = doRequest('GET', 'localhost', port, '/', {
+        Authorization: 'Bearer ' + jwt,
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 401,
+        data: 'Unknown pubkey id for this issuer'
+      })
+    })
+    it('should fail with not allowed because it has not token', () => {
+      let responsePromise = doRequest('GET', 'localhost', port, '/', {
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 401,
+        data: 'Not allowed'
       })
     })
   })
