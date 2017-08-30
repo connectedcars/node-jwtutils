@@ -83,6 +83,7 @@ try {
 
 ``` javascript
 const express = require('express')
+const jwtAuthMiddleware = require('./jwtauthmiddleware')
 
 // Configuration
 const audiences = ['https://api.domain.tld']
