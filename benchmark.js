@@ -75,6 +75,7 @@ const rsaPublicKey =
   'iQIDAQAB\n' +
   '-----END PUBLIC KEY-----\n'
 
+const audiences = ['https://host/oauth/token']
 const pubKeys = {
   'test@test.com': {
     '1@RS256': rsaPublicKey,
@@ -101,19 +102,26 @@ const jwtBody = {
 
 let suite = new Benchmark.Suite()
 
+let testToken = jwtUtils.encode(
+  rsaPrivateKeyEncrypted,
+  jwtHeader,
+  jwtBody,
+  'Qwerty1234'
+)
+
 suite
-  .add('Encrypted RSA key at RS256', () => {
+  .add('Encode with encrypted RSA key at RS256', () => {
     jwtUtils.encode(rsaPrivateKeyEncrypted, jwtHeader, jwtBody, 'Qwerty1234')
   })
-  .add('Unencrypted RSA key at RS256', () => {
+  .add('Encode with unencrypted RSA key at RS256', () => {
     jwtUtils.encode(rsaPrivateKey, jwtHeader, jwtBody)
+  })
+  .add('Decode encrypted RSA key at RS256', () => {
+    jwtUtils.decode(testToken, pubKeys, audiences)
   })
   // add listeners
   .on('cycle', function(event) {
     console.log(String(event.target))
-  })
-  .on('complete', function() {
-    console.log('Fastest is ' + this.filter('fastest').map('name'))
   })
   // run async
   .run({ async: true })
