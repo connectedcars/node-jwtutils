@@ -2,7 +2,7 @@
 
 const crypto = require('crypto')
 
-function jwtEncode(privatekey, header, body) {
+function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
   if (
     typeof header !== 'object' ||
     Array.isArray(header) ||
@@ -11,8 +11,6 @@ function jwtEncode(privatekey, header, body) {
   ) {
     throw new Error('both header and body should be of type object')
   }
-
-  const hashes = crypto.getHashes()
 
   // ES256
   let algo = null
@@ -46,12 +44,25 @@ function jwtEncode(privatekey, header, body) {
   // Base64 encode header and body
   let headerBase64 = base64EncodeUrlSafe(Buffer.from(JSON.stringify(header)))
   let bodyBase64 = base64EncodeUrlSafe(Buffer.from(JSON.stringify(body)))
+  let headerBodyBase64 = headerBase64 + '.' + bodyBase64
 
-  // Add to sign object and sign with privatekey
-  sign.update(headerBase64 + '.' + bodyBase64, 'utf8')
-  let signatureBase64 = base64EncodeUrlSafe(sign.sign(privatekey))
+  // Add header and body of JWT to sign
+  sign.update(headerBodyBase64, 'utf8')
 
-  return headerBase64 + '.' + bodyBase64 + '.' + signatureBase64
+  // Sign with privatekey
+  let signatureBuffer
+  if (privateKeyPassword !== null) {
+    signatureBuffer = sign.sign({
+      key: privateKey,
+      passphrase: privateKeyPassword
+    })
+  } else {
+    signatureBuffer = sign.sign(privateKey)
+  }
+
+  // Construct final JWT
+  let signatureBase64 = base64EncodeUrlSafe(signatureBuffer)
+  return headerBodyBase64 + '.' + signatureBase64
 }
 
 function base64EncodeUrlSafe(buffer) {

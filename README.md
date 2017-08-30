@@ -6,8 +6,8 @@
 Zero dependency JWT encoding and decoding for Node 6.x and 8.x
 
 This module only supports asymmetric encryption algorithms such as RS256,
-RS384, RS512, ES256, ES384 and ES512 as using symmetric encryption for JWT
-is really bad idea.
+RS384, RS512, ES256, ES384 and ES512. It currently does not implement symmetric
+ encryption as this is a really bad idea for any production use.
 
 ## Usage
 
@@ -29,7 +29,7 @@ let jwtBody = {
   scope: ['http://stuff', 'http://stuff2']
 }
 
-// Don't use this key for anything but testing
+// Don't use this key for anything but testing as this is the key from jwt.io
 const pemEncodedPrivateKey =
   '-----BEGIN RSA PRIVATE KEY-----\n' +
   'MIICWwIBAAKBgQDdlatRjRjogo3WojgGHFHYLugdUWAY9iR3fy4arWNA1KoS8kVw\n' +
@@ -47,9 +47,10 @@ const pemEncodedPrivateKey =
   'FaFp+DyAe+b4nDwuJaW2LURbr8AEZga7oQj0uYxcYw==\n' +
   '-----END RSA PRIVATE KEY-----'
 
+// let jwt = jwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody, privateKeyPassword)
 let jwt = jwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody)
 
-// Don't use this key for anything but testing
+// Don't use this key for anything but testing as this is the key from jwt.io
 const publicKey =
   '-----BEGIN PUBLIC KEY-----\n' +
   'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\n' +
@@ -116,4 +117,19 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log('Example app listening on port 3000!')
 })
+```
+
+## Generate own keypair
+
+Generate private RSA key:
+
+``` bash
+# Here the key is encrypted with aes256
+openssl genrsa -aes256 -out private.pem 2048
+```
+
+Generate public key from private key:
+
+``` bash
+openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 ```
