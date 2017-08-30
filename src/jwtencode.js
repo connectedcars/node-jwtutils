@@ -48,6 +48,7 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
 
   // Add header and body of JWT to sign
   sign.update(headerBodyBase64, 'utf8')
+  sign.end()
 
   // Sign with privatekey
   let signatureBuffer

@@ -62,6 +62,7 @@ function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
 
   const verifier = crypto.createVerify(algo)
   verifier.write(`${parts[0]}.${parts[1]}`, 'utf8')
+  verifier.end()
 
   let pubkey = header.kid
     ? issuer[`${header.kid}@${header.alg}`]
