@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="page-home">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title></title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <script>
+        function CallApi() {
+            let params = getLocationHashParams();
+            if(params['id_token']) {
+                $.ajaxSetup({
+                    headers : {
+                        'Authorization' : 'Bearer ' + params['id_token'],
+                    }
+                })
+                $.getJSON('/api/hello', (data) => {
+                    $(`<p>${data.message}</p>`).appendTo( "body" );
+                })
+            }
+        }
+        function getLocationHashParams() {
+            let params = {}
+            let parts = document.location.hash.substr(1).split('&')
+            for(let part of parts) {
+                let keyValue = part.split('=')
+                params[keyValue[0]] = keyValue.length > 1 ? keyValue[1] : null
+            }
+            return params
+        }
+    </script>
+    <p id='apimessage'></p>
+    <a href="https://accounts.google.com/o/oauth2/v2/auth?scope=openid%20email&state=mystate&redirect_uri=http://localhost:3000/index.html&response_type=id_token&client_id=807025168921-ti2uj07r2iammimbneq706at7497gtto.apps.googleusercontent.com&nonce=1234">Login</a>
+    <button onclick="CallApi()">Call Api</button>
+</body>
+</html>
