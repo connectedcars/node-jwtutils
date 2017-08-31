@@ -3,7 +3,7 @@
 const jwtUtils = require('./index')
 const JwtVerifyError = require('./jwtverifyerror')
 
-function jwtAuthMiddleware(pubKeys, audiences) {
+function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
   return function(request, response, next) {
     if (!(request.headers.authorization || '').startsWith('Bearer ')) {
       return next(new JwtVerifyError('Not allowed'))
@@ -15,10 +15,16 @@ function jwtAuthMiddleware(pubKeys, audiences) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
       request.user = {
+        audience: decodedJwtBody.aud,
+        issuer: decodedJwtBody.iss,
         subject: decodedJwtBody.sub,
         authenticated: true,
         body: decodedJwtBody
       }
+      if (typeof mapper === 'function') {
+        mapper(request.user)
+      }
+
       return next()
     } catch (e) {
       if (e instanceof JwtVerifyError) {

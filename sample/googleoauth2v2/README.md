@@ -17,6 +17,8 @@ testing this app
 5. Add "Authorised redirect URIs", fx. http://localhost:3000/index.html for
 testing this app
 
+Replace audiences with own client id in index.js
+
 ## Links
 
 * Scopes: https://developers.google.com/identity/protocols/googlescopes
