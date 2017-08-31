@@ -1,6 +1,8 @@
 'use strict'
 
 const crypto = require('crypto')
+
+const base64UrlSafe = require('./base64urlsafe')
 const JwtVerifyError = require('./jwtverifyerror')
 
 function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
@@ -19,7 +21,7 @@ function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
     throw new JwtVerifyError('JWT does not contain 3 dots')
   }
 
-  let header = JSON.parse(base64DecodeUrlSafe(parts[0]).toString('utf8'))
+  let header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8'))
 
   let algo = null
   switch (header.alg) {
@@ -47,7 +49,7 @@ function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
       )
   }
 
-  let body = JSON.parse(base64DecodeUrlSafe(parts[1]).toString('utf8'))
+  let body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8'))
 
   if (!body.iss) {
     throw new JwtVerifyError('No issuer set')
@@ -58,7 +60,7 @@ function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
     throw new JwtVerifyError('Unknown issuer')
   }
 
-  let signature = base64DecodeUrlSafe(parts[2])
+  let signature = base64UrlSafe.decode(parts[2])
 
   const verifier = crypto.createVerify(algo)
   verifier.write(`${parts[0]}.${parts[1]}`, 'utf8')
@@ -105,19 +107,6 @@ function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
   }
 
   return body
-}
-
-function base64DecodeUrlSafe(base64StringUrlSafe) {
-  let base64String = base64StringUrlSafe.replace(/-/g, '+').replace(/_/g, '/')
-  switch (base64String.length % 4) {
-    case 2:
-      base64String += '=='
-      break
-    case 3:
-      base64String += '='
-      break
-  }
-  return Buffer.from(base64String, 'base64')
 }
 
 module.exports = jwtDecode

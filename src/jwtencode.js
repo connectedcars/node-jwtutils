@@ -2,6 +2,8 @@
 
 const crypto = require('crypto')
 
+const base64UrlSafe = require('./base64urlsafe')
+
 function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
   if (
     typeof header !== 'object' ||
@@ -42,8 +44,8 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
   const sign = crypto.createSign(algo)
 
   // Base64 encode header and body
-  let headerBase64 = base64EncodeUrlSafe(Buffer.from(JSON.stringify(header)))
-  let bodyBase64 = base64EncodeUrlSafe(Buffer.from(JSON.stringify(body)))
+  let headerBase64 = base64UrlSafe.encode(Buffer.from(JSON.stringify(header)))
+  let bodyBase64 = base64UrlSafe.encode(Buffer.from(JSON.stringify(body)))
   let headerBodyBase64 = headerBase64 + '.' + bodyBase64
 
   // Add header and body of JWT to sign
@@ -62,16 +64,8 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
   }
 
   // Construct final JWT
-  let signatureBase64 = base64EncodeUrlSafe(signatureBuffer)
+  let signatureBase64 = base64UrlSafe.encode(signatureBuffer)
   return headerBodyBase64 + '.' + signatureBase64
-}
-
-function base64EncodeUrlSafe(buffer) {
-  return buffer
-    .toString('base64')
-    .replace(/\+/g, '-') // Convert '+' to '-'
-    .replace(/\//g, '_') // Convert '/' to '_'
-    .replace(/=+$/, '') // Remove ending '='
 }
 
 module.exports = jwtEncode
