@@ -49,7 +49,14 @@ describe('jwtMiddleware', () => {
       port = server.address().port
       app.set('port', port)
       // Register endponts
-      app.use(jwtAuthMiddleware(pubKeys, ['http://localhost/']))
+      app.use(
+        '/mapped',
+        jwtAuthMiddleware(pubKeys, ['http://localhost/'], user => {
+          // Add test e-mail
+          user.eMail = 'test@domain.tld'
+        })
+      )
+      app.use('/', jwtAuthMiddleware(pubKeys, ['http://localhost/']))
       app.use((err, req, res, next) => {
         if (err instanceof JwtVerifyError) {
           res.status(401).send(err.message)
@@ -59,6 +66,9 @@ describe('jwtMiddleware', () => {
       })
       app.get('/', function(req, res) {
         res.send(`Hello ${req.user.subject}`)
+      })
+      app.get('/mapped', function(req, res) {
+        res.send(`Hello ${req.user.eMail}`)
       })
 
       done()
@@ -76,6 +86,18 @@ describe('jwtMiddleware', () => {
       return expect(responsePromise, 'to be fulfilled with value satisfying', {
         statusCode: 200,
         data: 'Hello subject@domain.tld'
+      })
+    })
+    it('should return ok with a new e-mail', () => {
+      let jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
+      let responsePromise = doRequest('GET', 'localhost', port, '/mapped', {
+        Authorization: 'Bearer ' + jwt,
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 200,
+        data: 'Hello test@domain.tld'
       })
     })
     it('should fail because of missing sub', () => {

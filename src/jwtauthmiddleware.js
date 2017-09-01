@@ -5,6 +5,9 @@ const JwtVerifyError = require('./jwtverifyerror')
 
 function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
   return function(request, response, next) {
+    if ((request.user || {}).authenticated === true) {
+      return next() // Skip authentication if we already authenticated
+    }
     if (!(request.headers.authorization || '').startsWith('Bearer ')) {
       return next(new JwtVerifyError('Not allowed'))
     }
