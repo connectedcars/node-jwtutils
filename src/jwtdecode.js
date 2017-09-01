@@ -1,9 +1,9 @@
 'use strict'
 
 const crypto = require('crypto')
+const JwtVerifyError = require('./jwtverifyerror.js')
 
 const base64UrlSafe = require('./base64urlsafe')
-const JwtVerifyError = require('./jwtverifyerror')
 
 function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
   if (typeof jwt !== 'string') {

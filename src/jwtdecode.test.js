@@ -1,7 +1,7 @@
 'use strict'
 
 const expect = require('unexpected')
-const jwtUtils = require('./index')
+const { JwtUtils } = require('./index')
 
 const pubKeys = {}
 const audiences = []
@@ -17,7 +17,7 @@ describe('jwtUtils', () => {
     it('invalid jwt input', () => {
       expect(
         () => {
-          jwtUtils.decode({}, pubKeys, audiences)
+          JwtUtils.decode({}, pubKeys, audiences)
         },
         'to throw',
         'jwt needs to a string'
@@ -26,7 +26,7 @@ describe('jwtUtils', () => {
     it('invalid pubKeys input', () => {
       expect(
         () => {
-          jwtUtils.decode(testJwt, [], audiences)
+          JwtUtils.decode(testJwt, [], audiences)
         },
         'to throw',
         'publicKeys needs to be a map of { issuer: { keyid: "PEM encoded key" }'
@@ -35,7 +35,7 @@ describe('jwtUtils', () => {
     it('too few spaces', () => {
       expect(
         () => {
-          jwtUtils.decode('hello.test', pubKeys, audiences)
+          JwtUtils.decode('hello.test', pubKeys, audiences)
         },
         'to throw',
         'JWT does not contain 3 dots'
@@ -44,7 +44,7 @@ describe('jwtUtils', () => {
     it('invalid json', () => {
       expect(
         () => {
-          jwtUtils.decode(testJwt.substr(10), pubKeys, audiences)
+          JwtUtils.decode(testJwt.substr(10), pubKeys, audiences)
         },
         'to throw',
         'Unexpected token $ in JSON at position 0'
@@ -53,7 +53,7 @@ describe('jwtUtils', () => {
     it('wrong alg', () => {
       expect(
         () => {
-          jwtUtils.decode(testJwtWrongAlg, pubKeys, audiences)
+          JwtUtils.decode(testJwtWrongAlg, pubKeys, audiences)
         },
         'to throw',
         'Only alg RS256, RS384, RS512, ES256, ES384 and ES512 are supported'

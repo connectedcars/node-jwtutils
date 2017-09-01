@@ -1,10 +1,8 @@
 const express = require('express')
 const app = express()
 const http = require('http')
-const jwtUtils = require('./index')
-const jwtAuthMiddleware = require('./jwtauthmiddleware')
+const { JwtUtils, JwtAuthMiddleware, JwtVerifyError } = require('./index')
 const expect = require('unexpected')
-const JwtVerifyError = require('./jwtverifyerror')
 
 const ecPrivateKey =
   '-----BEGIN EC PRIVATE KEY-----\n' +
@@ -51,12 +49,12 @@ describe('jwtMiddleware', () => {
       // Register endponts
       app.use(
         '/mapped',
-        jwtAuthMiddleware(pubKeys, ['http://localhost/'], user => {
+        JwtAuthMiddleware(pubKeys, ['http://localhost/'], user => {
           // Add test e-mail
           user.eMail = 'test@domain.tld'
         })
       )
-      app.use('/', jwtAuthMiddleware(pubKeys, ['http://localhost/']))
+      app.use('/', JwtAuthMiddleware(pubKeys, ['http://localhost/']))
       app.use((err, req, res, next) => {
         if (err instanceof JwtVerifyError) {
           res.status(401).send(err.message)
@@ -77,7 +75,7 @@ describe('jwtMiddleware', () => {
 
   describe('authentication', () => {
     it('should return ok', () => {
-      let jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
       let responsePromise = doRequest('GET', 'localhost', port, '/', {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
@@ -89,7 +87,7 @@ describe('jwtMiddleware', () => {
       })
     })
     it('should return ok with a new e-mail', () => {
-      let jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
       let responsePromise = doRequest('GET', 'localhost', port, '/mapped', {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
@@ -103,7 +101,7 @@ describe('jwtMiddleware', () => {
     it('should fail because of missing sub', () => {
       let customJwtBody = Object.assign({}, jwtBody)
       delete customJwtBody.sub
-      let jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       let responsePromise = doRequest('GET', 'localhost', port, '/', {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
@@ -115,7 +113,7 @@ describe('jwtMiddleware', () => {
       })
     })
     it('should fail because of malform JSON', () => {
-      let jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
       let responsePromise = doRequest('GET', 'localhost', port, '/', {
         Authorization: 'Bearer ' + jwt.substr(2),
         Accept: 'application/json',
@@ -129,7 +127,7 @@ describe('jwtMiddleware', () => {
     it('should fail with unknown pubkey id', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
       customJwtHeader.kid = 2
-      let jwt = jwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
+      let jwt = JwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
       let responsePromise = doRequest('GET', 'localhost', port, '/', {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',

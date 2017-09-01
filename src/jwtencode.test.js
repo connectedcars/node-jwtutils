@@ -1,7 +1,7 @@
 'use strict'
 
 const expect = require('unexpected')
-const jwtUtils = require('./index')
+const { JwtUtils } = require('./index')
 
 const rsaPrivateKeyEncrypted =
   '-----BEGIN RSA PRIVATE KEY-----\n' +
@@ -75,7 +75,7 @@ describe('jwtUtils', () => {
     it('should faile with invalid header and body', () => {
       expect(
         () => {
-          jwtUtils.encode('', '', '')
+          JwtUtils.encode('', '', '')
         },
         'to throw',
         'both header and body should be of type object'
@@ -84,7 +84,7 @@ describe('jwtUtils', () => {
     it('should faile with empty header and body', () => {
       expect(
         () => {
-          jwtUtils.encode('', {}, {})
+          JwtUtils.encode('', {}, {})
         },
         'to throw',
         'Only alg RS256, RS384, RS512, ES256, ES384 and ES512 are supported'
@@ -94,13 +94,13 @@ describe('jwtUtils', () => {
       for (let algo of ['RS256', 'RS384', 'RS512']) {
         let customJwtHeader = Object.assign({}, jwtHeader)
         customJwtHeader.alg = algo
-        let jwt = jwtUtils.encode(
+        let jwt = JwtUtils.encode(
           rsaPrivateKeyEncrypted,
           customJwtHeader,
           jwtBody,
           'Qwerty1234'
         )
-        let decodedJwtBody = jwtUtils.decode(jwt, pubKeys, [
+        let decodedJwtBody = JwtUtils.decode(jwt, pubKeys, [
           'https://host/oauth/token'
         ])
         expect(jwtBody, 'to equal', decodedJwtBody)

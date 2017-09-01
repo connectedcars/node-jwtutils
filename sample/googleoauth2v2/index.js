@@ -4,36 +4,25 @@ const path = require('path')
 
 const express = require('express')
 
-const jwtAuthMiddleware = require('../../src/jwtauthmiddleware')
-const JwtVerifyError = require('../../src/jwtverifyerror')
+const { JwtAuthMiddleware, JwtVerifyError } = require('../../src/.')
 
 const request = require('request')
 const jwkToPem = require('jwk-to-pem')
 
-const audiences = [
-  '807025168921-ti2uj07r2iammimbneq706at7497gtto.apps.googleusercontent.com'
-]
-
-const rsaPublicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\n' +
-  'UWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\n' +
-  'HUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\n' +
-  'o2kQ+X5xK9cipRgEKwIDAQAB\n' +
-  '-----END PUBLIC KEY-----'
-
-const pubKeys = {
-  'http://localhost:3000/auth': {
-    '1@RS256': rsaPublicKey
-  }
+if (process.argv.length <= 2) {
+  console.error('node index.js "google-oauth-cclientid"')
+  process.exit(255)
 }
+
+const audiences = [process.argv[2]]
+const pubKeys = {}
 
 const app = express()
 app.use('/', express.static(path.join(__dirname, 'public')))
 
 app.use(
   '/api',
-  jwtAuthMiddleware(pubKeys, audiences, user => {
+  JwtAuthMiddleware(pubKeys, audiences, user => {
     // Use e-mail as subject for google tokens
     if (user.issuer === 'https://accounts.google.com') {
       user.subject = user.body.email

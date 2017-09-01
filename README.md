@@ -5,14 +5,39 @@
 
 Zero dependency JWT encoding and decoding for Node 6.x and 8.x
 
-This module only supports asymmetric encryption algorithms such as RS256,
-RS384, RS512, ES256, ES384 and ES512. It currently does not implement symmetric
- encryption as this is a really bad idea for any production use.
+Features:
 
-## Usage
+* Encode and decode any RS256, RS384, RS512, ES256, ES384 and ES512 signed tokens
+* Support for multiple issuers and keys per issuer.
+* Express middleware to validate JWT's
+
+## Background
+
+Most other JWT implementations tend be complex and have a large array of
+dependencies because they implement the seldom used JOSE standard.
+This often makes the whole JWT encoding/decoding complicated and hard to
+understand, something it really should not be.
+
+So the focus of this module has been to make a simple, secure, fast and
+flexible set of utility methods to work with JWT's. The code itself is also
+easy to understand and less than 200 lines of code, making it much easier to
+security audit the code.
+
+Also note doing your own crypto is a bad idea so this module only deals with
+the encoding/decoding of the JWT, the underlaying crypto operations are done
+by Node's build-in crypto api that uses openssl.
+
+Currently only asymmetric encryption algorithms are supported as this would
+also be the only recommend option for production use.
+
+## Samples
+
+* [Integrates with Google Identity Platform](sample/googleoauth2v2/README.md)
+
+## Basic usage
 
 ``` javascript
-const jwtUtils = require('jwtutils')
+const { JwtUtils, JwtVerifyError } = require('@connectedcars/jwtutils')
 
 let jwtHeader = {
   typ: 'JWT',
@@ -47,8 +72,8 @@ const pemEncodedPrivateKey =
   'FaFp+DyAe+b4nDwuJaW2LURbr8AEZga7oQj0uYxcYw==\n' +
   '-----END RSA PRIVATE KEY-----'
 
-// let jwt = jwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody, privateKeyPassword)
-let jwt = jwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody)
+// let jwt = JwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody, privateKeyPassword)
+let jwt = JwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody)
 
 // Don't use this key for anything but testing as this is the key from jwt.io
 const publicKey =
@@ -69,7 +94,7 @@ const pubKeys = {
 }
 
 try {
-  let decodedJwtBody = jwtUtils.decode(jwt, pubKeys, allowedAudinces)
+  let decodedJwtBody = JwtUtils.decode(jwt, pubKeys, allowedAudinces)
 } catch (e) {
   if (e instanceof JwtVerifyError) {
     // Can be returned to user
@@ -80,11 +105,11 @@ try {
 }
 ```
 
-## Express authentication middleware
+## Usage of express middleware
 
 ``` javascript
 const express = require('express')
-const jwtAuthMiddleware = require('./jwtauthmiddleware')
+const { JwtAuthMiddleware, JwtVerifyError } = require('@connectedcars/jwtutils')
 
 // Configuration
 const audiences = ['https://api.domain.tld']
@@ -97,7 +122,7 @@ const pubKeys = {
 const app = express()
 
 // Register the middleware
-app.use(jwtAuthMiddleware(pubKeys, audiences))
+app.use(JwtAuthMiddleware(pubKeys, audiences))
 
 // Register an error handler to return 401 errors
 app.use((err, req, res, next) => {

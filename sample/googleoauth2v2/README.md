@@ -17,7 +17,11 @@ testing this app
 5. Add "Authorised redirect URIs", fx. http://localhost:3000/index.html for
 testing this app
 
-Replace audiences with own client id in index.js
+## Run sample application
+
+``` bash
+node index.js '<OAuth Client ID>'
+```
 
 ## Links
 

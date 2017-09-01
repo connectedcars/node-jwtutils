@@ -1,6 +1,6 @@
 'use strict'
 
-const jwtUtils = require('./index')
+const jwtDecode = require('./jwtdecode')
 const JwtVerifyError = require('./jwtverifyerror')
 
 function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
@@ -13,7 +13,7 @@ function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
     }
     try {
       let jwt = request.headers.authorization.substring(7)
-      let decodedJwtBody = jwtUtils.decode(jwt, pubKeys, audiences)
+      let decodedJwtBody = jwtDecode(jwt, pubKeys, audiences)
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
