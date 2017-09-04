@@ -39,6 +39,8 @@ also be the only recommend option for production use.
 ``` javascript
 const { JwtUtils, JwtVerifyError } = require('@connectedcars/jwtutils')
 
+const unixNow = Math.floor(Date.now() / 1000)
+
 let jwtHeader = {
   typ: 'JWT',
   alg: 'RS256',
