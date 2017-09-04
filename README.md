@@ -47,7 +47,7 @@ let jwtHeader = {
 
 let jwtBody = {
   aud: 'https://api.domain.tld',
-  iss: 'https://auth.domain.tld',
+  iss: 'https://jwt.io/',
   sub: 'subject@domain.tld',
   iat: unixNow,
   exp: unixNow + 600,
@@ -87,7 +87,7 @@ const publicKey =
 const allowedAudinces = ['https://api.domain.tld']
 
 const pubKeys = {
-  'https://auth.domain.tld': {
+  'https://jwt.io/': {
     '1@RS256': publicKey,
     'default@RS256': publicKey // Will default to this key if the header does not have a kid
   }
@@ -114,7 +114,7 @@ const { JwtAuthMiddleware, JwtVerifyError } = require('@connectedcars/jwtutils')
 // Configuration
 const audiences = ['https://api.domain.tld']
 const pubKeys = {
-  'https://auth.domain.tld': {
+  'https://jwt.io/': {
     '1@RS256': publicKey // Fx. use key from before
   }
 }
@@ -158,3 +158,32 @@ Generate public key from private key:
 ``` bash
 openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 ```
+
+## Command line helper utils
+
+*NOTE: Does not support nested JSON*
+
+Load private key:
+
+``` bash
+jwtencode private.pem
+```
+
+Copy/paste to stdin (Ctrl-D to end), the password line is only needed if the private key is encrypted:
+
+```
+password password-for-private-key
+{
+  "alg": "RS256",
+  "typ": "JWT",
+  "kid": "1"
+}
+{
+  "iss": "jwt.io",
+  "aud": "https://api.domain.tld",
+  "sub": "subject@domain.tld",
+  "iat": 1504292127,
+  "nbf": 1504292127,
+  "exp": 1598986470
+}
+````

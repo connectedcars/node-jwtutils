@@ -3,6 +3,9 @@
   "version": "1.0.5",
   "description": "Zero dependency JWT encoding/decoding for Node",
   "main": "src/index.js",
+  "bin": {
+    "jwtencode": "./bin/jwtencode.js"
+  },
   "scripts": {
     "test": "nyc --reporter=lcov --reporter=text mocha \"src/**/*.test.js\"",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
