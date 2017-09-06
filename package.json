@@ -4,10 +4,11 @@
   "description": "Zero dependency JWT encoding/decoding for Node",
   "main": "src/index.js",
   "bin": {
-    "jwtencode": "./bin/jwtencode.js"
+    "jwtencode": "./bin/jwtencode.js",
+    "jwtdecode": "./bin/jwtdecode.js"
   },
   "scripts": {
-    "test": "nyc --reporter=lcov --reporter=text mocha \"src/**/*.test.js\"",
+    "test": "nyc --reporter=lcov --reporter=text mocha \"src/**/*.test.js\" \"bin/*.test.js\"",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {

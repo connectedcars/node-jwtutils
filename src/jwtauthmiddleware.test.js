@@ -31,7 +31,8 @@ const jwtBody = {
   iat: unixNow,
   exp: unixNow + 600,
   scope: ['http://stuff', 'http://stuff2'],
-  sub: 'subject@domain.tld'
+  sub: 'subject@domain.tld',
+  email: 'test@domain.tld'
 }
 
 const pubKeys = {
@@ -39,6 +40,8 @@ const pubKeys = {
     '1@ES256': ecPublicKey
   }
 }
+
+const audiences = ['http://localhost/']
 
 describe('jwtMiddleware', () => {
   let port = 0
@@ -49,12 +52,14 @@ describe('jwtMiddleware', () => {
       // Register endponts
       app.use(
         '/mapped',
-        JwtAuthMiddleware(pubKeys, ['http://localhost/'], user => {
-          // Add test e-mail
-          user.eMail = 'test@domain.tld'
+        JwtAuthMiddleware(pubKeys, audiences, user => {
+          if (user.issuer === 'http://localhost/oauth/token') {
+            // Map claims
+            user.eMail = user.body.email
+          }
         })
       )
-      app.use('/', JwtAuthMiddleware(pubKeys, ['http://localhost/']))
+      app.use('/', JwtAuthMiddleware(pubKeys, audiences))
       app.use((err, req, res, next) => {
         if (err instanceof JwtVerifyError) {
           res.status(401).send(err.message)
