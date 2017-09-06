@@ -189,3 +189,14 @@ password password-for-private-key
   "exp": 1598986470
 }
 ````
+
+``` bash
+jwtdecode public.pem 1 RS256 https://jwt.io localhost
+```
+
+Copy/paste to stdin (Ctrl-D to end):
+
+```
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEifQ.eyJpc3MiOiJodHRwczovL2p3dC5pbyIsImF1ZCI6ImxvY2FsaG9zdCIsInN1YiI6InN1YmplY3RAZG9tYWluLnRsZCIsImlhdCI6MTUwNDI5MjEyNywibmJmIjoxNTA0MjkyMTI3LCJleHAiOjE1OTg5ODY0NzB9.0L5AWwUF3EleBqnQ6V0Lqa36jCccP4A7cAFHHIY1b-oE7pxCoFr8gnAOrlc16N0WUPI6O17JT79kQIPR-LjFm-BgBycBw4eEFYb8z7iXA-zqgQz4ajZXlIljJtJUBbTupbnzEiBKjEFnTxYqb-vUm-TDwTMPaYzBxqqfOrrvKlw
+````
+

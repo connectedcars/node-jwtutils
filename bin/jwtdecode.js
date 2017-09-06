@@ -41,9 +41,11 @@ function processJwts(buffer) {
     /(?:^|\n)\s*?([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)\s*?(?:$|\n)/g,
     (match, jwt) => {
       try {
-        console.log(JSON.stringify(JwtUtils.decode(jwt, pubKeys, audiences)))
+        console.log(
+          JSON.stringify(JwtUtils.decode(jwt, pubKeys, audiences), null, 2)
+        )
       } catch (e) {
-        console.error(e)
+        console.error(e.message)
       }
       return ''
     }
