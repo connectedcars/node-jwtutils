@@ -124,7 +124,13 @@ const pubKeys = {
 const app = express()
 
 // Register the middleware
-app.use(JwtAuthMiddleware(pubKeys, audiences))
+app.use(JwtAuthMiddleware(pubKeys, audiences, user => {
+  if (user.issuer === 'https://jwt.io/') {
+    if (!user.subject.match(/^[^@]+@domain\.tld$/)) {
+      throw new JwtVerifyError('Issuer https://jwt.io/ only allowed to have subject ending in @domain.tld')
+    }
+  }
+}))
 
 // Register an error handler to return 401 errors
 app.use((err, req, res, next) => {
