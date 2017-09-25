@@ -57,7 +57,7 @@ function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
 
   let issuer = publicKeys[body.iss]
   if (!issuer) {
-    throw new JwtVerifyError('Unknown issuer')
+    throw new JwtVerifyError(`Unknown issuer '${body.iss}'`)
   }
 
   let signature = base64UrlSafe.decode(parts[2])

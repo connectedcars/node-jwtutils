@@ -206,14 +206,14 @@ describe('jwtUtils', () => {
     })
     it('unknown issuer', () => {
       let customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.iss += 'unknown@test.com'
+      customJwtBody.iss = 'unknown@test.com'
       let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(
         () => {
           JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
         },
         'to throw',
-        'Unknown issuer'
+        `Unknown issuer 'unknown@test.com'`
       )
     })
     it('wrong alg', () => {
