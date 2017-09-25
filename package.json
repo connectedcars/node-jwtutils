@@ -1,6 +1,6 @@
 {
   "name": "@connectedcars/jwtutils",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Zero dependency JWT encoding/decoding for Node",
   "main": "src/index.js",
   "bin": {
