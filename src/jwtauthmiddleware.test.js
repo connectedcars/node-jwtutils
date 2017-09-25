@@ -140,7 +140,7 @@ describe('jwtMiddleware', () => {
       })
       return expect(responsePromise, 'to be fulfilled with value satisfying', {
         statusCode: 401,
-        data: 'Unknown pubkey id for this issuer'
+        data: `Unknown pubkey id '2' for this issuer`
       })
     })
     it('should fail with not allowed because it has not token', () => {

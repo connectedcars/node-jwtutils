@@ -70,18 +70,20 @@ function jwtDecode(jwt, publicKeys, audiences, nbfIatSkrew = 300) {
     ? issuer[`${header.kid}@${header.alg}`]
     : issuer[`default@${header.alg}`]
   if (!pubkey) {
-    throw new JwtVerifyError('Unknown pubkey id for this issuer')
+    throw new JwtVerifyError(
+      `Unknown pubkey id '${header.kid}' for this issuer`
+    )
   }
 
   if (!verifier.verify(pubkey, signature)) {
     throw new JwtVerifyError(
-      `Signature verification failed with alg ${header.alg}`
+      `Signature verification failed with alg '${header.alg}'`
     )
   }
 
   let auds = Array.isArray(body.aud) ? body.aud : [body.aud]
   if (!auds.some(aud => audiences.includes(aud))) {
-    throw new JwtVerifyError('Unknown audience')
+    throw new JwtVerifyError(`Unknown audience '${auds.join(',')}'`)
   }
 
   let unixNow = Math.floor(Date.now() / 1000)

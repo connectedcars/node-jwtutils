@@ -140,7 +140,7 @@ describe('jwtUtils', () => {
           JwtUtils.decode(jwt, pubKeys, ['https://myhost/oauth/token'])
         },
         'to throw',
-        'Unknown audience'
+        `Unknown audience 'https://host/oauth/token'`
       )
     })
     it('expired', () => {
@@ -236,7 +236,7 @@ describe('jwtUtils', () => {
           JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
         },
         'to throw',
-        'Unknown pubkey id for this issuer'
+        `Unknown pubkey id '3' for this issuer`
       )
     })
     it('invalid signature', () => {
@@ -248,7 +248,7 @@ describe('jwtUtils', () => {
           JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
         },
         'to throw',
-        'Signature verification failed with alg RS256'
+        `Signature verification failed with alg 'RS256'`
       )
     })
     it('Handle exception if its a JwtVerifyError', () => {
