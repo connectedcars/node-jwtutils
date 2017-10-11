@@ -13,7 +13,7 @@ let publicKeyPath = process.argv[2]
 let keyId = process.argv[3]
 let algo = process.argv[4]
 let issuer = process.argv[5]
-let audiences = process.argv[6]
+let audiences = process.argv[6].split(',')
 
 let publicKey = fs.readFileSync(publicKeyPath)
 

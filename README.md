@@ -118,6 +118,14 @@ const audiences = ['https://api.domain.tld']
 const pubKeys = {
   'https://jwt.io/': {
     '1@RS256': publicKey // Fx. use key from before
+  },
+  'https://jwt.io/custom': { // Overwrite default validation for this issuer
+    '1@RS256': { // Same options can also be used directly with decode
+      publicKey: publicKey,
+      expiresMax: 3600, // Don't allow token that has a lifetime over 1 hour
+      expiresSkew: 600, // Allow tokens that expired up to 10 minutes ago
+      nbfIatSkew: 300, // Allow tokens that has nbf or iat in the future by up to 5 minutes
+    }
   }
 }
 

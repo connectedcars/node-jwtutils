@@ -38,6 +38,12 @@ const jwtBody = {
 const pubKeys = {
   'http://localhost/oauth/token': {
     '1@ES256': ecPublicKey
+  },
+  'http://localhost/oauth/token/moreexpires': {
+    '1@ES256': {
+      publicKey: ecPublicKey,
+      expiresSkew: 600
+    }
   }
 }
 

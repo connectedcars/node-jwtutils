@@ -78,6 +78,23 @@ const pubKeys = {
     '2@RS256': rsaOtherPublicKey,
     '3@RS256': null,
     '4@RS256': rsaOtherPublicKey.substr(2)
+  },
+  'test@custom.com': {
+    '1@RS256': {
+      publicKey: rsaPublicKey,
+      expiresSkew: 600,
+      expiresMax: 86400
+    }
+  },
+  'test@expired.com': {
+    '1@RS256': {
+      publicKey: rsaPublicKey,
+      validators: {
+        exp: () => {
+          throw new JwtVerifyError('Always expired')
+        }
+      }
+    }
   }
 }
 
@@ -85,9 +102,12 @@ describe('jwtUtils', () => {
   describe('encode/decode', () => {
     it('success old inteface', () => {
       let jwt = oldJwtUtils.encode(rsaPrivateKey, jwtHeader, jwtBody)
-      let decodedJwtBody = oldJwtUtils.decode(jwt, pubKeys, [
-        'https://host/oauth/token'
-      ])
+      let decodedJwtBody = oldJwtUtils.decode(
+        jwt,
+        pubKeys,
+        ['https://host/oauth/token'],
+        300
+      )
       expect(jwtBody, 'to equal', decodedJwtBody)
     })
     it('success with RSA at RS256, RS384 and RS512', () => {
@@ -132,6 +152,86 @@ describe('jwtUtils', () => {
         'https://host/oauth/token'
       ])
       expect(customJwtBody, 'to equal', decodedJwtBody)
+    })
+    it('success with expired token', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.iss = 'test@custom.com'
+      customJwtBody.exp -= 600
+      let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+      let decodedJwtBody = JwtUtils.decode(jwt, pubKeys, [
+        'https://host/oauth/token'
+      ])
+      expect(customJwtBody, 'to equal', decodedJwtBody)
+    })
+    it('token outside maximum expires', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.iss = 'test@custom.com'
+      customJwtBody.exp += 172800
+      let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+      expect(
+        () => {
+          JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+        },
+        'to throw',
+        `Expires in the future by more than 86400 seconds`
+      )
+    })
+    it('always fail with expired', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.iss = 'test@expired.com'
+      let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+      expect(
+        () => {
+          JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+        },
+        'to throw',
+        `Always expired`
+      )
+    })
+    it('token outside maximum expires using decode options', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.exp += 172800
+      let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+      expect(
+        () => {
+          JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
+            expiresMax: 600
+          })
+        },
+        'to throw',
+        `Expires in the future by more than 600 seconds`
+      )
+    })
+    it('token outside maximum expires using nbf', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.exp += 172800
+      customJwtBody.nbf = customJwtBody.iat
+      delete customJwtBody.iat
+      let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+      expect(
+        () => {
+          JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
+            expiresMax: 600
+          })
+        },
+        'to throw',
+        `Expires in the future by more than 600 seconds`
+      )
+    })
+    it('token outside maximum expires using unixNow', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.exp += 172800
+      delete customJwtBody.iat
+      let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+      expect(
+        () => {
+          JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
+            expiresMax: 600
+          })
+        },
+        'to throw',
+        `Expires in the future by more than 600 seconds`
+      )
     })
     it('unknown aud', () => {
       let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, jwtBody)
@@ -229,7 +329,7 @@ describe('jwtUtils', () => {
     })
     it('unknown kid', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
-      customJwtHeader.kid = 3
+      customJwtHeader.kid = '3'
       let jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       expect(
         () => {
@@ -241,7 +341,7 @@ describe('jwtUtils', () => {
     })
     it('invalid signature', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
-      customJwtHeader.kid = 2
+      customJwtHeader.kid = '2'
       let jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       expect(
         () => {
@@ -265,7 +365,7 @@ describe('jwtUtils', () => {
     })
     it('invalid pubkey', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
-      customJwtHeader.kid = 4
+      customJwtHeader.kid = '4'
       let jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       expect(
         () => {

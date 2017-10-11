@@ -32,6 +32,24 @@ describe('jwtUtils', () => {
         'publicKeys needs to be a map of { issuer: { keyid: "PEM encoded key" }'
       )
     })
+    it('invalid audiences input', () => {
+      expect(
+        () => {
+          JwtUtils.decode(testJwt, pubKeys, '')
+        },
+        'to throw',
+        'audiences needs to be an array of allowed audiences'
+      )
+    })
+    it('invalid options input', () => {
+      expect(
+        () => {
+          JwtUtils.decode(testJwt, pubKeys, audiences, '')
+        },
+        'to throw',
+        'options needs to a map of { nbfIatSkew: 300, ... }'
+      )
+    })
     it('too few spaces', () => {
       expect(
         () => {

@@ -39,27 +39,40 @@ describe('jwtencode', () => {
     jwtEncode.stdin.write(jwt)
     jwtEncode.stdin.end()
 
+    // Read stderr
+    let stderrStr = ''
     let errorData = []
     jwtEncode.stderr.on('data', data => {
       errorData.push(data)
     })
     jwtEncode.stderr.on('data', () => {
-      let error = Buffer.concat(errorData).toString('utf8')
-      if (error != '') {
-        done(new Error(error))
-      }
+      stderrStr = Buffer.concat(errorData).toString('utf8')
     })
 
     // Read token
+    let stdoutStr = ''
     let decodedData = []
+    let error
     jwtEncode.stdout.on('data', data => {
       decodedData.push(data)
     })
     jwtEncode.stdout.on('end', () => {
-      let decodedBodyStr = Buffer.concat(decodedData).toString('utf8').trim()
-      let decodedBody = JSON.parse(decodedBodyStr)
-      expect(jwtBody, 'to equal', decodedBody)
-      done()
+      try {
+        stdoutStr = Buffer.concat(decodedData).toString('utf8').trim()
+        let decodedBody = JSON.parse(stdoutStr)
+        expect(decodedBody, 'to equal', jwtBody)
+      } catch (e) {
+        error = e
+      }
+    })
+
+    jwtEncode.on('exit', (code, signal) => {
+      if (error) {
+        console.log(`stdout:${stdoutStr}\nstderr:${stderrStr}\nexit:${code}`)
+        done(error)
+      } else {
+        done()
+      }
     })
   }).slow(2000)
 })
