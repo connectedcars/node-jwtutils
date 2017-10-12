@@ -371,8 +371,8 @@ describe('jwtUtils', () => {
         () => {
           JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
         },
-        'to throw',
-        'PEM_read_bio_PUBKEY failed'
+        'to throw a',
+        Error
       )
     })
   })
