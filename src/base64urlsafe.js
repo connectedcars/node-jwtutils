@@ -1,3 +1,6 @@
+// @ts-check
+'use strict'
+
 function base64EncodeUrlSafe(buffer) {
   return buffer
     .toString('base64')

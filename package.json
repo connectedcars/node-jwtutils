@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/connectedcars/node-jwtutils#readme",
   "devDependencies": {
+    "@types/mocha": "^2.2.45",
+    "@types/node": "^8.5.2",
     "babel-eslint": "^7.2.3",
     "benchmark": "^2.1.4",
     "coveralls": "^2.13.1",

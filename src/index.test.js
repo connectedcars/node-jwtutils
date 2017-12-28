@@ -1,3 +1,4 @@
+// @ts-check
 'use strict'
 
 const expect = require('unexpected')
@@ -353,7 +354,7 @@ describe('jwtUtils', () => {
     })
     it('Handle exception if its a JwtVerifyError', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
-      customJwtHeader.kid = 2
+      customJwtHeader.kid = '2'
       let jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       try {
         JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])

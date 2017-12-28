@@ -1,3 +1,4 @@
+// @ts-check
 'use strict'
 
 function JwtVerifyError(message, innerError) {

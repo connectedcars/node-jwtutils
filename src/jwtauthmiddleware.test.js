@@ -1,3 +1,6 @@
+// @ts-check
+'use strict'
+
 const express = require('express')
 const app = express()
 const http = require('http')
