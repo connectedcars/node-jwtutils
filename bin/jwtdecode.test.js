@@ -45,7 +45,7 @@ describe('jwtencode', () => {
     jwtEncode.stderr.on('data', data => {
       errorData.push(data)
     })
-    jwtEncode.stderr.on('data', () => {
+    jwtEncode.stderr.on('end', () => {
       stderrStr = Buffer.concat(errorData).toString('utf8')
     })
 
