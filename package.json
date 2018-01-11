@@ -25,19 +25,22 @@
   },
   "homepage": "https://github.com/connectedcars/node-jwtutils#readme",
   "devDependencies": {
-    "@types/mocha": "^2.2.45",
-    "@types/node": "^8.5.2",
+    "@types/mocha": "^2.2.46",
+    "@types/node": "^8.5.8",
     "babel-eslint": "^7.2.3",
     "benchmark": "^2.1.4",
-    "coveralls": "^2.13.1",
-    "eslint": "^4.5.0",
-    "eslint-config-prettier": "^2.3.0",
-    "eslint-plugin-prettier": "^2.2.0",
-    "express": "^4.15.4",
-    "microtime": "^2.1.6",
-    "mocha": "^3.5.0",
-    "nyc": "^11.1.0",
-    "prettier": "^1.5.3",
-    "unexpected": "^10.33.2"
-  }
+    "coveralls": "^2.13.3",
+    "eslint": "^4.15.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-prettier": "^2.4.0",
+    "express": "^4.16.2",
+    "microtime": "^2.1.7",
+    "mocha": "^3.5.3",
+    "nyc": "^11.4.1",
+    "prettier": "^1.10.2",
+    "r2": "^2.0.0",
+    "typescript": "^2.6.2",
+    "unexpected": "^10.36.2"
+  },
+  "dependencies": {}
 }
