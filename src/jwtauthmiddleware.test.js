@@ -68,6 +68,16 @@ describe('jwtMiddleware', () => {
           }
         })
       )
+      app.use(
+        '/async',
+        JwtAuthMiddleware(pubKeys, audiences, async user => {
+          if (user.subject === 'error') {
+            throw new JwtVerifyError('Async error')
+          } else {
+            await Promise.resolve('test')
+          }
+        })
+      )
       app.use('/', JwtAuthMiddleware(pubKeys, audiences))
       app.use((err, req, res, next) => {
         if (err instanceof JwtVerifyError) {
@@ -81,6 +91,9 @@ describe('jwtMiddleware', () => {
       })
       app.get('/mapped', function(req, res) {
         res.send(`Hello ${req.user.eMail}`)
+      })
+      app.get('/async', function(req, res) {
+        res.send(`Async response`)
       })
 
       done()
@@ -160,6 +173,34 @@ describe('jwtMiddleware', () => {
       return expect(responsePromise, 'to be fulfilled with value satisfying', {
         statusCode: 401,
         data: 'Not allowed'
+      })
+    })
+    it('should fail with async error', () => {
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, {
+        ...jwtBody,
+        sub: 'error'
+      })
+      let responsePromise = doRequest('GET', 'localhost', port, '/async', {
+        Authorization: 'Bearer ' + jwt,
+        Accept: 'application/json',
+        'User-Agent': 'test',
+        'X-Error': 'Async error'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 401,
+        data: 'Async error'
+      })
+    })
+    it('should success with async', () => {
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
+      let responsePromise = doRequest('GET', 'localhost', port, '/async', {
+        Authorization: 'Bearer ' + jwt,
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 200,
+        data: 'Async response'
       })
     })
   })
