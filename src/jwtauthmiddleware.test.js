@@ -70,11 +70,11 @@ describe('jwtMiddleware', () => {
       )
       app.use(
         '/async',
-        JwtAuthMiddleware(pubKeys, audiences, async user => {
+        JwtAuthMiddleware(pubKeys, audiences, user => {
           if (user.subject === 'error') {
-            throw new JwtVerifyError('Async error')
+            return Promise.reject(new JwtVerifyError('Async error'))
           } else {
-            await Promise.resolve('test')
+            return Promise.resolve('test')
           }
         })
       )
