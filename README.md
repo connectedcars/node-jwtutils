@@ -32,7 +32,7 @@ also be the only recommend option for production use.
 
 ## Samples
 
-* [Integrates with Google Identity Platform](sample/googleoauth2v2/README.md)
+* [Integrate with Google Identity Platform](sample/googleoauth2v2/README.md)
 
 ## Basic usage
 
@@ -160,6 +160,41 @@ app.listen(3000, () => {
 })
 ```
 
+## Usage of service authentication (Google and Github)
+
+``` javascript
+const { JwtServiceAuth } = require('./index')
+const fs = require('fs')
+const r2 = require('r2')
+
+// Wrap your favorite http library
+let httpRequestHandler = async (method, url, headers, body) => { // Fx. POST, http://domain.tld, {}, "..."
+  // Do http request
+  let httpRespone = await r2[method.toLowerCase()](url, { headers, body }).response
+  let data = await httpResponse.arrayBuffer()
+  return {
+    statusCode: httpResponse.status,
+    data: data,
+    headers: httpResponse.headers
+  }
+})
+
+let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler)
+
+let gitHubAppPrivateKey = fs.readFileSync("user-appname.2017-01-01.private-key.pem", 'utf8')
+let googleServiceAccountKeyfile = fs.readFileSync("user-serviceaccount-12345678.json", 'utf8')
+
+async function getAccessTokens() {
+  let githubAppToken = await = jwtServiceAuth.getGithubAccessToken(gitHubAppPrivateKey, 1, 1)
+  let googleToken = await jwtServiceAuth.getGoogleAccessToken(googleServiceAccountKeyfile)
+}
+```
+
+### Documentation
+
+* Github App: https://developer.github.com/apps/building-github-apps/authentication-options-for-github-apps/
+* Google Service Account: https://developers.google.com/identity/protocols/OAuth2ServiceAccount
+
 ## Generate own keypair
 
 Generate private RSA key:
@@ -187,7 +222,7 @@ jwtencode private.pem
 
 Copy/paste to stdin (Ctrl-D to end), the password line is only needed if the private key is encrypted:
 
-```
+``` text
 password password-for-private-key
 {
   "alg": "RS256",
@@ -210,7 +245,6 @@ jwtdecode public.pem 1 RS256 https://jwt.io localhost
 
 Copy/paste to stdin (Ctrl-D to end):
 
-```
+``` text
 eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEifQ.eyJpc3MiOiJodHRwczovL2p3dC5pbyIsImF1ZCI6ImxvY2FsaG9zdCIsInN1YiI6InN1YmplY3RAZG9tYWluLnRsZCIsImlhdCI6MTUwNDI5MjEyNywibmJmIjoxNTA0MjkyMTI3LCJleHAiOjE1OTg5ODY0NzB9.0L5AWwUF3EleBqnQ6V0Lqa36jCccP4A7cAFHHIY1b-oE7pxCoFr8gnAOrlc16N0WUPI6O17JT79kQIPR-LjFm-BgBycBw4eEFYb8z7iXA-zqgQz4ajZXlIljJtJUBbTupbnzEiBKjEFnTxYqb-vUm-TDwTMPaYzBxqqfOrrvKlw
 ````
-
