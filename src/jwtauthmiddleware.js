@@ -48,14 +48,11 @@ function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
 }
 
 function isPromise(value) {
-  if (
+  return (
     typeof value === 'object' &&
     value !== null &&
     typeof value.then === 'function'
-  ) {
-    return true
-  }
-  return false
+  )
 }
 
 module.exports = jwtAuthMiddleware
