@@ -18,6 +18,7 @@ function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
+
       request.user = {
         audience: decodedJwtBody.aud,
         issuer: decodedJwtBody.iss,
@@ -25,11 +26,17 @@ function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
         authenticated: true,
         body: decodedJwtBody
       }
-      if (typeof mapper === 'function') {
-        mapper(request.user)
-      }
 
-      return next()
+      // Handle async
+      let result
+      if (typeof mapper === 'function') {
+        result = mapper(request.user, request, response)
+      }
+      if (isPromise(result)) {
+        result.then(() => next()).catch(e => next(e))
+      } else {
+        return next()
+      }
     } catch (e) {
       if (e instanceof JwtVerifyError) {
         return next(e)
@@ -38,6 +45,14 @@ function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
       }
     }
   }
+}
+
+function isPromise(value) {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof value.then === 'function'
+  )
 }
 
 module.exports = jwtAuthMiddleware
