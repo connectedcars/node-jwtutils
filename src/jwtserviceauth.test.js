@@ -8,6 +8,7 @@ const { JwtServiceAuth, JwtUtils, JwtServiceAuthError } = require('./index')
 const r2 = require('r2')
 const http = require('http')
 const curl = require('url')
+const { httpRequest, HttpRequestError } = require('./httprequest')
 
 const rsaPublicKey =
   '-----BEGIN PUBLIC KEY-----\n' +
@@ -108,6 +109,19 @@ describe('JwtServiceAuth', () => {
             ).toISOString()
           })
         )
+      } else if (req.url === '/large_response') {
+        res.statusCode = 200
+        res.end('x'.repeat(1024))
+      } else if (req.url === '/echo') {
+        res.statusCode = 200
+        req.on('data', data => {
+          res.write(data)
+        })
+        req.on('end', () => {
+          res.end()
+        })
+      } else if (req.url === '/timeout') {
+        //
       } else {
         res.statusCode = 404
         res.end()
@@ -119,13 +133,15 @@ describe('JwtServiceAuth', () => {
   })
 
   // Setup httpRequestHandler
-  let httpRequestHandler = null
+  let httpRequestHandlerR2 = null
+  let baseUrl = null
   before(done => {
     listenPromise.then(result => {
-      httpRequestHandler = (method, url, headers, body) => {
+      baseUrl = `http://localhost:${result.port}`
+      httpRequestHandlerR2 = (method, url, headers, body) => {
         // Overwrite to point to test server
         let parsedUrl = curl.parse(url)
-        url = `http://localhost:${result.port}${parsedUrl.path}`
+        url = `${baseUrl}${parsedUrl.path}`
         // Do http request
         let r2Request = r2[method.toLowerCase()](url, {
           headers,
@@ -150,6 +166,45 @@ describe('JwtServiceAuth', () => {
     httpServer.close()
   })
 
+  describe('httpRequest', () => {
+    it('should return 404', () => {
+      let response = httpRequest('GET', baseUrl)
+      return expect(response, 'to be fulfilled with value satisfying', {
+        statusCode: 404
+      })
+    })
+    it('should return too large', () => {
+      let response = httpRequest(
+        'GET',
+        `${baseUrl}/large_response`,
+        null,
+        null,
+        { maxResponseSize: 512 }
+      )
+      return expect(
+        response,
+        'to be rejected with error satisfying',
+        new HttpRequestError('Response too lange')
+      )
+    })
+    it('should return POST data', () => {
+      let response = httpRequest('POST', `${baseUrl}/echo`, null, 'Hello')
+      return expect(response, 'to be fulfilled with value satisfying', {
+        statusCode: 200
+      })
+    })
+    it('should timeout', () => {
+      let response = httpRequest('GET', `${baseUrl}/timeout`, null, null, {
+        timeout: 1
+      })
+      return expect(
+        response,
+        'to be rejected with error satisfying',
+        new HttpRequestError('Timeout')
+      )
+    })
+  })
+
   describe('JwtServiceAuthError', () => {
     it('innerError should be null', () => {
       let error = new JwtServiceAuthError('')
@@ -159,7 +214,7 @@ describe('JwtServiceAuth', () => {
 
   describe('getGoogleAccessToken', () => {
     it('should succeed with ok token', () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler)
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       let accessTokenPromise = jwtServiceAuth.getGoogleAccessToken(
         JSON.stringify(googleKeyFileData)
       )
@@ -173,7 +228,7 @@ describe('JwtServiceAuth', () => {
       )
     })
     it('should fail', () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler)
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       return jwtServiceAuth
         .getGoogleAccessToken(JSON.stringify(googleKeyFileData), 3600, [])
         .then(accessToken => {
@@ -188,7 +243,7 @@ describe('JwtServiceAuth', () => {
         })
     })
     it('should fail with bad input', () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler)
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       expect(() => {
         jwtServiceAuth.getGoogleAccessToken('{}')
       }, 'to throw error')
@@ -196,7 +251,7 @@ describe('JwtServiceAuth', () => {
   })
   describe('getGithubAccessToken', () => {
     it('should succeed with ok token', () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler)
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       let accessTokenPromise = jwtServiceAuth.getGithubAccessToken(
         rsaPrivateKey,
         1,
@@ -212,7 +267,7 @@ describe('JwtServiceAuth', () => {
       )
     })
     it('should fail', () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler)
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       return jwtServiceAuth
         .getGithubAccessToken(rsaPrivateKey, 0, 1)
         .then(accessToken => {

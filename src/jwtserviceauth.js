@@ -4,10 +4,12 @@
 const querystring = require('querystring')
 const jwtEncode = require('./jwtencode')
 const JwtServiceAuthError = require('./jwtserviceautherror')
+const { httpRequest } = require('./httprequest')
 
 /**
  * @typedef {Object} httpHandlerResponse
  * @property {number} statusCode
+ * @property {string} statusMessage
  * @property {Buffer} data
  * @property {Object} headers
  */
@@ -18,12 +20,24 @@ const JwtServiceAuthError = require('./jwtserviceautherror')
  * @property {number} expiresIn
  */
 
+/**
+ * Make a http request
+ * @param {string} method
+ * @param {string} url
+ * @param {Object} headers
+ * @param {Buffer|string} body
+ * @return {Promise<httpHandlerResponse>}
+ */
+function defaultHttpRequestHandler(method, url, headers, body) {
+  return httpRequest(method, url, headers, body)
+}
+
 class JwtServiceAuth {
   /**
    *
    * @param {{(method:string, url:string, headers:Object, body:string|Buffer): Promise<httpHandlerResponse>}} httpRequestHandler
    */
-  constructor(httpRequestHandler) {
+  constructor(httpRequestHandler = defaultHttpRequestHandler) {
     this.httpRequestHandler = httpRequestHandler
   }
 
