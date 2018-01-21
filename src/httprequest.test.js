@@ -2,12 +2,13 @@
 'use strict'
 
 const expect = require('unexpected')
-const { createTestServer } = require('./testutils')
+const { localhostCertificate, localhostPrivateKey } = require('./testresources')
+const { createTestHttpServer, createTestHttpsServer } = require('./testutils')
 
 const { httpRequest, HttpRequestError } = require('./httprequest')
 
 describe('httpRequest', () => {
-  let [httpServer, listenPromise] = createTestServer((req, res) => {
+  let [httpServer, httpListenPromise] = createTestHttpServer((req, res) => {
     if (req.url === '/timeout') {
       //
     } else if (req.url === '/large_response') {
@@ -26,31 +27,50 @@ describe('httpRequest', () => {
       res.end()
     }
   })
+  let [httpsServer, httpsListenPromise] = createTestHttpsServer(
+    { cert: localhostCertificate, key: localhostPrivateKey },
+    (req, res) => {
+      res.statusCode = 200
+      res.end()
+    }
+  )
 
   // Setup httpRequestHandler
-  let baseUrl = null
+  let httpBaseUrl = null
+  let httpsBaseUrl = null
   before(done => {
-    listenPromise.then(result => {
-      baseUrl = `http://localhost:${result.port}`
-      console.log(`Listining on ${result.hostname}:${result.port}`)
+    Promise.all([httpListenPromise, httpsListenPromise]).then(results => {
+      let httpPort = results[0].port
+      let httpsPort = results[1].port
+      console.log(`Listining on 127.0.0.1:${httpPort} for http`)
+      console.log(`Listining on 127.0.0.1:${httpsPort} for https`)
+      httpBaseUrl = `http://localhost:${httpPort}`
+      httpsBaseUrl = `https://localhost:${httpsPort}`
       done()
     })
   })
 
   after(() => {
     httpServer.close()
+    httpsServer.close()
   })
 
   it('should return 404', () => {
-    let response = httpRequest('GET', baseUrl)
+    let response = httpRequest('GET', httpBaseUrl)
     return expect(response, 'to be fulfilled with value satisfying', {
       statusCode: 404
     })
   })
   it('should return too large', () => {
-    let response = httpRequest('GET', `${baseUrl}/large_response`, null, null, {
-      maxResponseSize: 512
-    })
+    let response = httpRequest(
+      'GET',
+      `${httpBaseUrl}/large_response`,
+      null,
+      null,
+      {
+        maxResponseSize: 512
+      }
+    )
     return expect(
       response,
       'to be rejected with error satisfying',
@@ -58,13 +78,13 @@ describe('httpRequest', () => {
     )
   })
   it('should return POST data', () => {
-    let response = httpRequest('POST', `${baseUrl}/echo`, null, 'Hello')
+    let response = httpRequest('POST', `${httpBaseUrl}/echo`, null, 'Hello')
     return expect(response, 'to be fulfilled with value satisfying', {
       statusCode: 200
     })
   })
   it('should timeout', () => {
-    let response = httpRequest('GET', `${baseUrl}/timeout`, null, null, {
+    let response = httpRequest('GET', `${httpBaseUrl}/timeout`, null, null, {
       timeout: 1
     })
     return expect(
@@ -84,9 +104,11 @@ describe('httpRequest', () => {
     )
   })
   it('https connected', () => {
-    let response = httpRequest('GET', `https://www.google.com/`)
+    let response = httpRequest('GET', httpsBaseUrl, null, null, {
+      ca: localhostCertificate
+    })
     return expect(response, 'to be fulfilled with value satisfying', {
-      statusCode: 302
+      statusCode: 200
     })
   })
 })

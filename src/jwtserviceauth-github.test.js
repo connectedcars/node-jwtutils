@@ -2,7 +2,7 @@
 'use strict'
 
 const expect = require('unexpected')
-const { createTestServer } = require('./testutils')
+const { createTestHttpServer } = require('./testutils')
 const { rsaPrivateKey, rsaPublicKey } = require('./testresources')
 
 const { JwtServiceAuth, JwtUtils } = require('./index')
@@ -24,7 +24,7 @@ const pubKeys = {
 }
 
 describe('JwtServiceAuth', () => {
-  let [httpServer, listenPromise] = createTestServer((req, res) => {
+  let [httpServer, listenPromise] = createTestHttpServer((req, res) => {
     try {
       if (req.url === '/installations/1/access_tokens') {
         let token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')

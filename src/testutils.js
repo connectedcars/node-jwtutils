@@ -2,9 +2,11 @@
 'use strict'
 
 const http = require('http')
+const https = require('https')
 
 // Make ts-check happy
-const Server = http.Server
+const HttpServer = http.Server
+const HttpsServer = https.Server
 
 /**
  * @typedef {Object} listenResponse
@@ -15,9 +17,9 @@ const Server = http.Server
 /**
  * Start a test http server
  * @param {*} requestHandler
- * @returns {[Server,Promise<listenResponse>]}
+ * @returns {[HttpServer,Promise<listenResponse>]}
  */
-function createTestServer(requestHandler) {
+function createTestHttpServer(requestHandler) {
   const httpServer = http.createServer(requestHandler)
   return [
     httpServer,
@@ -32,6 +34,27 @@ function createTestServer(requestHandler) {
   ]
 }
 
+/**
+ * Start a test http server
+ * @param {*} requestHandler
+ * @returns {[HttpsServer,Promise<listenResponse>]}
+ */
+function createTestHttpsServer(options, requestHandler) {
+  const httpServer = https.createServer(options, requestHandler)
+  return [
+    httpServer,
+    new Promise((resolve, reject) => {
+      httpServer.listen(0, () => {
+        resolve({
+          hostname: httpServer.address().address,
+          port: httpServer.address().port
+        })
+      })
+    })
+  ]
+}
+
 module.exports = {
-  createTestServer
+  createTestHttpServer,
+  createTestHttpsServer
 }
