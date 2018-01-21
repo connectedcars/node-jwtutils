@@ -6,7 +6,7 @@ const { createTestServer } = require('./testutils')
 const { rsaPrivateKey, rsaPublicKey } = require('./testresources')
 
 const querystring = require('querystring')
-const { JwtServiceAuth, JwtUtils, JwtServiceAuthError } = require('./index')
+const { JwtServiceAuth, JwtUtils } = require('./index')
 
 const r2 = require('r2')
 const curl = require('url')
@@ -28,16 +28,6 @@ let googleKeyFileData = {
 const pubKeys = {
   'buildstatus@nversion-168820.iam.gserviceaccount.com': {
     '76d81ae69ce620a517b140fc73dbae61e88b34bc@RS256': rsaPublicKey
-  },
-  '1': {
-    'default@RS256': {
-      publicKey: rsaPublicKey,
-      validators: {
-        aud: () => {
-          return true
-        }
-      }
-    }
   }
 }
 
@@ -70,21 +60,6 @@ describe('JwtServiceAuth', () => {
             res.end(JSON.stringify({ error: 'not valid' }))
           }
         })
-      } else if (req.url === '/installations/1/access_tokens') {
-        let token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
-        let body = JwtUtils.decode(token, pubKeys, [
-          'https://www.googleapis.com/oauth2/v4/token'
-        ])
-        res.statusCode = 201
-        let now = new Date()
-        res.end(
-          JSON.stringify({
-            token: 'v1.1f699f1069f60xxx',
-            expires_at: new Date(
-              new Date().getTime() + 3600 * 1000
-            ).toISOString()
-          })
-        )
       } else {
         res.statusCode = 404
         res.end()
@@ -129,13 +104,6 @@ describe('JwtServiceAuth', () => {
     httpServer.close()
   })
 
-  describe('JwtServiceAuthError', () => {
-    it('innerError should be null', () => {
-      let error = new JwtServiceAuthError('')
-      expect(error.innerError, 'to be null')
-    })
-  })
-
   describe('getGoogleAccessToken', () => {
     it('should succeed with ok token', () => {
       let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
@@ -172,39 +140,6 @@ describe('JwtServiceAuth', () => {
       expect(() => {
         jwtServiceAuth.getGoogleAccessToken('{}')
       }, 'to throw error')
-    })
-  })
-  describe('getGithubAccessToken', () => {
-    it('should succeed with ok token', () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
-      let accessTokenPromise = jwtServiceAuth.getGithubAccessToken(
-        rsaPrivateKey,
-        1,
-        1
-      )
-      return expect(
-        accessTokenPromise,
-        'to be fulfilled with value satisfying',
-        {
-          accessToken: 'v1.1f699f1069f60xxx',
-          expiresIn: 3600
-        }
-      )
-    })
-    it('should fail', () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
-      return jwtServiceAuth
-        .getGithubAccessToken(rsaPrivateKey, 0, 1)
-        .then(accessToken => {
-          return new Error('Got back accessToken when errors was expected')
-        })
-        .catch(e => {
-          try {
-            return expect(e, 'to have message', 'response.statusCode not 200')
-          } catch (e) {
-            return Promise.reject(e)
-          }
-        })
     })
   })
 })
