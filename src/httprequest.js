@@ -48,9 +48,6 @@ function httpRequest(method, url, headers = null, data = null, options = {}) {
     var request = httpRequester(requestOptions, response => {
       let responseData = []
       response.on('data', chunk => {
-        if (!Buffer.isBuffer(chunk)) {
-          chunk = Buffer.from(chunk, 'utf8')
-        }
         if (chunk.length + responseData.length <= maxResponseSize) {
           responseData.push(chunk)
         } else {

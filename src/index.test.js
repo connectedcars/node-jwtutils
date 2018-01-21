@@ -2,54 +2,16 @@
 'use strict'
 
 const expect = require('unexpected')
+const {
+  rsaPrivateKey,
+  rsaPublicKey,
+  ecPrivateKey,
+  ecPublicKey,
+  rsaOtherPublicKey
+} = require('./testresources')
+
 const { JwtUtils, JwtVerifyError } = require('./index')
 const oldJwtUtils = require('./index')
-
-const rsaPublicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\n' +
-  'UWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\n' +
-  'HUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\n' +
-  'o2kQ+X5xK9cipRgEKwIDAQAB\n' +
-  '-----END PUBLIC KEY-----'
-
-const rsaOtherPublicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDf6PME6PIAF47/UzLDixmtlLvn\n' +
-  'RkSGzixmdGJUurUZyz3B2ok5DIYYtdN1LWXmt0BRfA5B9SQAsZ4h9tdAs5zjVUe1\n' +
-  's9oLHK0++UEM7vowvhqvMmxeVmcABtsx0IoXTryLLKcrdJQfmmeAItZAyYbz6Tzp\n' +
-  'O6x06JSme6Xy0lOQawIDAQAB\n' +
-  '-----END PUBLIC KEY-----'
-
-const rsaPrivateKey =
-  '-----BEGIN RSA PRIVATE KEY-----\n' +
-  'MIICWwIBAAKBgQDdlatRjRjogo3WojgGHFHYLugdUWAY9iR3fy4arWNA1KoS8kVw\n' +
-  '33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQsHUfQrSDv+MuSUMAe8jzKE4qW\n' +
-  '+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5Do2kQ+X5xK9cipRgEKwIDAQAB\n' +
-  'AoGAD+onAtVye4ic7VR7V50DF9bOnwRwNXrARcDhq9LWNRrRGElESYYTQ6EbatXS\n' +
-  '3MCyjjX2eMhu/aF5YhXBwkppwxg+EOmXeh+MzL7Zh284OuPbkglAaGhV9bb6/5Cp\n' +
-  'uGb1esyPbYW+Ty2PC0GSZfIXkXs76jXAu9TOBvD0ybc2YlkCQQDywg2R/7t3Q2OE\n' +
-  '2+yo382CLJdrlSLVROWKwb4tb2PjhY4XAwV8d1vy0RenxTB+K5Mu57uVSTHtrMK0\n' +
-  'GAtFr833AkEA6avx20OHo61Yela/4k5kQDtjEf1N0LfI+BcWZtxsS3jDM3i1Hp0K\n' +
-  'Su5rsCPb8acJo5RO26gGVrfAsDcIXKC+bQJAZZ2XIpsitLyPpuiMOvBbzPavd4gY\n' +
-  '6Z8KWrfYzJoI/Q9FuBo6rKwl4BFoToD7WIUS+hpkagwWiz+6zLoX1dbOZwJACmH5\n' +
-  'fSSjAkLRi54PKJ8TFUeOP15h9sQzydI8zJU+upvDEKZsZc/UhT/SySDOxQ4G/523\n' +
-  'Y0sz/OZtSWcol/UMgQJALesy++GdvoIDLfJX5GBQpuFgFenRiRDabxrE9MNUZ2aP\n' +
-  'FaFp+DyAe+b4nDwuJaW2LURbr8AEZga7oQj0uYxcYw==\n' +
-  '-----END RSA PRIVATE KEY-----'
-
-const ecPrivateKey =
-  '-----BEGIN EC PRIVATE KEY-----\n' +
-  'MHQCAQEEIEbBJ5shjRhQjmWZQfBu8t069BolPpmZjg+c2mSqr8BkoAcGBSuBBAAK\n' +
-  'oUQDQgAEgYq9+AtlLZMXL2g61gwOG3vPQPeaWQD+3JcRUdcwdZm4duMXQZrwVBSr\n' +
-  '5Kunr1NnK+0VCrcoUh09GFr8UTAq3g==\n' +
-  '-----END EC PRIVATE KEY-----'
-
-const ecPublicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEgYq9+AtlLZMXL2g61gwOG3vPQPeaWQD+\n' +
-  '3JcRUdcwdZm4duMXQZrwVBSr5Kunr1NnK+0VCrcoUh09GFr8UTAq3g==\n' +
-  '-----END PUBLIC KEY-----\n'
 
 const unixNow = Math.floor(Date.now() / 1000)
 

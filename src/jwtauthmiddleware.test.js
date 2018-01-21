@@ -1,24 +1,13 @@
 // @ts-check
 'use strict'
 
+const expect = require('unexpected')
+const { ecPrivateKey, ecPublicKey } = require('./testresources')
+
 const express = require('express')
 const app = express()
 const http = require('http')
 const { JwtUtils, JwtAuthMiddleware, JwtVerifyError } = require('./index')
-const expect = require('unexpected')
-
-const ecPrivateKey =
-  '-----BEGIN EC PRIVATE KEY-----\n' +
-  'MHQCAQEEIEbBJ5shjRhQjmWZQfBu8t069BolPpmZjg+c2mSqr8BkoAcGBSuBBAAK\n' +
-  'oUQDQgAEgYq9+AtlLZMXL2g61gwOG3vPQPeaWQD+3JcRUdcwdZm4duMXQZrwVBSr\n' +
-  '5Kunr1NnK+0VCrcoUh09GFr8UTAq3g==\n' +
-  '-----END EC PRIVATE KEY-----'
-
-const ecPublicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEgYq9+AtlLZMXL2g61gwOG3vPQPeaWQD+\n' +
-  '3JcRUdcwdZm4duMXQZrwVBSr5Kunr1NnK+0VCrcoUh09GFr8UTAq3g==\n' +
-  '-----END PUBLIC KEY-----\n'
 
 const jwtHeader = {
   typ: 'JWT',

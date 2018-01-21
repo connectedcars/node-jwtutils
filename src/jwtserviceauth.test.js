@@ -2,38 +2,14 @@
 'use strict'
 
 const expect = require('unexpected')
+const { createTestServer } = require('./testutils')
+const { rsaPrivateKey, rsaPublicKey } = require('./testresources')
+
 const querystring = require('querystring')
 const { JwtServiceAuth, JwtUtils, JwtServiceAuthError } = require('./index')
 
 const r2 = require('r2')
-const http = require('http')
 const curl = require('url')
-const { httpRequest, HttpRequestError } = require('./httprequest')
-
-const rsaPublicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\n' +
-  'UWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\n' +
-  'HUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\n' +
-  'o2kQ+X5xK9cipRgEKwIDAQAB\n' +
-  '-----END PUBLIC KEY-----'
-
-const rsaPrivateKey =
-  '-----BEGIN RSA PRIVATE KEY-----\n' +
-  'MIICWwIBAAKBgQDdlatRjRjogo3WojgGHFHYLugdUWAY9iR3fy4arWNA1KoS8kVw\n' +
-  '33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQsHUfQrSDv+MuSUMAe8jzKE4qW\n' +
-  '+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5Do2kQ+X5xK9cipRgEKwIDAQAB\n' +
-  'AoGAD+onAtVye4ic7VR7V50DF9bOnwRwNXrARcDhq9LWNRrRGElESYYTQ6EbatXS\n' +
-  '3MCyjjX2eMhu/aF5YhXBwkppwxg+EOmXeh+MzL7Zh284OuPbkglAaGhV9bb6/5Cp\n' +
-  'uGb1esyPbYW+Ty2PC0GSZfIXkXs76jXAu9TOBvD0ybc2YlkCQQDywg2R/7t3Q2OE\n' +
-  '2+yo382CLJdrlSLVROWKwb4tb2PjhY4XAwV8d1vy0RenxTB+K5Mu57uVSTHtrMK0\n' +
-  'GAtFr833AkEA6avx20OHo61Yela/4k5kQDtjEf1N0LfI+BcWZtxsS3jDM3i1Hp0K\n' +
-  'Su5rsCPb8acJo5RO26gGVrfAsDcIXKC+bQJAZZ2XIpsitLyPpuiMOvBbzPavd4gY\n' +
-  '6Z8KWrfYzJoI/Q9FuBo6rKwl4BFoToD7WIUS+hpkagwWiz+6zLoX1dbOZwJACmH5\n' +
-  'fSSjAkLRi54PKJ8TFUeOP15h9sQzydI8zJU+upvDEKZsZc/UhT/SySDOxQ4G/523\n' +
-  'Y0sz/OZtSWcol/UMgQJALesy++GdvoIDLfJX5GBQpuFgFenRiRDabxrE9MNUZ2aP\n' +
-  'FaFp+DyAe+b4nDwuJaW2LURbr8AEZga7oQj0uYxcYw==\n' +
-  '-----END RSA PRIVATE KEY-----'
 
 let googleKeyFileData = {
   type: 'service_account',
@@ -109,19 +85,6 @@ describe('JwtServiceAuth', () => {
             ).toISOString()
           })
         )
-      } else if (req.url === '/large_response') {
-        res.statusCode = 200
-        res.end('x'.repeat(1024))
-      } else if (req.url === '/echo') {
-        res.statusCode = 200
-        req.on('data', data => {
-          res.write(data)
-        })
-        req.on('end', () => {
-          res.end()
-        })
-      } else if (req.url === '/timeout') {
-        //
       } else {
         res.statusCode = 404
         res.end()
@@ -166,45 +129,6 @@ describe('JwtServiceAuth', () => {
     httpServer.close()
   })
 
-  describe('httpRequest', () => {
-    it('should return 404', () => {
-      let response = httpRequest('GET', baseUrl)
-      return expect(response, 'to be fulfilled with value satisfying', {
-        statusCode: 404
-      })
-    })
-    it('should return too large', () => {
-      let response = httpRequest(
-        'GET',
-        `${baseUrl}/large_response`,
-        null,
-        null,
-        { maxResponseSize: 512 }
-      )
-      return expect(
-        response,
-        'to be rejected with error satisfying',
-        new HttpRequestError('Response too lange')
-      )
-    })
-    it('should return POST data', () => {
-      let response = httpRequest('POST', `${baseUrl}/echo`, null, 'Hello')
-      return expect(response, 'to be fulfilled with value satisfying', {
-        statusCode: 200
-      })
-    })
-    it('should timeout', () => {
-      let response = httpRequest('GET', `${baseUrl}/timeout`, null, null, {
-        timeout: 1
-      })
-      return expect(
-        response,
-        'to be rejected with error satisfying',
-        new HttpRequestError('Timeout')
-      )
-    })
-  })
-
   describe('JwtServiceAuthError', () => {
     it('innerError should be null', () => {
       let error = new JwtServiceAuthError('')
@@ -232,6 +156,7 @@ describe('JwtServiceAuth', () => {
       return jwtServiceAuth
         .getGoogleAccessToken(JSON.stringify(googleKeyFileData), 3600, [])
         .then(accessToken => {
+          // This should neven happen so return an error to the catch if it does
           return new Error('Got back accessToken when errors was expected')
         })
         .catch(e => {
@@ -283,29 +208,3 @@ describe('JwtServiceAuth', () => {
     })
   })
 })
-
-/**
- * @typedef {Object} listenResponse
- * @property {string} hostname
- * @property {number} port
- */
-
-/**
- * Start a test http server
- * @param {*} requestHandler
- * @returns {[Server,Promise<listenResponse>]}
- */
-function createTestServer(requestHandler) {
-  const httpServer = http.createServer(requestHandler)
-  return [
-    httpServer,
-    new Promise((resolve, reject) => {
-      httpServer.listen(0, () => {
-        resolve({
-          hostname: httpServer.address().address,
-          port: httpServer.address().port
-        })
-      })
-    })
-  ]
-}
