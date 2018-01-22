@@ -40,14 +40,14 @@ function createTestHttpServer(requestHandler) {
  * @returns {[HttpsServer,Promise<listenResponse>]}
  */
 function createTestHttpsServer(options, requestHandler) {
-  const httpServer = https.createServer(options, requestHandler)
+  const httpsServer = https.createServer(options, requestHandler)
   return [
-    httpServer,
+    httpsServer,
     new Promise((resolve, reject) => {
-      httpServer.listen(0, () => {
+      httpsServer.listen(0, () => {
         resolve({
-          hostname: httpServer.address().address,
-          port: httpServer.address().port
+          hostname: httpsServer.address().address,
+          port: httpsServer.address().port
         })
       })
     })
