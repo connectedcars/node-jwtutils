@@ -151,7 +151,7 @@ function validateAudience(body, audiences, options) {
   }
 }
 
-function validateExpires(body, unixNow, options = {}) {
+function validateExpires(body, unixNow, options) {
   if (!body.exp) {
     throw new JwtVerifyError(`No expires set on token`)
   }

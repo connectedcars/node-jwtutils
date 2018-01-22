@@ -17,7 +17,8 @@ const pubKeys = {
 const audiences = ['localhost']
 
 describe('jwtencode', () => {
-  it('should return ok', done => {
+  it('should return ok', function(done) {
+    this.slow(10000)
     let jwtEncode = spawn(`${__dirname}/jwtencode.js`, [
       `${__dirname}/jwtencode.test.key`
     ])
@@ -61,10 +62,12 @@ describe('jwtencode', () => {
       tokenData.push(data)
     })
     jwtEncode.stdout.on('end', () => {
-      let jwt = Buffer.concat(tokenData).toString('utf8').trim()
+      let jwt = Buffer.concat(tokenData)
+        .toString('utf8')
+        .trim()
       let decodedBody = JwtUtils.decode(jwt, pubKeys, audiences)
       expect(body, 'to equal', decodedBody)
       done()
     })
-  }).slow(2000)
+  })
 })
