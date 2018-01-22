@@ -28,9 +28,7 @@ describe('JwtServiceAuth', () => {
     try {
       if (req.url === '/installations/1/access_tokens') {
         let token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
-        let body = JwtUtils.decode(token, pubKeys, [
-          'https://www.googleapis.com/oauth2/v4/token'
-        ])
+        let body = JwtUtils.decode(token, pubKeys, [])
         res.statusCode = 201
         res.end(
           JSON.stringify({
