@@ -24,7 +24,8 @@ let jwtBody = {
 }
 
 describe('jwtencode', () => {
-  it('should return ok', done => {
+  it('should return ok', function(done) {
+    this.slow(10000)
     let jwtEncode = spawn(`${__dirname}/jwtdecode.js`, [
       `${__dirname}/jwtencode.test.pub`,
       '1',
@@ -58,7 +59,9 @@ describe('jwtencode', () => {
     })
     jwtEncode.stdout.on('end', () => {
       try {
-        stdoutStr = Buffer.concat(decodedData).toString('utf8').trim()
+        stdoutStr = Buffer.concat(decodedData)
+          .toString('utf8')
+          .trim()
         let decodedBody = JSON.parse(stdoutStr)
         expect(decodedBody, 'to equal', jwtBody)
       } catch (e) {
@@ -74,5 +77,5 @@ describe('jwtencode', () => {
         done()
       }
     })
-  }).slow(2000)
+  })
 })
