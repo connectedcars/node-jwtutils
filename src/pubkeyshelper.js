@@ -25,35 +25,48 @@ class PubkeysHelper {
   }
 
   /**
-   * Fetch JWK formated public keys from http endpoint
+   * Fetch JWK formated public keys from a http endpoint with the default http handler
+   * @param {*} url
+   * @param {*} options
+   */
+  static fetchJwkKeys(url, options = {}) {
+    return _fetchJwkKeys(defaultHttpRequestHandler, url, options)
+  }
+
+  /**
+   * Fetch JWK formated public keys from a http endpoint
    * @param {*} url
    * @param {*} options
    */
   fetchJwkKeys(url, options = {}) {
-    return this.httpRequestHandler('GET', url).then(response => {
-      let pubkeysResponse = JSON.parse(
-        Buffer.from(response.data).toString('utf8')
-      )
-      if (!Array.isArray(pubkeysResponse.keys)) {
-        throw new Error(
-          `Response from ${url} not in expected format: Missing array property keys`
-        )
-      }
-      if (Object.keys(pubkeysResponse.keys).length === 0) {
-        throw new Error(`No keys found in response from ${url}`)
-      }
-
-      let pubKeys = {}
-      for (const key of pubkeysResponse.keys) {
-        let publicKeyPem = jwkUtils.jwtToPem(key)
-        pubKeys[`${key.kid}@${key.alg}`] = {
-          publicKey: publicKeyPem,
-          ...options
-        }
-      }
-      return pubKeys
-    })
+    return _fetchJwkKeys(this.httpRequestHandler, url, options)
   }
+}
+
+function _fetchJwkKeys(httpRequestHandler, url, options) {
+  return httpRequestHandler('GET', url, {}, null).then(response => {
+    let pubkeysResponse = JSON.parse(
+      Buffer.from(response.data).toString('utf8')
+    )
+    if (!Array.isArray(pubkeysResponse.keys)) {
+      throw new Error(
+        `Response from ${url} not in expected format: Missing array property keys`
+      )
+    }
+    if (Object.keys(pubkeysResponse.keys).length === 0) {
+      throw new Error(`No keys found in response from ${url}`)
+    }
+
+    let pubKeys = {}
+    for (const key of pubkeysResponse.keys) {
+      let publicKeyPem = jwkUtils.jwtToPem(key)
+      pubKeys[`${key.kid}@${key.alg}`] = {
+        publicKey: publicKeyPem,
+        ...options
+      }
+    }
+    return pubKeys
+  })
 }
 
 module.exports = PubkeysHelper

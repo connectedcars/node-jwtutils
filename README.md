@@ -160,6 +160,25 @@ app.listen(3000, () => {
 })
 ```
 
+### Integration with 3rd parties
+
+Google Identity platform:
+
+``` javascript
+const { PubkeysHelper } = require('@connectedcars/jwtutils')
+
+// Fetch with Google's public keys every hour
+setInterval(() => {
+  PubkeysHelper.fetchJwkKeys('https://www.googleapis.com/oauth2/v3/certs')
+    .then(keys => {
+      pubKeys['https://accounts.google.com'] = keys
+    })
+    .catch(e => {
+      console.log(e)
+    })
+}, 60 * 60 * 1000)
+```
+
 ## Usage of service authentication (Google and Github)
 
 ``` javascript
