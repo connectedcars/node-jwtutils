@@ -1,8 +1,11 @@
 {
   "name": "@connectedcars/jwtutils",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Zero dependency JWT encoding/decoding for Node",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "bin": {
     "jwtencode": "./bin/jwtencode.js",
     "jwtdecode": "./bin/jwtdecode.js"
@@ -32,6 +35,7 @@
     "coveralls": "^2.13.3",
     "eslint": "^4.15.0",
     "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-prettier": "^2.4.0",
     "express": "^4.16.2",
     "microtime": "^2.1.7",

@@ -4,7 +4,7 @@
 const querystring = require('querystring')
 const jwtEncode = require('./jwtencode')
 const JwtServiceAuthError = require('./jwtserviceautherror')
-const { httpRequest } = require('./httprequest')
+const defaultHttpRequestHandler = require('./defaulthttprequesthandler')
 
 /**
  * @typedef {Object} httpHandlerResponse
@@ -20,21 +20,9 @@ const { httpRequest } = require('./httprequest')
  * @property {number} expiresIn
  */
 
-/**
- * Make a http request
- * @param {string} method
- * @param {string} url
- * @param {Object} headers
- * @param {Buffer|string} body
- * @return {Promise<httpHandlerResponse>}
- */
-function defaultHttpRequestHandler(method, url, headers, body) {
-  return httpRequest(method, url, headers, body)
-}
-
 class JwtServiceAuth {
   /**
-   *
+   * Set http request handler for all external http calls
    * @param {{(method:string, url:string, headers:Object, body:string|Buffer): Promise<httpHandlerResponse>}} httpRequestHandler
    */
   constructor(httpRequestHandler = defaultHttpRequestHandler) {
@@ -165,6 +153,9 @@ class JwtServiceAuth {
       }
     })
   }
+  /* getGoogleAccessTokenFromGCloudHelper() {
+    //gcloud config config-helper --format=json
+  } */
 }
 
 module.exports = JwtServiceAuth

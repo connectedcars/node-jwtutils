@@ -7,12 +7,14 @@ const JwtVerifyError = require('./jwtverifyerror')
 const JwtServiceAuthError = require('./jwtserviceautherror')
 const JwtAuthMiddleware = require('./jwtauthmiddleware')
 const JwtServiceAuth = require('./jwtserviceauth')
+const PubkeysHelper = require('./pubkeyshelper')
 
 module.exports = {
   JwtUtils: {
     encode: jwtEncode,
     decode: jwtDecode
   },
+  PubkeysHelper,
   JwtAuthMiddleware,
   JwtServiceAuth,
   JwtVerifyError,

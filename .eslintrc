@@ -4,13 +4,15 @@
       "prettier"
     ],
     "plugins": [
-      "prettier"
+      "prettier",
+      "node"
     ],
     "parserOptions": {
       "ecmaVersion": 2016,
       "sourceType": "module"
     },
     "rules": {
+      "node/no-unsupported-features": "error",
       "no-unused-vars": "warn",
       "prettier/prettier": ["error", {
         "singleQuote": true,
