@@ -168,14 +168,20 @@ Google Identity platform:
 const { PubkeysHelper } = require('@connectedcars/jwtutils')
 
 // Fetch with Google's public keys every hour
-setInterval(() => {
+const applyGoogleKeys = (pubKeys) => {
   PubkeysHelper.fetchJwkKeys('https://www.googleapis.com/oauth2/v3/certs')
     .then(keys => {
       pubKeys['https://accounts.google.com'] = keys
     })
     .catch(e => {
+      // Do some error handling
       console.log(e)
     })
+}
+
+applyGoogleKeys(pubKeys)
+setInterval(() => {
+  applyGoogleKeys(pubKeys)
 }, 60 * 60 * 1000)
 ```
 
@@ -198,7 +204,7 @@ let httpRequestHandler = async (method, url, headers, body) => { // Fx. POST, ht
   }
 })
 
-let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler)
+let jwtServiceAuth = new JwtServiceAuth(httpRequestHandler) // Or use the built-in default
 
 let gitHubAppPrivateKey = fs.readFileSync("user-appname.2017-01-01.private-key.pem", 'utf8')
 let googleServiceAccountKeyfile = fs.readFileSync("user-serviceaccount-12345678.json", 'utf8')
