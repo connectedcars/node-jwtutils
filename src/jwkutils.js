@@ -38,12 +38,15 @@ const secp521r1Oid = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23] // OBJECT IDENTI
 
 function jwtToPem(jwk) {
   switch (jwk.kty) {
-    case 'RSA':
+    case 'RSA': {
       return rsaPublicJwkToPem(jwk)
-    case 'EC':
+    }
+    case 'EC': {
       return ecPublicKeyJwkToPem(jwk)
-    default:
+    }
+    default: {
       throw new Error(`Unknown key type: ${jwk.kty}`)
+    }
   }
 }
 
