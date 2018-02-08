@@ -8,6 +8,10 @@ const { rsaPrivateKey, rsaPublicKey } = require('./testresources')
 const querystring = require('querystring')
 const { JwtServiceAuth, JwtUtils } = require('./index')
 
+const fs = require('fs')
+const path = require('path')
+const tmp = require('tmp')
+
 const r2 = require('r2')
 const curl = require('url')
 
@@ -140,6 +144,78 @@ describe('JwtServiceAuth', () => {
       expect(() => {
         jwtServiceAuth.getGoogleAccessToken('{}')
       }, 'to throw error')
+    })
+  })
+  describe('getGoogleAccessTokenFromGCloudHelper', () => {
+    let tmpdir
+    let oldPath
+    before(() => {
+      tmpdir = tmp.dirSync()
+      oldPath = process.env['PATH']
+      process.env['PATH'] = `${tmpdir.name}${path.delimiter}${oldPath}`
+      let configString = JSON.stringify(
+        {
+          configuration: {
+            active_configuration: 'buildstatus',
+            properties: {
+              compute: {
+                region: 'europe-west1',
+                zone: 'europe-west1-a'
+              },
+              core: {
+                account: 'troels@connectedcars.dk',
+                disable_usage_reporting: 'True',
+                project: 'buildstatus'
+              }
+            }
+          },
+          credential: {
+            access_token: 'ok',
+            token_expiry: new Date(
+              new Date().getTime() + 3600 * 1000
+            ).toISOString()
+          },
+          sentinels: {
+            config_sentinel: '/user/buildstatus/.config/gcloud/config_sentinel'
+          }
+        },
+        null,
+        2
+      )
+      fs.writeFileSync(
+        `${tmpdir.name}/gcloud`,
+        `#!${process.argv[0]}\nconsole.log(\`${configString}\`)`
+      )
+      fs.chmodSync(`${tmpdir.name}/gcloud`, '755')
+    })
+    after(() => {
+      process.env['PATH'] = oldPath
+      fs.unlinkSync(`${tmpdir.name}/gcloud`)
+      tmpdir.removeCallback()
+    })
+
+    it('should succeed with ok token', () => {
+      let jwtServiceAuth = new JwtServiceAuth()
+      let accessTokenPromise = jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: 3600
+        }
+      )
+    })
+    it('static should succeed with ok token ', () => {
+      let accessTokenPromise = JwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: 3600
+        }
+      )
     })
   })
 })

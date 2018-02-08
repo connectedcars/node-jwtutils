@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/mocha": "^2.2.46",
     "@types/node": "^8.5.8",
+    "@types/tmp": "0.0.33",
     "babel-eslint": "^7.2.3",
     "benchmark": "^2.1.4",
     "coveralls": "^2.13.3",
@@ -43,6 +44,7 @@
     "nyc": "^11.4.1",
     "prettier": "^1.10.2",
     "r2": "^2.0.0",
+    "tmp": "0.0.33",
     "typescript": "^2.6.2",
     "unexpected": "^10.36.2"
   },
