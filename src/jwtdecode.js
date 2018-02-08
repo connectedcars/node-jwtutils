@@ -40,29 +40,39 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
 
   let header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8'))
 
-  let algo = null
+  let signAlgo = null
+  let hmacAlgo = null
   switch (header.alg) {
     case 'RS256':
-      algo = 'RSA-SHA256'
+      signAlgo = 'RSA-SHA256'
       break
     case 'RS384':
-      algo = 'RSA-SHA384'
+      signAlgo = 'RSA-SHA384'
       break
     case 'RS512':
-      algo = 'RSA-SHA512'
+      signAlgo = 'RSA-SHA512'
       break
     case 'ES256':
-      algo = 'sha256'
+      signAlgo = 'sha256'
       break
     case 'ES384':
-      algo = 'sha256'
+      signAlgo = 'sha384'
       break
     case 'ES512':
-      algo = 'sha512'
+      signAlgo = 'sha512'
+      break
+    case 'HS256':
+      hmacAlgo = 'sha256'
+      break
+    case 'HS384':
+      hmacAlgo = 'sha384'
+      break
+    case 'HS512':
+      hmacAlgo = 'sha512'
       break
     default:
       throw new JwtVerifyError(
-        'Only alg RS256, RS384, RS512, ES256, ES384 and ES512 are supported'
+        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
       )
   }
 
@@ -78,32 +88,45 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
   }
 
   // Find public key
-  let pubkey =
+  let pubkeyOrSharedKey =
     typeof header.kid === 'string'
       ? issuer[`${header.kid}@${header.alg}`]
       : issuer[`default@${header.alg}`]
 
   let issuerOptions = {}
-  if (typeof pubkey === 'object' && pubkey !== null && pubkey.publicKey) {
-    issuerOptions = pubkey
-    pubkey = pubkey.publicKey
+  if (
+    typeof pubkeyOrSharedKey === 'object' &&
+    pubkeyOrSharedKey !== null &&
+    pubkeyOrSharedKey.publicKey
+  ) {
+    issuerOptions = pubkeyOrSharedKey
+    pubkeyOrSharedKey = pubkeyOrSharedKey.publicKey
   }
 
-  if (!pubkey) {
+  if (!pubkeyOrSharedKey) {
     throw new JwtVerifyError(
       `Unknown pubkey id '${header.kid}' for this issuer`
     )
   }
 
-  // Validate signature
-  let signature = base64UrlSafe.decode(parts[2])
-  const verifier = crypto.createVerify(algo)
-  verifier.write(`${parts[0]}.${parts[1]}`, 'utf8')
-  verifier.end()
-  if (!verifier.verify(pubkey, signature)) {
-    throw new JwtVerifyError(
-      `Signature verification failed with alg '${header.alg}'`
-    )
+  let signatureOrHash = base64UrlSafe.decode(parts[2])
+  if (signAlgo) {
+    // Validate signature
+    const verifier = crypto.createVerify(signAlgo)
+    verifier.write(`${parts[0]}.${parts[1]}`, 'utf8')
+    verifier.end()
+    if (!verifier.verify(pubkeyOrSharedKey, signatureOrHash)) {
+      throw new JwtVerifyError(
+        `Signature verification failed with alg '${header.alg}'`
+      )
+    }
+  } else if (hmacAlgo) {
+    const hmac = crypto.createHmac(hmacAlgo, pubkeyOrSharedKey)
+    hmac.update(`${parts[0]}.${parts[1]}`, 'utf8')
+    let signatureBuffer = hmac.digest()
+    if (!crypto.timingSafeEqual(signatureOrHash, signatureBuffer)) {
+      throw new JwtVerifyError(`Verification failed with alg '${header.alg}'`)
+    }
   }
 
   let unixNow = Math.floor(Date.now() / 1000)
