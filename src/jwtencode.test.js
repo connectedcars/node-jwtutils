@@ -69,5 +69,14 @@ describe('jwtUtils', () => {
         expect(jwtBody, 'to equal', decodedJwtBody)
       }
     })
+    it('should fail with missing key', () => {
+      expect(
+        () => {
+          JwtUtils.encode(null, { alg: 'RS256' }, {}, 'key')
+        },
+        'to throw',
+        'privateKey can not be null for RS256'
+      )
+    })
   })
 })

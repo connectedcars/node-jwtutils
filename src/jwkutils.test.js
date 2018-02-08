@@ -82,10 +82,10 @@ describe('jwkutils', () => {
     let generatedPem = jwkUtils.ecPublicKeyJwkToPem(jwk)
     expect(generatedPem, 'to equal', expected)
   })
-  it('jwtToPem K-256, RSA', () => {
-    let generatedEcPem = jwkUtils.jwtToPem(ecPublicKeyJwk)
+  it('jwkToPem K-256, RSA', () => {
+    let generatedEcPem = jwkUtils.jwkToPem(ecPublicKeyJwk)
     expect(generatedEcPem, 'to equal', ecPublicKey)
-    let generatedRsaPem = jwkUtils.jwtToPem(rsaPublicKeyJwk)
+    let generatedRsaPem = jwkUtils.jwkToPem(rsaPublicKeyJwk)
     expect(generatedRsaPem, 'to equal', rsaPublicKey)
   })
 })

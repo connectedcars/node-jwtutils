@@ -59,7 +59,7 @@ function _fetchJwkKeys(httpRequestHandler, url, options) {
 
     let pubKeys = {}
     for (const key of pubkeysResponse.keys) {
-      let publicKeyPem = jwkUtils.jwtToPem(key)
+      let publicKeyPem = jwkUtils.jwkToPem(key)
       pubKeys[`${key.kid}@${key.alg}`] = Object.assign(
         {
           publicKey: publicKeyPem

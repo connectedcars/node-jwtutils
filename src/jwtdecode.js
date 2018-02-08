@@ -110,6 +110,7 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
   }
 
   let signatureOrHash = base64UrlSafe.decode(parts[2])
+  /* istanbul ignore else */
   if (signAlgo) {
     // Validate signature
     const verifier = crypto.createVerify(signAlgo)
@@ -127,6 +128,8 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
     if (!crypto.timingSafeEqual(signatureOrHash, signatureBuffer)) {
       throw new JwtVerifyError(`Verification failed with alg '${header.alg}'`)
     }
+  } else {
+    throw Error(`Should never happen`)
   }
 
   let unixNow = Math.floor(Date.now() / 1000)

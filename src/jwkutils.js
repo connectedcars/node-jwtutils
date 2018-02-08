@@ -36,7 +36,14 @@ const prime256v1Oid = [
 const secp384r1Oid = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22] // OBJECT IDENTIFIER=1.3.132.0.34 - secp384r1
 const secp521r1Oid = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23] // OBJECT IDENTIFIER=1.3.132.0.35 - secp521r1
 
+/**
+ * @deprecated since version 1.0.13
+ */
 function jwtToPem(jwk) {
+  this.jwkToPem(jwk)
+}
+
+function jwkToPem(jwk) {
   switch (jwk.kty) {
     case 'RSA': {
       return rsaPublicJwkToPem(jwk)
@@ -181,7 +188,8 @@ function hexDump(bytes) {
 module.exports = {
   rsaPublicJwkToPem,
   ecPublicKeyJwkToPem,
-  jwtToPem
+  jwkToPem,
+  jwtToPem // Fuckup with naming
 }
 
 // Links

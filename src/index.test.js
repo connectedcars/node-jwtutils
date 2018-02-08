@@ -43,7 +43,8 @@ const pubKeys = {
     '4@RS256': rsaOtherPublicKey.substr(2),
     '2@HS256': 'sharedkey',
     '2@HS384': 'sharedkey',
-    '2@HS512': 'sharedkey'
+    '2@HS512': 'sharedkey',
+    '5@HS256': 'wrongkey'
   },
   'test@custom.com': {
     '1@RS256': {
@@ -327,6 +328,19 @@ describe('jwtUtils', () => {
         },
         'to throw',
         `Signature verification failed with alg 'RS256'`
+      )
+    })
+    it('invalid shared key', () => {
+      let customJwtHeader = Object.assign({}, jwtHeader)
+      customJwtHeader.kid = '5'
+      customJwtHeader.alg = 'HS256'
+      let jwt = JwtUtils.encode(null, customJwtHeader, jwtBody, 'sharedkey')
+      expect(
+        () => {
+          JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+        },
+        'to throw',
+        `Verification failed with alg 'HS256'`
       )
     })
     it('Handle exception if its a JwtVerifyError', () => {

@@ -57,7 +57,12 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
   let headerBodyBase64 = headerBase64 + '.' + bodyBase64
 
   let signatureBuffer
+  /* istanbul ignore else */
   if (signAlgo) {
+    if (!privateKey) {
+      throw new Error(`privateKey can not be null for ${header.alg}`)
+    }
+
     const sign = crypto.createSign(signAlgo)
     // Add header and body of JWT to sign
     sign.update(headerBodyBase64, 'utf8')
@@ -76,6 +81,8 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
     const hmac = crypto.createHmac(hmacAlgo, privateKeyPassword)
     hmac.update(headerBodyBase64)
     signatureBuffer = hmac.digest()
+  } else {
+    throw Error(`Should never happen`)
   }
 
   // Construct final JWT
