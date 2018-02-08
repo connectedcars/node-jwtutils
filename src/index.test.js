@@ -40,7 +40,10 @@ const pubKeys = {
     '1@ES512': ecPublicKey,
     '2@RS256': rsaOtherPublicKey,
     '3@RS256': null,
-    '4@RS256': rsaOtherPublicKey.substr(2)
+    '4@RS256': rsaOtherPublicKey.substr(2),
+    '2@HS256': 'sharedkey',
+    '2@HS384': 'sharedkey',
+    '2@HS512': 'sharedkey'
   },
   'test@custom.com': {
     '1@RS256': {
@@ -89,6 +92,18 @@ describe('jwtUtils', () => {
         let customJwtHeader = Object.assign({}, jwtHeader)
         customJwtHeader.alg = algo
         let jwt = JwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
+        let decodedJwtBody = JwtUtils.decode(jwt, pubKeys, [
+          'https://host/oauth/token'
+        ])
+        expect(jwtBody, 'to equal', decodedJwtBody)
+      }
+    })
+    it('success with HS256, HS384 and HS512', () => {
+      for (let algo of ['HS256', 'HS384', 'HS512']) {
+        let customJwtHeader = Object.assign({}, jwtHeader)
+        customJwtHeader.kid = '2'
+        customJwtHeader.alg = algo
+        let jwt = JwtUtils.encode(null, customJwtHeader, jwtBody, 'sharedkey')
         let decodedJwtBody = JwtUtils.decode(jwt, pubKeys, [
           'https://host/oauth/token'
         ])
@@ -281,13 +296,13 @@ describe('jwtUtils', () => {
     })
     it('wrong alg', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
-      customJwtHeader.alg = 'HS256'
+      customJwtHeader.alg = 'HS128'
       expect(
         () => {
           JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
         },
         'to throw',
-        'Only alg RS256, RS384, RS512, ES256, ES384 and ES512 are supported'
+        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
       )
     })
     it('unknown kid', () => {

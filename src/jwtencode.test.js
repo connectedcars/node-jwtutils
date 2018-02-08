@@ -50,7 +50,7 @@ describe('jwtUtils', () => {
           JwtUtils.encode('', {}, {})
         },
         'to throw',
-        'Only alg RS256, RS384, RS512, ES256, ES384 and ES512 are supported'
+        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
       )
     })
     it('should succeed with encrypted RSA private key', () => {

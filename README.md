@@ -7,8 +7,12 @@ Zero dependency JWT encoding and decoding for Node 6.x and 8.x
 
 Features:
 
-* Encode and decode any RS256, RS384, RS512, ES256, ES384 and ES512 signed tokens
+* Encode and decode any JWT tokens
+* Supported asymmetric algorithmes (RS256, RS384, RS512, ES256, ES384 and ES512)
+* Supported symmetric algorithmes (HS256, HS384 and HS512)
 * Support for multiple issuers and keys per issuer.
+* Import keys from JWK endpoints
+* Easy service authentication for Google and Github
 * Express middleware to validate JWT's
 
 ## Background
@@ -27,8 +31,8 @@ Also note doing your own crypto is a bad idea so this module only deals with
 the encoding/decoding of the JWT, the underlaying crypto operations are done
 by Node's build-in crypto api that uses openssl.
 
-Currently only asymmetric encryption algorithms are supported as this would
-also be the only recommend option for production use.
+While symmetric algorithms are supported for legacy integrations, they are
+not advisable for production use.
 
 ## Samples
 
