@@ -5,6 +5,7 @@ const querystring = require('querystring')
 const jwtEncode = require('./jwtencode')
 const JwtServiceAuthError = require('./jwtserviceautherror')
 const defaultHttpRequestHandler = require('./defaulthttprequesthandler')
+const ProcessUtils = require('./processutils')
 
 /**
  * @typedef {Object} httpHandlerResponse
@@ -18,6 +19,7 @@ const defaultHttpRequestHandler = require('./defaulthttprequesthandler')
  * @typedef {Object} accessTokenResponse
  * @property {string} accessToken
  * @property {number} expiresIn
+ * @property {number} expiresAt
  */
 
 class JwtServiceAuth {
@@ -70,7 +72,8 @@ class JwtServiceAuth {
         let expiresAt = new Date(authResponse.expires_at).getTime()
         return Promise.resolve({
           accessToken: authResponse.token,
-          expiresIn: Math.ceil((expiresAt - now) / 1000)
+          expiresIn: Math.ceil((expiresAt - now) / 1000),
+          expiresAt: expiresAt
         })
       } else {
         return Promise.reject(
@@ -139,23 +142,55 @@ class JwtServiceAuth {
         let authResponse = JSON.parse(
           Buffer.from(response.data).toString('utf8')
         )
-        return Promise.resolve({
+        let now = new Date().getTime()
+        return {
           accessToken: authResponse.access_token,
-          expiresIn: authResponse.expires_in
-        })
+          expiresIn: authResponse.expires_in,
+          expiresAt: now + authResponse.expires_in * 1000
+        }
       } else {
-        return Promise.reject(
-          new JwtServiceAuthError('response.statusCode not 200', {
-            statusCode: response.statusCode,
-            data: Buffer.from(response.data).toString('utf8')
-          })
-        )
+        throw new JwtServiceAuthError('response.statusCode not 200', {
+          statusCode: response.statusCode,
+          data: Buffer.from(response.data).toString('utf8')
+        })
       }
     })
   }
-  /* getGoogleAccessTokenFromGCloudHelper() {
-    //gcloud config config-helper --format=json
-  } */
+
+  /**
+   * Get Google Access Token from gcloud environment
+   * @returns {Promise<accessTokenResponse>}
+   */
+  getGoogleAccessTokenFromGCloudHelper() {
+    return _getGoogleAccessTokenFromGCloudHelper()
+  }
+
+  /**
+   * Get Google Access Token from gcloud environment
+   * @returns {Promise<accessTokenResponse>}
+   */
+  static getGoogleAccessTokenFromGCloudHelper() {
+    return _getGoogleAccessTokenFromGCloudHelper()
+  }
+}
+
+function _getGoogleAccessTokenFromGCloudHelper() {
+  let [gcloudConfigHelper, resultPromise] = ProcessUtils.runProcessAsync(
+    `gcloud`,
+    ['config', 'config-helper', '--format=json'],
+    { closeStdin: true }
+  )
+
+  return resultPromise.then(result => {
+    let config = JSON.parse(result.stdout)
+    let now = new Date().getTime()
+    let expiresAt = new Date(config.credential.token_expiry).getTime()
+    return {
+      accessToken: config.credential.access_token,
+      expiresIn: Math.ceil((expiresAt - now) / 1000),
+      expiresAt: config.credential.token_expiry
+    }
+  })
 }
 
 module.exports = JwtServiceAuth
