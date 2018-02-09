@@ -35,7 +35,17 @@ describe('ProcessUtils', () => {
   it('should generate stderr', () => {
     let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', [])
     return expect(resultPromise, 'to be fulfilled with', {
-      stderr: 'Done sleeping\n'
+      stderr: Buffer.from('Done sleeping\n')
     })
+  })
+  it('should overflow', () => {
+    let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', [], {
+      stdErrMaxSize: 5
+    })
+    return expect(
+      resultPromise,
+      'to be rejected with',
+      new Error('Data size larger than maxsize: 14 > 5')
+    )
   })
 })

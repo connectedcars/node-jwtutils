@@ -17,11 +17,14 @@ class ProcessUtils {
    * @returns {[ChildProcess, Promise<ProcessResult>]}
    */
   static runProcessAsync(command, args, options = {}) {
-    console.log(`${command} ${args.join(' ')}`)
     let cmd = spawn(command, args, {
       env: options.env,
       detached: options.detached
     })
+
+    let maxSize = options.maxSize || 10 * 1024 * 1024
+    let stdOutMaxSize = options.stdOutMaxSize || maxSize
+    let stdErrMaxSize = options.stdErrMaxSize || maxSize
 
     let promise = new Promise((resolve, reject) => {
       if (options.timeout) {
@@ -31,27 +34,8 @@ class ProcessUtils {
         }, options.timeout)
       }
 
-      // Read stdout
-      let stdoutPromise = new Promise(resolve => {
-        let stdData = []
-        cmd.stdout.on('data', data => {
-          stdData.push(data)
-        })
-        cmd.stdout.on('end', () => {
-          resolve(Buffer.concat(stdData).toString('utf8'))
-        })
-      })
-
-      let stderrPromise = new Promise(resolve => {
-        // Read stderr
-        let errorData = []
-        cmd.stderr.on('data', data => {
-          errorData.push(data)
-        })
-        cmd.stderr.on('end', () => {
-          resolve(Buffer.concat(errorData).toString('utf8'))
-        })
-      })
+      let stdoutPromise = readAllAsync(cmd.stdout, stdOutMaxSize)
+      let stderrPromise = readAllAsync(cmd.stderr, stdErrMaxSize)
 
       // Close stdin
       if (options.closeStdin) {
@@ -64,17 +48,39 @@ class ProcessUtils {
         })
       })
 
-      Promise.all([exitPromise, stdoutPromise, stderrPromise]).then(results => {
-        resolve({
-          code: results[0].code,
-          signal: results[0].signal,
-          stdout: results[1],
-          stderr: results[2]
+      Promise.all([exitPromise, stdoutPromise, stderrPromise])
+        .then(results => {
+          resolve({
+            code: results[0].code,
+            signal: results[0].signal,
+            stdout: results[1],
+            stderr: results[2]
+          })
         })
-      })
+        .catch(reject)
     })
     return [cmd, promise]
   }
+}
+
+function readAllAsync(fd, maxSize) {
+  return new Promise((resolve, reject) => {
+    let data = []
+    let dataLength = 0
+    fd.on('data', chunk => {
+      dataLength += chunk.length
+      if (dataLength > maxSize) {
+        fd.destroy()
+        reject(
+          new Error(`Data size larger than maxsize: ${dataLength} > ${maxSize}`)
+        )
+      }
+      data.push(chunk)
+    })
+    fd.on('end', () => {
+      resolve(Buffer.concat(data))
+    })
+  })
 }
 
 module.exports = ProcessUtils

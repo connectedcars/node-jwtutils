@@ -47,8 +47,10 @@ function httpRequest(method, url, headers = null, data = null, options = {}) {
 
     var request = httpRequester(requestOptions, response => {
       let responseData = []
+      let responseDataLength = 0
       response.on('data', chunk => {
-        if (chunk.length + responseData.length <= maxResponseSize) {
+        responseDataLength += chunk.length
+        if (responseDataLength <= maxResponseSize) {
           responseData.push(chunk)
         } else {
           response.destroy()
