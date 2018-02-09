@@ -88,75 +88,39 @@ class JwtServiceAuth {
 
   /**
    * Get Google Access Token from service account keyfile
-   * @param {*} keyFileData
-   * @param {*} expires
-   * @param {*} scopes
+   * @param {string} keyFileData
+   * @param {Array<string>} [scopes=['https://www.googleapis.com/auth/userinfo.email']]
+   * @param {Object} [options]
+   * @param {number} [options.expires=3600]
+   * @param {number} [options.impersonate]
    * @returns {Promise<accessTokenResponse>}
    */
-  getGoogleAccessToken(
-    keyFileData,
-    expires = 3600,
-    scopes = ['https://www.googleapis.com/auth/userinfo.email']
-  ) {
-    let keyData = JSON.parse(keyFileData)
-
-    if (keyData.type !== 'service_account') {
-      throw new Error('Only supports service account keyFiles')
-    }
-
-    // Create JWT auth token
-    let unixNow = Math.floor(new Date().getTime() / 1000)
-    let jwtHeader = {
-      typ: 'JWT',
-      alg: 'RS256',
-      kid: keyData.private_key_id
-    }
-    let jwtBody = {
-      aud: 'https://www.googleapis.com/oauth2/v4/token',
-      iss: keyData.client_email,
-      iat: unixNow,
-      exp: unixNow + expires,
-      scope: scopes.join(' ')
-    }
-    let jwt = jwtEncode(keyData.private_key, jwtHeader, jwtBody)
-
-    let formParams = {
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt
-    }
-    let formData = Object.keys(formParams)
-      .map(key => `${key}=${querystring.escape(formParams[key])}`)
-      .join('&')
-
-    // Fetch access token
-    return this.httpRequestHandler(
-      'POST',
-      `https://www.googleapis.com/oauth2/v4/token`,
-      {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'tlbdk-buildstatus'
-      },
-      formData
-    ).then(response => {
-      if (response.statusCode === 200) {
-        let authResponse = JSON.parse(
-          Buffer.from(response.data).toString('utf8')
-        )
-        let now = new Date().getTime()
-        return {
-          accessToken: authResponse.access_token,
-          expiresIn: authResponse.expires_in,
-          expiresAt: now + authResponse.expires_in * 1000
-        }
-      } else {
-        throw new JwtServiceAuthError('response.statusCode not 200', {
-          statusCode: response.statusCode,
-          data: Buffer.from(response.data).toString('utf8')
-        })
-      }
-    })
+  getGoogleAccessToken(keyFileData, scopes = null, options = {}) {
+    return _getGoogleAccessToken(
+      this.httpRequestHandler,
+      keyFileData,
+      scopes,
+      options
+    )
   }
 
+  /**
+   * Get Google Access Token from service account keyfile
+   * @param {string} keyFileData
+   * @param {Array<string>} [scopes=['https://www.googleapis.com/auth/userinfo.email']]
+   * @param {Object} [options]
+   * @param {number} [options.expires=3600]
+   * @param {number} [options.impersonate]
+   * @returns {Promise<accessTokenResponse>}
+   */
+  static getGoogleAccessToken(keyFileData, scopes = null, options = {}) {
+    return _getGoogleAccessToken(
+      defaultHttpRequestHandler,
+      keyFileData,
+      scopes,
+      options
+    )
+  }
   /**
    * Get Google Access Token from gcloud environment
    * @returns {Promise<accessTokenResponse>}
@@ -172,6 +136,98 @@ class JwtServiceAuth {
   static getGoogleAccessTokenFromGCloudHelper() {
     return _getGoogleAccessTokenFromGCloudHelper()
   }
+}
+
+/**
+ * Get Google Access Token from service account keyfile
+ * @param {string} keyFileData
+ * @param {Array<string>} [scopes=['https://www.googleapis.com/auth/userinfo.email']]
+ * @param {Object} [options]
+ * @param {number} [options.expires=3600]
+ * @param {number} [options.impersonate]
+ * @returns {Promise<accessTokenResponse>}
+ */
+function _getGoogleAccessToken(
+  httpRequestHandler,
+  keyFileData,
+  scopes,
+  options
+) {
+  // TODO: Remove in V2.0
+  // Support old interface for expires
+  if (typeof scopes === 'number') {
+    if (typeof options === 'object') {
+      options.expires = scopes
+    } else {
+      options = {
+        expires: scopes
+      }
+    }
+    scopes = null
+  }
+
+  scopes = scopes ? scopes : ['https://www.googleapis.com/auth/userinfo.email']
+
+  let keyData = JSON.parse(keyFileData)
+
+  if (keyData.type !== 'service_account') {
+    throw new Error('Only supports service account keyFiles')
+  }
+
+  // Create JWT auth token
+  let unixNow = Math.floor(new Date().getTime() / 1000)
+  let jwtHeader = {
+    typ: 'JWT',
+    alg: 'RS256',
+    kid: keyData.private_key_id
+  }
+  let jwtBody = {
+    aud: 'https://www.googleapis.com/oauth2/v4/token',
+    iss: keyData.client_email,
+    iat: unixNow,
+    exp: unixNow + (options.expires || 3600),
+    scope: scopes.join(' ')
+  }
+
+  if (options.impersonate) {
+    jwtBody.sub = options.impersonate
+  }
+
+  let jwt = jwtEncode(keyData.private_key, jwtHeader, jwtBody)
+
+  let formParams = {
+    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+    assertion: jwt
+  }
+  let formData = Object.keys(formParams)
+    .map(key => `${key}=${querystring.escape(formParams[key])}`)
+    .join('&')
+
+  // Fetch access token
+  return httpRequestHandler(
+    'POST',
+    `https://www.googleapis.com/oauth2/v4/token`,
+    {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'tlbdk-buildstatus'
+    },
+    formData
+  ).then(response => {
+    if (response.statusCode === 200) {
+      let authResponse = JSON.parse(Buffer.from(response.data).toString('utf8'))
+      let now = new Date().getTime()
+      return {
+        accessToken: authResponse.access_token,
+        expiresIn: authResponse.expires_in,
+        expiresAt: now + authResponse.expires_in * 1000
+      }
+    } else {
+      throw new JwtServiceAuthError('response.statusCode not 200', {
+        statusCode: response.statusCode,
+        data: Buffer.from(response.data).toString('utf8')
+      })
+    }
+  })
 }
 
 function _getGoogleAccessTokenFromGCloudHelper() {
