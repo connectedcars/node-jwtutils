@@ -4,6 +4,7 @@
 const urlParser = require('url')
 const http = require('http')
 const https = require('https')
+const zlib = require('zlib')
 
 /**
  * @typedef {Object} HttpResponse
@@ -48,7 +49,22 @@ function httpRequest(method, url, headers = null, data = null, options = {}) {
     var request = httpRequester(requestOptions, response => {
       let responseData = []
       let responseDataLength = 0
-      response.on('data', chunk => {
+      let responseStream
+      switch (response.headers['content-encoding']) {
+        case 'gzip': {
+          responseStream = response.pipe(zlib.createGunzip())
+          break
+        }
+        case 'deflate': {
+          responseStream = response.pipe(zlib.createInflate())
+          break
+        }
+        default: {
+          responseStream = response
+        }
+      }
+
+      responseStream.on('data', chunk => {
         responseDataLength += chunk.length
         if (responseDataLength <= maxResponseSize) {
           responseData.push(chunk)
@@ -57,7 +73,7 @@ function httpRequest(method, url, headers = null, data = null, options = {}) {
           reject(new HttpRequestError('Response too lange'))
         }
       })
-      response.on('end', () => {
+      responseStream.on('end', () => {
         resolve({
           statusCode: response.statusCode,
           statusMessage: response.statusMessage,
