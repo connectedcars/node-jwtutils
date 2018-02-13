@@ -119,7 +119,7 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: 3600
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
         }
       )
     })
@@ -160,7 +160,7 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: 3600
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
         }
       )
     })
@@ -222,7 +222,7 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: 3600
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
         }
       )
     })
@@ -233,7 +233,7 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: 3600
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
         }
       )
     })
