@@ -92,7 +92,7 @@ class JwtServiceAuth {
    * @param {Array<string>} [scopes=['https://www.googleapis.com/auth/userinfo.email']]
    * @param {Object} [options]
    * @param {number} [options.expires=3600]
-   * @param {number} [options.impersonate]
+   * @param {string} [options.impersonate]
    * @returns {Promise<accessTokenResponse>}
    */
   getGoogleAccessToken(keyFileData, scopes = null, options = {}) {
@@ -110,7 +110,7 @@ class JwtServiceAuth {
    * @param {Array<string>} [scopes=['https://www.googleapis.com/auth/userinfo.email']]
    * @param {Object} [options]
    * @param {number} [options.expires=3600]
-   * @param {number} [options.impersonate]
+   * @param {string} [options.impersonate]
    * @returns {Promise<accessTokenResponse>}
    */
   static getGoogleAccessToken(keyFileData, scopes = null, options = {}) {
@@ -144,7 +144,7 @@ class JwtServiceAuth {
  * @param {Array<string>} [scopes=['https://www.googleapis.com/auth/userinfo.email']]
  * @param {Object} [options]
  * @param {number} [options.expires=3600]
- * @param {number} [options.impersonate]
+ * @param {string} [options.impersonate]
  * @returns {Promise<accessTokenResponse>}
  */
 function _getGoogleAccessToken(

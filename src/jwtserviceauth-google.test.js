@@ -123,6 +123,7 @@ describe('JwtServiceAuth', () => {
         }
       )
     })
+
     it('should fail', () => {
       let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       return jwtServiceAuth
@@ -139,13 +140,32 @@ describe('JwtServiceAuth', () => {
           }
         })
     })
+
     it('should fail with bad input', () => {
       let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       expect(() => {
         jwtServiceAuth.getGoogleAccessToken('{}')
       }, 'to throw error')
     })
+
+    it('should succeed with ok token and impersonate', () => {
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
+      let accessTokenPromise = jwtServiceAuth.getGoogleAccessToken(
+        JSON.stringify(googleKeyFileData),
+        null,
+        { impersonate: 'test' }
+      )
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: 3600
+        }
+      )
+    })
   })
+
   describe('getGoogleAccessTokenFromGCloudHelper', () => {
     let tmpdir
     let oldPath
