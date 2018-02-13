@@ -214,7 +214,8 @@ describe('JwtServiceAuth', () => {
       tmpdir.removeCallback()
     })
 
-    it('should succeed with ok token', () => {
+    it('should succeed with ok token', function() {
+      this.slow(5000)
       let jwtServiceAuth = new JwtServiceAuth()
       let accessTokenPromise = jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
       return expect(
@@ -226,7 +227,8 @@ describe('JwtServiceAuth', () => {
         }
       )
     })
-    it('static should succeed with ok token ', () => {
+    it('static should succeed with ok token ', function() {
+      this.slow(5000)
       let accessTokenPromise = JwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
       return expect(
         accessTokenPromise,
