@@ -156,7 +156,7 @@ function _getGoogleAccessToken(
   // TODO: Remove in V2.0
   // Support old interface for expires
   if (typeof scopes === 'number') {
-    if (typeof options === 'object') {
+    if (options !== null && typeof options === 'object') {
       options.expires = scopes
     } else {
       options = {

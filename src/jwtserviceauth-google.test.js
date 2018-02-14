@@ -124,6 +124,39 @@ describe('JwtServiceAuth', () => {
       )
     })
 
+    it('should succeed with ok token with other scope', () => {
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
+      let accessTokenPromise = jwtServiceAuth.getGoogleAccessToken(
+        JSON.stringify(googleKeyFileData),
+        ['https://www.googleapis.com/auth/admin.datatransfer']
+      )
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
+        }
+      )
+    })
+
+    it('should succeed with ok token old expires interface', () => {
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
+      let accessTokenPromise = jwtServiceAuth.getGoogleAccessToken(
+        JSON.stringify(googleKeyFileData),
+        3600,
+        null
+      )
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
+        }
+      )
+    })
+
     it('should fail', () => {
       let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       return jwtServiceAuth
