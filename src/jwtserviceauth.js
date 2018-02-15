@@ -60,8 +60,7 @@ class JwtServiceAuth {
       `https://api.github.com/installations/${installationId}/access_tokens`,
       {
         Authorization: 'Bearer ' + jwt,
-        Accept: 'application/vnd.github.machine-man-preview+json',
-        'User-Agent': 'tlbdk-buildstatus'
+        Accept: 'application/vnd.github.machine-man-preview+json'
       }
     ).then(response => {
       if (response.statusCode === 201) {
@@ -203,19 +202,21 @@ function _getGoogleAccessToken(
     .map(key => `${key}=${querystring.escape(formParams[key])}`)
     .join('&')
 
+  // Be pessimistic with expiry time so start time before doing the request
+  let now = new Date().getTime()
+
   // Fetch access token
   return httpRequestHandler(
     'POST',
     `https://www.googleapis.com/oauth2/v4/token`,
     {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'tlbdk-buildstatus'
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
     formData
   ).then(response => {
     if (response.statusCode === 200) {
       let authResponse = JSON.parse(Buffer.from(response.data).toString('utf8'))
-      let now = new Date().getTime()
+
       return {
         accessToken: authResponse.access_token,
         expiresIn: authResponse.expires_in,
