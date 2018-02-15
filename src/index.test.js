@@ -343,7 +343,7 @@ describe('jwtUtils', () => {
         `Verification failed with alg 'HS256'`
       )
     })
-    it('Handle exception if its a JwtVerifyError', () => {
+    it('handle exception if its a JwtVerifyError', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
       customJwtHeader.kid = '2'
       let jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
