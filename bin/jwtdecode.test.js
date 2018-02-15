@@ -25,7 +25,8 @@ let jwtBody = {
 
 describe('jwtencode', () => {
   it('should return ok', function(done) {
-    this.slow(10000)
+    this.timeout(10000)
+    this.slow(3000)
     let jwtEncode = spawn(`${__dirname}/jwtdecode.js`, [
       `${__dirname}/jwtencode.test.pub`,
       '1',

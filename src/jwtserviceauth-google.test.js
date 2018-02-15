@@ -248,6 +248,7 @@ describe('JwtServiceAuth', () => {
     })
 
     it('should succeed with ok token', function() {
+      this.timeout(10000)
       this.slow(5000)
       let jwtServiceAuth = new JwtServiceAuth()
       let accessTokenPromise = jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
@@ -261,6 +262,7 @@ describe('JwtServiceAuth', () => {
       )
     })
     it('static should succeed with ok token ', function() {
+      this.timeout(10000)
       this.slow(5000)
       let accessTokenPromise = JwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
       return expect(

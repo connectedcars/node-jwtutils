@@ -27,21 +27,24 @@ describe('ProcessUtils', () => {
   })
 
   it('should timeout', function() {
-    this.slow(2000)
+    this.timeout(10000)
+    this.slow(3000)
     let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', ['10'], {
       timeout: 1
     })
     return expect(resultPromise, 'to be rejected with', new Error('Timeout'))
   })
   it('should generate stderr', function() {
-    this.slow(2000)
+    this.timeout(10000)
+    this.slow(3000)
     let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', [])
     return expect(resultPromise, 'to be fulfilled with', {
       stderr: Buffer.from('Done sleeping\n')
     })
   })
   it('should overflow', function() {
-    this.slow(2000)
+    this.timeout(10000)
+    this.slow(3000)
     let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', [], {
       stdErrMaxSize: 5
     })

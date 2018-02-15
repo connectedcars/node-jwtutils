@@ -18,7 +18,9 @@ const audiences = ['localhost']
 
 describe('jwtencode', () => {
   it('should return ok', function(done) {
-    this.slow(10000)
+    this.timeout(10000)
+    this.slow(3000)
+
     let jwtEncode = spawn(`${__dirname}/jwtencode.js`, [
       `${__dirname}/jwtencode.test.key`
     ])
