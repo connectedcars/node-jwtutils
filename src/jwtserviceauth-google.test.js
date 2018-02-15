@@ -119,10 +119,44 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: 3600
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
         }
       )
     })
+
+    it('should succeed with ok token with other scope', () => {
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
+      let accessTokenPromise = jwtServiceAuth.getGoogleAccessToken(
+        JSON.stringify(googleKeyFileData),
+        ['https://www.googleapis.com/auth/admin.datatransfer']
+      )
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
+        }
+      )
+    })
+
+    it('should succeed with ok token old expires interface', () => {
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
+      let accessTokenPromise = jwtServiceAuth.getGoogleAccessToken(
+        JSON.stringify(googleKeyFileData),
+        3600,
+        null
+      )
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
+        }
+      )
+    })
+
     it('should fail', () => {
       let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       return jwtServiceAuth
@@ -139,13 +173,32 @@ describe('JwtServiceAuth', () => {
           }
         })
     })
+
     it('should fail with bad input', () => {
       let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
       expect(() => {
         jwtServiceAuth.getGoogleAccessToken('{}')
       }, 'to throw error')
     })
+
+    it('should succeed with ok token and impersonate', () => {
+      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2)
+      let accessTokenPromise = jwtServiceAuth.getGoogleAccessToken(
+        JSON.stringify(googleKeyFileData),
+        null,
+        { impersonate: 'test' }
+      )
+      return expect(
+        accessTokenPromise,
+        'to be fulfilled with value satisfying',
+        {
+          accessToken: 'ok',
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
+        }
+      )
+    })
   })
+
   describe('getGoogleAccessTokenFromGCloudHelper', () => {
     let tmpdir
     let oldPath
@@ -194,7 +247,8 @@ describe('JwtServiceAuth', () => {
       tmpdir.removeCallback()
     })
 
-    it('should succeed with ok token', () => {
+    it('should succeed with ok token', function() {
+      this.slow(5000)
       let jwtServiceAuth = new JwtServiceAuth()
       let accessTokenPromise = jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
       return expect(
@@ -202,18 +256,19 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: 3600
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
         }
       )
     })
-    it('static should succeed with ok token ', () => {
+    it('static should succeed with ok token ', function() {
+      this.slow(5000)
       let accessTokenPromise = JwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
       return expect(
         accessTokenPromise,
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: 3600
+          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
         }
       )
     })

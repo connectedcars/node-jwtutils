@@ -26,19 +26,22 @@ describe('ProcessUtils', () => {
     tmpdir.removeCallback()
   })
 
-  it('should timeout', () => {
+  it('should timeout', function() {
+    this.slow(2000)
     let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', ['10'], {
       timeout: 1
     })
     return expect(resultPromise, 'to be rejected with', new Error('Timeout'))
   })
-  it('should generate stderr', () => {
+  it('should generate stderr', function() {
+    this.slow(2000)
     let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', [])
     return expect(resultPromise, 'to be fulfilled with', {
       stderr: Buffer.from('Done sleeping\n')
     })
   })
-  it('should overflow', () => {
+  it('should overflow', function() {
+    this.slow(2000)
     let [cmd, resultPromise] = ProcessUtils.runProcessAsync('sleep', [], {
       stdErrMaxSize: 5
     })
