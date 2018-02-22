@@ -59,13 +59,22 @@ describe('jwtMiddleware', () => {
       )
       app.use(
         '/async',
-        JwtAuthMiddleware(pubKeys, audiences, user => {
-          if (user.subject === 'error') {
-            return Promise.reject(new JwtVerifyError('Async error'))
-          } else {
-            return Promise.resolve('test')
-          }
-        })
+        JwtAuthMiddleware(
+          pubKeys,
+          audiences,
+          user => {
+            if (user.subject === 'error') {
+              return Promise.reject(new JwtVerifyError('Async error'))
+            } else {
+              return Promise.resolve('test')
+            }
+          },
+          null
+        )
+      )
+      app.use(
+        '/anonymous',
+        JwtAuthMiddleware(pubKeys, audiences, null, { allowAnonymous: true })
       )
       app.use('/', JwtAuthMiddleware(pubKeys, audiences))
       app.use((err, req, res, next) => {
@@ -74,6 +83,9 @@ describe('jwtMiddleware', () => {
         } else {
           res.status(500).send('Unknown error')
         }
+      })
+      app.get('/anonymous', function(req, res) {
+        res.send(`Hello anonymous`)
       })
       app.get('/', function(req, res) {
         res.send(`Hello ${req.user.subject}`)
@@ -100,6 +112,30 @@ describe('jwtMiddleware', () => {
       return expect(responsePromise, 'to be fulfilled with value satisfying', {
         statusCode: 200,
         data: 'Hello subject@domain.tld'
+      })
+    })
+    it('should return ok for anonymous', () => {
+      let responsePromise = doRequest('GET', 'localhost', port, '/anonymous', {
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 200,
+        data: 'Hello anonymous'
+      })
+    })
+    it('should fail for anonymous with invalid token', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      delete customJwtBody.sub
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
+      let responsePromise = doRequest('GET', 'localhost', port, '/anonymous', {
+        Authorization: 'Bearer ' + jwt,
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 401,
+        data: "Missing 'sub' in body"
       })
     })
     it('should return ok with a new e-mail', () => {
@@ -142,7 +178,7 @@ describe('jwtMiddleware', () => {
     })
     it('should fail with unknown pubkey id', () => {
       let customJwtHeader = Object.assign({}, jwtHeader)
-      customJwtHeader.kid = 2
+      customJwtHeader.kid = '2'
       let jwt = JwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
       let responsePromise = doRequest('GET', 'localhost', port, '/', {
         Authorization: 'Bearer ' + jwt,
