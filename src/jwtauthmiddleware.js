@@ -4,12 +4,29 @@
 const jwtDecode = require('./jwtdecode')
 const JwtVerifyError = require('./jwtverifyerror')
 
-function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
+/**
+ *
+ * @param {Object} pubKeys
+ * @param {Array<string>} audiences
+ * @param {Function} [mapper]
+ * @param {Object} [options]
+ * @param {boolean} [options.allowAnonymous]
+ */
+function jwtAuthMiddleware(pubKeys, audiences, mapper = null, options = {}) {
+  mapper = mapper || null
+  options = options || {}
   return function(request, response, next) {
-    if ((request.user || {}).authenticated === true) {
+    if (
+      request.jwtAuthMiddlewareProcessed ||
+      (request.user || {}).authenticated === true
+    ) {
       return next() // Skip authentication if we already authenticated
     }
     if (!(request.headers.authorization || '').startsWith('Bearer ')) {
+      if (options.allowAnonymous) {
+        request.jwtAuthMiddlewareProcessed = true
+        return next()
+      }
       return next(new JwtVerifyError('Not allowed'))
     }
     try {
@@ -33,8 +50,14 @@ function jwtAuthMiddleware(pubKeys, audiences, mapper = null) {
         result = mapper(request.user, request, response)
       }
       if (isPromise(result)) {
-        result.then(() => next()).catch(e => next(e))
+        result
+          .then(() => {
+            request.jwtAuthMiddlewareProcessed = true
+            next()
+          })
+          .catch(e => next(e))
       } else {
+        request.jwtAuthMiddlewareProcessed = true
         return next()
       }
     } catch (e) {
