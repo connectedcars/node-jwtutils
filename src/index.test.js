@@ -367,5 +367,28 @@ describe('jwtUtils', () => {
         Error
       )
     })
+    it('success with broken token', () => {
+      let expectedJwtBody = {
+        id: 1,
+        iat: 1519802691,
+        iss: 'test@test.com',
+        aud: 'https://host/oauth/token'
+      }
+      let decodedJwtBody = JwtUtils.decode(
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNTE5ODAyNjkxfQ.p6t378Ri2JpOCm9WtC36ttyH8ILzG9-OWT_kgMrrRfo',
+        pubKeys,
+        ['https://host/oauth/token'],
+        {
+          fixup: (header, body) => {
+            header.kid = '2'
+            body.iss = 'test@test.com'
+            body.aud = 'https://host/oauth/token'
+            body.exp = body.iat + 300
+          },
+          expiresSkew: 307584000
+        }
+      )
+      expect(decodedJwtBody, 'to satisfy', expectedJwtBody)
+    })
   })
 })

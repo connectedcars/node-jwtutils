@@ -6,7 +6,24 @@ const JwtVerifyError = require('./jwtverifyerror.js')
 
 const base64UrlSafe = require('./base64urlsafe')
 
-const defaultOptions = { expiresSkew: 0, expiresMax: 0, nbfIatSkew: 300 }
+const defaultOptions = {
+  expiresSkew: 0,
+  expiresMax: 0,
+  nbfIatSkew: 300,
+  fixup: null
+}
+
+/**
+ *
+ * @param {string} jwt
+ * @param {Object} publicKeys
+ * @param {Array<string>} audiences
+ * @param {Object} [options]
+ * @param {Object} [options.expiresSkew=0]
+ * @param {Object} [options.expiresMax=0]
+ * @param {Object} [options.nbfIatSkew=300]
+ * @param {Function<header,body,void>} [options.fixup]
+ */
 function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
   if (typeof jwt !== 'string') {
     throw new Error('jwt needs to a string')
@@ -39,6 +56,10 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
   }
 
   let header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8'))
+  let body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8'))
+  if (typeof options.fixup === 'function') {
+    options.fixup(header, body)
+  }
 
   let signAlgo = null
   let hmacAlgo = null
@@ -75,8 +96,6 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
         'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
       )
   }
-
-  let body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8'))
 
   if (!body.iss) {
     throw new JwtVerifyError('No issuer set')
