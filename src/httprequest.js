@@ -83,6 +83,7 @@ function httpRequest(method, url, headers = null, data = null, options = {}) {
       })
     })
     request.setTimeout(timeout, () => {
+      request.abort()
       reject(new HttpRequestError('Timeout'))
     })
     request.on('error', e => {
