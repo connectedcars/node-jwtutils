@@ -33,13 +33,23 @@ class JwtServiceAuth {
 
   /**
    * Get Github Access Token
-   * @param {*} privateKey
-   * @param {*} appId
-   * @param {*} installationId
-   * @param {*} expires
+   * @param {string} privateKey
+   * @param {string} appId
+   * @param {string} installationId
+   * @param {string} appName
+   * @param {Object} [options]
+   * @param {number} [options.expires]
    * @returns {Promise<accessTokenResponse>}
    */
-  getGithubAccessToken(privateKey, appId, installationId, expires = 600) {
+  getGithubAccessToken(
+    privateKey,
+    appId,
+    installationId,
+    appName,
+    options = {}
+  ) {
+    let expires = options.expires ? options.expires : 600
+
     // Create JWT auth token
     let unixNow = Math.floor(new Date().getTime() / 1000)
     let jwtHeader = {
@@ -60,6 +70,7 @@ class JwtServiceAuth {
       `https://api.github.com/installations/${installationId}/access_tokens`,
       {
         Authorization: 'Bearer ' + jwt,
+        'User-Agent': appName ? appName : 'jwtutils',
         Accept: 'application/vnd.github.machine-man-preview+json'
       }
     ).then(response => {
