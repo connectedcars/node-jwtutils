@@ -43,8 +43,9 @@ const audiences = ['http://localhost/']
 
 describe('jwtMiddleware', () => {
   let port = 0
+  let server
   before(done => {
-    let server = http.createServer(app).listen(() => {
+    server = http.createServer(app).listen(() => {
       port = server.address().port
       app.set('port', port)
       // Register endponts
@@ -99,6 +100,10 @@ describe('jwtMiddleware', () => {
 
       done()
     })
+  })
+  after(done => {
+    server.close()
+    done()
   })
 
   describe('authentication', () => {
