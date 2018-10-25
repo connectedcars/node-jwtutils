@@ -257,7 +257,12 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
+          expiresIn: expect
+            .it('to be a number')
+            .and('to be greater than', 1000),
+          expiresAt: expect
+            .it('to be a number')
+            .and('to be greater than', 1500000000)
         }
       )
     })
@@ -270,7 +275,12 @@ describe('JwtServiceAuth', () => {
         'to be fulfilled with value satisfying',
         {
           accessToken: 'ok',
-          expiresIn: expect.it('to be a number').and('to be greater than', 1000)
+          expiresIn: expect
+            .it('to be a number')
+            .and('to be greater than', 1000),
+          expiresAt: expect
+            .it('to be a number')
+            .and('to be greater than', 1500000000)
         }
       )
     })

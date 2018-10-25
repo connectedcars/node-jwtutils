@@ -256,7 +256,7 @@ function _getGoogleAccessTokenFromGCloudHelper() {
     return {
       accessToken: config.credential.access_token,
       expiresIn: Math.ceil((expiresAt - now) / 1000),
-      expiresAt: config.credential.token_expiry
+      expiresAt: expiresAt
     }
   })
 }
