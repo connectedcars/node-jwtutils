@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html class="page-home">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title></title>
+</head>
+<body>
+    <script>
+        let allowedRedirects = {
+            'http://localhost:3000/app.html': true
+        }
+
+        function getLocationParams() {
+            let params = {}
+            let parts = document.location.search.substr(1).split('&')
+            for(let part of parts) {
+                let keyValue = part.split('=')
+                params[keyValue[0]] = keyValue.length > 1 ? keyValue[1] : null
+            }
+            return params
+        }
+
+        function login(username, password) {
+            let params = getLocationParams()
+            let redirectUrl = params['redirect_uri']
+            if (!allowedRedirects[redirectUrl]) {
+                return $(`<p>Unknown redirect url: ${redirectUrl}</p>`).appendTo("body");
+            }
+            fetch('/api/login', {
+                method: 'post',
+                headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                }),
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                window.location = redirectUrl + "#token=" + data.token
+            })
+        }
+    </script>
+    <button id="login" onclick="login('admin', '1234')">Login with admin and password 1234</button>
+</body>
+</html>

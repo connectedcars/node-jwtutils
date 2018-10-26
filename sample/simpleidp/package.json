@@ -12,8 +12,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.16.4",
-    "jwk-to-pem": "^2.0.0",
-    "request": "^2.88.0"
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4"
   }
 }
