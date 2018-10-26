@@ -39,7 +39,8 @@ app.use('/api/login', (req, res) => {
   let username = req.body.username
 
   // Here we do a simple hashed password check
-  crypto.pbkdf2(password, 'salt', 100000, 64, 'sha512', (err, derivedKey) => {
+  const salt = crypto.randomBytes(16)
+  crypto.pbkdf2(password, salt, 100000, 64, 'sha512', (err, derivedKey) => {
     if (err) {
       return res.sendStatus(403)
     }
@@ -48,8 +49,9 @@ app.use('/api/login', (req, res) => {
     if (!hashedPassword) {
       return res.sendStatus(403)
     }
-
-    if (hashedPassword !== derivedKey.toString('hex')) {
+    
+    let hashedPasswordBytes = Buffer.from(hashedPassword, 'hex')
+    if (!crypto.timingSafeEqual(hashedPasswordBytes, derivedKey)) {
       return res.sendStatus(403)
     }
 
