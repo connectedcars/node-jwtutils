@@ -25,8 +25,10 @@ const pemEncodedPrivateKey =
   '-----END RSA PRIVATE KEY-----'
 
 const users = {
-  admin:
-    '377feab95ad6e891272d45ad717723d75acf2efd92cbf931d72d1052636635c831d8693c64c42790e877d0a7e3a83b452c960145175025fc853bec2145984885'
+  admin: {
+    hash: '377feab95ad6e891272d45ad717723d75acf2efd92cbf931d72d1052636635c831d8693c64c42790e877d0a7e3a83b452c960145175025fc853bec2145984885',
+    salt: 'd75acf2efd9'
+  }
 }
 
 const app = express()
@@ -38,18 +40,19 @@ app.use('/api/login', (req, res) => {
   let password = req.body.password
   let username = req.body.username
 
-  // Here we do a simple hashed password check
-  crypto.pbkdf2(password, 'salt', 100000, 64, 'sha512', (err, derivedKey) => {
+  let user = users[username]
+  if (!user) {
+    return res.sendStatus(403)
+  }
+  
+  // Here we do a simple hashed password check  
+  crypto.pbkdf2(password, user.salt, 100000, 64, 'sha512', (err, derivedKey) => {
     if (err) {
       return res.sendStatus(403)
     }
 
-    let hashedPassword = users[username]
-    if (!hashedPassword) {
-      return res.sendStatus(403)
-    }
-
-    if (hashedPassword !== derivedKey.toString('hex')) {
+    let hashedPasswordBytes = Buffer.from(user.hash, 'hex')
+    if (!crypto.timingSafeEqual(hashedPasswordBytes, derivedKey)) {
       return res.sendStatus(403)
     }
 
