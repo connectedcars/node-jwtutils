@@ -9,8 +9,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.16.3",
+    "express": "^4.16.4",
     "jwk-to-pem": "^2.0.0",
-    "request": "^2.85.0"
+    "request": "^2.88.0"
   }
 }
