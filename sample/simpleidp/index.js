@@ -4,6 +4,7 @@ const path = require('path')
 const express = require('express')
 const bodyParser = require('body-parser')
 const { JwtUtils } = require('../../src/.')
+const crypto = require('crypto')
 
 // Don't use this key, generate your own and load it from a safe place
 const pemEncodedPrivateKey =
@@ -23,36 +24,57 @@ const pemEncodedPrivateKey =
   'FaFp+DyAe+b4nDwuJaW2LURbr8AEZga7oQj0uYxcYw==\n' +
   '-----END RSA PRIVATE KEY-----'
 
+const users = {
+  admin:
+    '377feab95ad6e891272d45ad717723d75acf2efd92cbf931d72d1052636635c831d8693c64c42790e877d0a7e3a83b452c960145175025fc853bec2145984885'
+}
+
 const app = express()
 app.use('/', express.static(path.join(__dirname, 'public')))
 
 app.use(bodyParser.json())
 app.use('/api/login', (req, res) => {
   // Do your authentication login here, you could user modules like passport to do it for you also
-  if (req.body.user !== 'admin' && req.body.password !== '1234') {
-    return res.sendStatus(403)
-  }
+  let password = req.body.password
+  let username = req.body.username
 
-  const unixNow = Math.floor(Date.now() / 1000)
-  let jwtHeader = {
-    typ: 'JWT',
-    alg: 'RS256',
-    kid: '1'
-  }
-  let jwtBody = {
-    iss: 'simpleidp',
-    sub: req.body.user,
-    aud: 'simpleservice',
-    exp: unixNow + 3600, // One hour expiry
-    iat: unixNow,
-    nbf: unixNow - 300, // Allow consumers a 5 mins backwards timeskew
-    clt: 0
-  }
+  // Here we do a simple hashed password check
+  crypto.pbkdf2(password, 'salt', 100000, 64, 'sha512', (err, derivedKey) => {
+    if (err) {
+      return res.sendStatus(403)
+    }
 
-  let signedJwt = JwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody)
-  res.json({
-    token: signedJwt,
-    expires: 3600
+    let hashedPassword = users[username]
+    if (!hashedPassword) {
+      return res.sendStatus(403)
+    }
+
+    if (hashedPassword !== derivedKey.toString('hex')) {
+      return res.sendStatus(403)
+    }
+
+    // Generate token
+    const unixNow = Math.floor(Date.now() / 1000)
+    let jwtHeader = {
+      typ: 'JWT',
+      alg: 'RS256',
+      kid: '1'
+    }
+    let jwtBody = {
+      iss: 'simpleidp',
+      sub: req.body.user,
+      aud: 'simpleservice',
+      exp: unixNow + 3600, // One hour expiry
+      iat: unixNow,
+      nbf: unixNow - 300, // Allow consumers a 5 mins backwards timeskew
+      clt: 0
+    }
+
+    let signedJwt = JwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody)
+    res.json({
+      token: signedJwt,
+      expires: 3600
+    })
   })
 })
 
