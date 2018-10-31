@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html class="page-home">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Login test</title>
+</head>
+<body>
+    <script>
+        // Set the login url
+        fetch('/config', {
+            method: 'GET',
+            headers: {
+            'Accept': 'application/json'
+            }
+        }).then(response => {
+            return response.json();
+        }).then(config => {
+            let loginButton = document.querySelector('#login');
+            if (loginButton) {
+                loginButton.setAttribute('href', config.loginUrl)
+            }
+        })
+
+        function callApi() {
+            let params = getLocationHashParams();
+            if(params['id_token']) {
+                fetch('/api/hello', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization' : `Bearer ${params['id_token']}`,
+                        'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    return response.json();
+                }).then(data => {
+                    let apimessage = document.querySelector('#apimessage');
+                    if (apimessage) {
+                        var message = document.createElement('p');
+                        message.innerHTML = data.message;
+                        apimessage.append(message)
+                    }
+                })
+            }
+        }
+
+        function getLocationHashParams() {
+            let params = {}
+            let parts = document.location.hash.substr(1).split('&')
+            for(let part of parts) {
+                let keyValue = part.split('=')
+                params[keyValue[0]] = keyValue.length > 1 ? keyValue[1] : null
+            }
+            return params
+        }
+    </script>
+    <a id="login" href="">Login</a>
+    <button onclick="callApi()">Call Api</button>
+    <div id='apimessage'></div>
+</body>
+</html>

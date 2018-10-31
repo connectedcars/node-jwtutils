@@ -1,0 +1,18 @@
+{
+  "name": "googleoauth2v2",
+  "version": "1.0.0",
+  "description": "Sample project showing how to use google oauth2 v2 API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "express": "^4.16.4"
+  }
+}
