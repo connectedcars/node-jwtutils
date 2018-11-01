@@ -11,8 +11,9 @@
     "jwtdecode": "./bin/jwtdecode.js"
   },
   "scripts": {
-    "test": "nyc --reporter=lcov --reporter=text mocha \"src/**/*.test.js\" \"bin/*.test.js\"",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+    "test": "mocha \"src/**/*.test.js\" \"bin/*.test.js\"",
+    "cov": "nyc --reporter=lcov --reporter=text npm test",
+    "coveralls": "nyc report --reporter=text-lcov npm test | coveralls"
   },
   "repository": {
     "type": "git",
@@ -48,5 +49,15 @@
     "typescript": "^3.1.3",
     "unexpected": "^10.39.1"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "nyc": {
+    "include": [
+      "src/**",
+      "bin/**"
+    ],
+    "exclude": [
+      "**/*.test.js"
+    ],
+    "all": true
+  }
 }
