@@ -44,8 +44,8 @@ class PubkeysHelper {
 }
 
 function _fetchJwkKeys(httpRequestHandler, url, options) {
-  let selectedAlgorithms = options.algorithms || []
-  delete options.algorithms
+  let defaultAlgorithms = options.defaultAlgorithms || []
+  delete options.defaultAlgorithms
 
   return httpRequestHandler('GET', url, {}, null).then(response => {
     let pubkeysResponse = JSON.parse(
@@ -63,7 +63,7 @@ function _fetchJwkKeys(httpRequestHandler, url, options) {
     let pubKeys = {}
     for (const key of pubkeysResponse.keys) {
       let publicKeyPem = jwkUtils.jwkToPem(key)
-      let algorithms = key.alg ? [key.alg] : selectedAlgorithms
+      let algorithms = key.alg ? [key.alg] : defaultAlgorithms
       for (let algorithm of algorithms) {
         pubKeys[`${key.kid}@${algorithm}`] = Object.assign(
           {

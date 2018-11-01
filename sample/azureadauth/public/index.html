@@ -7,20 +7,24 @@
 </head>
 <body>
     <script>
-        // Set the login url
-        fetch('/config', {
-            method: 'GET',
-            headers: {
-            'Accept': 'application/json'
-            }
-        }).then(response => {
-            return response.json();
-        }).then(config => {
-            let loginButton = document.querySelector('#login');
-            if (loginButton) {
-                loginButton.setAttribute('href', config.loginUrl)
-            }
-        })
+        function login() {
+            // Set the login url
+            fetch('/config', {
+                method: 'GET',
+                headers: {
+                'Accept': 'application/json'
+                }
+            }).then(response => {
+                return response.json();
+            }).then(config => {
+                let loginUrl = config.loginUrl
+                let usernameInput = document.querySelector('#username');
+                if (usernameInput && usernameInput.value) {
+                    loginUrl = loginUrl + `&login_hint=${usernameInput.value}`
+                }
+                document.location = loginUrl
+            })
+        }
 
         function callApi() {
             let params = getLocationHashParams();
@@ -54,7 +58,8 @@
             return params
         }
     </script>
-    <a id="login" href="">Login</a>
+    Username: <input id="username" type="text" name="username">
+    <button onclick="login()">Login</button>
     <button onclick="callApi()">Call Api</button>
     <div id='apimessage'></div>
 </body>

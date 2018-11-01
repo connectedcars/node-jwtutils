@@ -2,13 +2,18 @@
 
 const path = require('path')
 const express = require('express')
-const axios = require('axios')
+const { default: axios } = require('axios')
 
 const {
   JwtAuthMiddleware,
   JwtVerifyError,
   PubkeysHelper
 } = require('../../src/.')
+
+if (process.argv.length <= 5) {
+  console.error('node index.js "application id" "tenant"')
+  process.exit(255)
+}
 
 let pubkeysHelper = new PubkeysHelper()
 const pubKeys = {}
@@ -21,15 +26,31 @@ const issuer = `https://login.microsoftonline.com/${tenant}/v2.0`
 const openidConfigEndpoint = `https://login.microsoftonline.com/${tenant}/v2.0/.well-known/openid-configuration`
 const audiences = [applicationId]
 
+/**
+ * @typedef OpenIdConnectConfig
+ * @property {string} authorization_endpoint
+ * @property {string} jwks_uri
+ * @property {Array<string>} id_token_signing_alg_values_supported
+ */
+
+/**
+ * @typedef OpenIdConnectHelperOptions
+ * @property {number} [refreshInterval=3600] Refresh interval in seconds
+ */
+
 class OpenIdConnectHelper {
   /**
    *
    * @param {Object} publicKeys
    * @param {string} url
    * @param {string} issuer
-   * @param {Object} [options]
+   * @param {OpenIdConnectHelperOptions} [options]
    */
   constructor(publicKeys, url, issuer, options = {}) {
+    /**
+     * Open ID Connect configuration
+     * @type {OpenIdConnectConfig}
+     */
     this.config = null
     this.url = url
     this.issuer = issuer
@@ -55,25 +76,19 @@ class OpenIdConnectHelper {
       this.updatePubkeys().catch(e => {
         console.error(`Failed to fetch pubkeys: ${e}`)
       })
-    }, 60 * 60 * 1000) // TODO: Make it optional
+    }, (options.refreshInterval || 3600) * 1000)
   }
 
   updatePubkeys() {
-    // TODO: Add filtering on issue for keys
     return pubkeysHelper
       .fetchJwkKeys(this.config.jwks_uri, {
-        algorithms: this.config.id_token_signing_alg_values_supported || []
+        defaultAlgorithms:
+          this.config.id_token_signing_alg_values_supported || []
       })
       .then(keys => {
-        // TODO Validate keys
         this.publicKeys[this.issuer] = keys
       })
   }
-}
-
-if (process.argv.length <= 2) {
-  console.error('node index.js "application id" "tenant"')
-  process.exit(255)
 }
 
 let openIdConnectHelper = new OpenIdConnectHelper(
@@ -112,7 +127,6 @@ app.use(
 
 // Register an error handler to return 401 errors
 app.use((err, req, res, next) => {
-  let test = pubKeys
   if (err instanceof JwtVerifyError) {
     if (err.innerError) {
       console.error(`Failed with: ${err.innerError.message}`)

@@ -9,7 +9,7 @@ First register an app:
 ## Run sample application
 
 ``` bash
-node index.js '<OAuth Client ID>'
+node index.js "application id" "tenant"
 ```
 
 ## Urls
