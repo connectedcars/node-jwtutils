@@ -10,7 +10,7 @@ const {
   PubkeysHelper
 } = require('../../src/.')
 
-if (process.argv.length <= 5) {
+if (process.argv.length < 4) {
   console.error('node index.js "application id" "tenant"')
   process.exit(255)
 }
