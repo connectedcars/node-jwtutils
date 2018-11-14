@@ -9,12 +9,10 @@ First register an app:
 ## Run sample application
 
 ``` bash
-node index.js "application id" "tenant"
+node index.js "application id" "tenant1,tenant2"
 ```
 
-## Urls
-
-* Microsoft "common" tenant id: https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0/.well-known/openid-configuration
+* Microsoft "common" tenant: "188040d-6c67-4c5b-b112-36a304b66dad"
 
 ## Links
 

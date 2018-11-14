@@ -19,100 +19,117 @@ let pubkeysHelper = new PubkeysHelper()
 const pubKeys = {}
 
 const applicationId = process.argv[2]
-const tenant = process.argv[3]
+const tenants = process.argv[3].split(',')
 const redirectUri = 'http://localhost:3000/'
 
-const issuer = `https://login.microsoftonline.com/${tenant}/v2.0`
-const openidConfigEndpoint = `https://login.microsoftonline.com/${tenant}/v2.0/.well-known/openid-configuration`
 const audiences = [applicationId]
+
+let openIdConnectConfigCache = {}
+
+// Fetch all OpenIdConnect configs
+for (let tenant of tenants) {
+  const issuer = `https://login.microsoftonline.com/${tenant}/v2.0`
+  const openidConfigEndpoint = `https://login.microsoftonline.com/${tenant}/v2.0/.well-known/openid-configuration`
+
+  fetchOpenIdConnectConfig(openidConfigEndpoint)
+    .then(config => {
+      let updatePubkeys = (jwksUri, defaultAlgorithms) => {
+        return pubkeysHelper
+          .fetchJwkKeys(jwksUri, {
+            defaultAlgorithms: defaultAlgorithms || []
+          })
+          .then(keys => {
+            pubKeys[issuer] = keys
+          })
+      }
+      // Do initial fetch of pubkeys
+      updatePubkeys(
+        config.jwks_uri,
+        config.id_token_signing_alg_values_supported
+      )
+
+      // Schedule pubkey update
+      setInterval(() => {
+        updatePubkeys(
+          config.jwks_uri,
+          config.id_token_signing_alg_values_supported
+        ).catch(e => {
+          console.error(`Failed to fetch pubkeys: ${e}`)
+        })
+      }, 3600 * 1000)
+    })
+    .catch(e => {
+      console.error(`Failed to fetch open id connect config: ${e}`)
+    })
+}
 
 /**
  * @typedef OpenIdConnectConfig
  * @property {string} authorization_endpoint
  * @property {string} jwks_uri
+ * @property {string} issuer
  * @property {Array<string>} id_token_signing_alg_values_supported
  */
 
 /**
- * @typedef OpenIdConnectHelperOptions
- * @property {number} [refreshInterval=3600] Refresh interval in seconds
+ * Fetch Open ID Connect configuration
+ * @param {string} openidConfigEndpoint
+ * @returns {Promise<OpenIdConnectConfig>}
  */
-
-class OpenIdConnectHelper {
-  /**
-   *
-   * @param {Object} publicKeys
-   * @param {string} url
-   * @param {string} issuer
-   * @param {OpenIdConnectHelperOptions} [options]
-   */
-  constructor(publicKeys, url, issuer, options = {}) {
-    /**
-     * Open ID Connect configuration
-     * @type {OpenIdConnectConfig}
-     */
-    this.config = null
-    this.url = url
-    this.issuer = issuer
-    this.publicKeys = publicKeys
-    axios
-      .get(url)
-      .then(res => {
-        if (res.status === 200 && res.data) {
-          this.config = res.data
-          if (!this.config.jwks_uri) {
-            throw new Error('JWK uri not set')
-          }
-          return this.updatePubkeys()
-        } else {
-          throw Error('Some error')
-        }
-      })
-      .catch(e => {
-        console.error(e)
-      })
-
-    setInterval(() => {
-      this.updatePubkeys().catch(e => {
-        console.error(`Failed to fetch pubkeys: ${e}`)
-      })
-    }, (options.refreshInterval || 3600) * 1000)
+// TODO: Do cache timeout/invalidation
+function fetchOpenIdConnectConfig(openidConfigEndpoint) {
+  // Use cached version of config if we have it
+  let config = openIdConnectConfigCache[openidConfigEndpoint]
+  if (config) {
+    return Promise.resolve(config)
   }
-
-  updatePubkeys() {
-    return pubkeysHelper
-      .fetchJwkKeys(this.config.jwks_uri, {
-        defaultAlgorithms:
-          this.config.id_token_signing_alg_values_supported || []
-      })
-      .then(keys => {
-        this.publicKeys[this.issuer] = keys
-      })
-  }
+  // Fetch config
+  return axios.get(openidConfigEndpoint).then(res => {
+    if (res.status === 200 && res.data) {
+      if (!res.data.jwks_uri) {
+        throw new Error('JWK uri not set')
+      }
+      openIdConnectConfigCache[openidConfigEndpoint] = res.data
+      return res.data
+    } else {
+      throw Error('Some error')
+    }
+  })
 }
-
-let openIdConnectHelper = new OpenIdConnectHelper(
-  pubKeys,
-  openidConfigEndpoint,
-  issuer
-)
 
 const app = express()
 app.use('/', express.static(path.join(__dirname, 'public')))
 
 app.get('/config', (req, res) => {
-  let loginUrl =
-    `${openIdConnectHelper.config.authorization_endpoint}?` +
-    `client_id=${applicationId}` +
-    `&redirect_uri=${encodeURI(redirectUri)}` +
-    '&response_type=id_token' +
-    '&scope=openid email profile' +
-    '&response_mode=fragment' +
-    '&state=12345' +
-    '&nonce=678910'
-  res.json({
-    loginUrl: loginUrl
-  })
+  let username = req.query['username']
+  if (username) {
+    let match = username.match(/^[^@]+@(.+)$/)
+    if (match) {
+      let domain = match[1]
+      fetchOpenIdConnectConfig(
+        `https://login.microsoftonline.com/${domain}/v2.0/.well-known/openid-configuration`
+      )
+        .then(config => {
+          if (!pubKeys[config.issuer]) {
+            return res.status(401).send({ error: 'No config for your' })
+          }
+          res.json({
+            loginUrl:
+              `${config.authorization_endpoint}?` +
+              `client_id=${applicationId}` +
+              `&redirect_uri=${encodeURI(redirectUri)}` +
+              '&response_type=id_token' +
+              '&scope=openid email' +
+              '&response_mode=fragment' +
+              '&state=12345' +
+              '&nonce=678910'
+          })
+        })
+        .catch(e => {
+          console.error(e)
+        })
+    }
+  }
 })
 
 app.use(

@@ -8,22 +8,25 @@
 <body>
     <script>
         function login() {
-            // Set the login url
-            fetch('/config', {
-                method: 'GET',
-                headers: {
-                'Accept': 'application/json'
-                }
-            }).then(response => {
-                return response.json();
-            }).then(config => {
-                let loginUrl = config.loginUrl
-                let usernameInput = document.querySelector('#username');
-                if (usernameInput && usernameInput.value) {
-                    loginUrl = loginUrl + `&login_hint=${usernameInput.value}`
-                }
-                document.location = loginUrl
-            })
+            let usernameInput = document.querySelector('#username')
+            if (usernameInput && usernameInput.value) {
+                // Set the login url
+                fetch(`/config?username=${usernameInput.value}`, {
+                    method: 'GET',
+                    headers: {
+                    'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    return response.json();
+                }).then(config => {
+                    let loginUrl = config.loginUrl
+
+                    if (usernameInput && usernameInput.value) {
+                        loginUrl = loginUrl + `&login_hint=${usernameInput.value}`
+                    }
+                    document.location = loginUrl
+                })
+            }
         }
 
         function callApi() {
@@ -58,7 +61,7 @@
             return params
         }
     </script>
-    Username: <input id="username" type="text" name="username">
+    Username: <input id="username" type="text" name="username" value="admtrbe@semler.dk">
     <button onclick="login()">Login</button>
     <button onclick="callApi()">Call Api</button>
     <div id='apimessage'></div>
