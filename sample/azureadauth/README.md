@@ -17,3 +17,8 @@ node index.js "application id" "tenant1,tenant2"
 ## Links
 
 * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-implicit-grant-flow
+
+
+# TODO
+
+* Reprompt to get new access
