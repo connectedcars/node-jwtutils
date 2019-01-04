@@ -1,0 +1,8 @@
+coverage/
+.*
+benchmark*.js
+jsconfig.json
+sample/
+src/test*
+src/**.test.*
+bin/**.test.*
