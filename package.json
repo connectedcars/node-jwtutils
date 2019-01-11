@@ -3,6 +3,7 @@
   "version": "1.0.19",
   "description": "Zero dependency JWT encoding/decoding for Node",
   "main": "src/index.js",
+  "typings": "types/@connectedcars/jwtutils/index.d.ts",
   "engines": {
     "node": ">=6.0.0"
   },
@@ -13,7 +14,10 @@
   "scripts": {
     "test": "mocha \"src/**/*.test.js\" \"bin/*.test.js\"",
     "cov": "nyc --reporter=lcov --reporter=text npm test",
-    "coveralls": "nyc report --reporter=text-lcov npm test | coveralls"
+    "coveralls": "nyc report --reporter=text-lcov npm test | coveralls",
+    "lint": "npm run eslint && npm run dtslint",
+    "dtslint": "dtslint types",
+    "eslint": "eslint --ignore-pattern=\"**/*.test.js\" src/**/*.js bin/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -49,7 +53,9 @@
     "typescript": "^3.2.2",
     "unexpected": "^10.40.2"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dtslint": "^0.4.2"
+  },
   "nyc": {
     "include": [
       "src/**",
