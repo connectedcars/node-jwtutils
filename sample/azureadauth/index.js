@@ -119,10 +119,11 @@ app.get('/config', (req, res) => {
               `client_id=${applicationId}` +
               `&redirect_uri=${encodeURI(redirectUri)}` +
               '&response_type=id_token' +
-              '&scope=openid email' +
+              '&scope=openid profile email' +
               '&response_mode=fragment' +
               '&state=12345' +
-              '&nonce=678910'
+              '&nonce=678910' +
+              '&prompt=consent'
           })
         })
         .catch(e => {
@@ -135,10 +136,9 @@ app.get('/config', (req, res) => {
 app.use(
   '/api',
   JwtAuthMiddleware(pubKeys, audiences, user => {
-    // Use e-mail as subject for google tokens
-    if (user.issuer === issuer) {
-      user.subject = user.body.email
-    }
+    // Use e-mail as subject from the token
+    // TODO: Validate that the issues has a email in the token
+    user.subject = user.body.preferred_username
   })
 )
 
