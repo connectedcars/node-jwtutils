@@ -26,9 +26,13 @@ class JwtServiceAuth {
   /**
    * Set http request handler for all external http calls
    * @param {{(method:string, url:string, headers:Object, body:string|Buffer): Promise<httpHandlerResponse>}} httpRequestHandler
+   * @param {object} options
+   * @param {string} [options.endpoint=https://www.googleapis.com/oauth2/v4/token]
    */
-  constructor(httpRequestHandler = defaultHttpRequestHandler) {
+  constructor(httpRequestHandler = defaultHttpRequestHandler, options = {}) {
     this.httpRequestHandler = httpRequestHandler
+    this.authEndpoint =
+      options.endpoint || 'https://www.googleapis.com/oauth2/v4/token'
   }
 
   /**
@@ -72,7 +76,8 @@ class JwtServiceAuth {
         Authorization: 'Bearer ' + jwt,
         'User-Agent': appName ? appName : 'jwtutils',
         Accept: 'application/vnd.github.machine-man-preview+json'
-      }
+      },
+      undefined
     ).then(response => {
       if (response.statusCode === 201) {
         let authResponse = JSON.parse(
@@ -106,11 +111,14 @@ class JwtServiceAuth {
    * @returns {Promise<accessTokenResponse>}
    */
   getGoogleAccessToken(keyFileData, scopes = null, options = {}) {
+    let mergedConfig = Object.assign({}, options, {
+      endpoint: this.authEndpoint
+    })
     return _getGoogleAccessToken(
       this.httpRequestHandler,
       keyFileData,
       scopes,
-      options
+      mergedConfig
     )
   }
 
@@ -121,6 +129,7 @@ class JwtServiceAuth {
    * @param {Object} [options]
    * @param {number} [options.expires=3600]
    * @param {string} [options.impersonate]
+   * @param {string} [options.endpoint=https://www.googleapis.com/oauth2/v4/token]
    * @returns {Promise<accessTokenResponse>}
    */
   static getGoogleAccessToken(keyFileData, scopes = null, options = {}) {
@@ -155,6 +164,7 @@ class JwtServiceAuth {
  * @param {Object} [options]
  * @param {number} [options.expires=3600]
  * @param {string} [options.impersonate]
+ * @param {string} [options.endpoint=https://www.googleapis.com/oauth2/v4/token]
  * @returns {Promise<accessTokenResponse>}
  */
 function _getGoogleAccessToken(
@@ -217,9 +227,10 @@ function _getGoogleAccessToken(
   let now = new Date().getTime()
 
   // Fetch access token
+
   return httpRequestHandler(
     'POST',
-    `https://www.googleapis.com/oauth2/v4/token`,
+    options.endpoint || 'https://www.googleapis.com/oauth2/v4/token',
     {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
