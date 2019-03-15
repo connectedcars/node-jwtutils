@@ -22,6 +22,7 @@ const defaultOptions = {
  * @param {Object} [options.expiresSkew=0]
  * @param {Object} [options.expiresMax=0]
  * @param {Object} [options.nbfIatSkew=300]
+ * @param {Object} [options.getIssuer]
  * @param {Function<header,body,void>} [options.fixup]
  */
 function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
@@ -101,11 +102,13 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
     throw new JwtVerifyError('No issuer set')
   }
 
-  let issuer = publicKeys[body.iss]
+  const issuer = options.getIssuer
+    ? options.getIssuer(body, publicKeys)
+    : publicKeys[body.iss]
+
   if (!issuer) {
     throw new JwtVerifyError(`Unknown issuer '${body.iss}'`)
   }
-
   // Find public key
   let pubkeyOrSharedKey =
     typeof header.kid === 'string'
