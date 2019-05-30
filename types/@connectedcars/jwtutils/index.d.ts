@@ -1,6 +1,7 @@
 // TypeScript Version: 3.0
 
 export class JwtVerifyError extends Error {
+  public innerError: Error
   constructor(message: string, innerError?: Error)
 }
 
@@ -9,6 +10,15 @@ export interface JwtDecodeOptions {
   expiresMax?: number
   nbfIatSkew?: number
   fixup?: (header: any, body: any) => void
+}
+
+export interface getGithubAccessTokenOptions {
+  expires: number
+}
+
+export interface getGoogleAccessTokenOptions {
+  impersonate: string
+  expires: number
 }
 
 export namespace JwtUtils {
@@ -52,8 +62,11 @@ export interface AccessTokenResponse {
 
 export class JwtServiceAuth {
   constructor(httpRequestHandler?: (method: string, url: string, headers: object, body: string | Buffer) => Promise<HttpHandlerResponse>)
-  getGithubAccessToken(privateKey: string, appId: string, installationId: string, appName: string, options: object): Promise<AccessTokenResponse>
+  getGithubAccessToken(privateKey: string, appId: string, installationId: string, appName: string, options?: getGithubAccessTokenOptions): Promise<AccessTokenResponse>
   getGoogleAccessTokenFromGCloudHelper(): Promise<AccessTokenResponse>
+  static getGoogleAccessTokenFromGCloudHelper(): Promise<AccessTokenResponse>
+  getGoogleAccessToken(googleServiceAccount: string, scopes: string[], options?: getGoogleAccessTokenOptions)
+  static getGoogleAccessToken(googleServiceAccount: string, scopes: string[], options?: getGoogleAccessTokenOptions)
 }
 
 export interface JwtAuthMiddlewareOptions {
