@@ -56,7 +56,7 @@ export interface HttpHandlerResponse {
 
 export interface AccessTokenResponse {
   accessToken: string
-  expireIn: number
+  expiresIn: number
   expiresAt: number
 }
 
