@@ -1,7 +1,7 @@
 // TypeScript Version: 3.0
 
 export class JwtVerifyError extends Error {
-  public innerError: Error
+  innerError: Error
   constructor(message: string, innerError?: Error)
 }
 
@@ -65,8 +65,8 @@ export class JwtServiceAuth {
   getGithubAccessToken(privateKey: string, appId: string, installationId: string, appName: string, options?: getGithubAccessTokenOptions): Promise<AccessTokenResponse>
   getGoogleAccessTokenFromGCloudHelper(): Promise<AccessTokenResponse>
   static getGoogleAccessTokenFromGCloudHelper(): Promise<AccessTokenResponse>
-  getGoogleAccessToken(googleServiceAccount: string, scopes: string[], options?: getGoogleAccessTokenOptions)
-  static getGoogleAccessToken(googleServiceAccount: string, scopes: string[], options?: getGoogleAccessTokenOptions)
+  getGoogleAccessToken(googleServiceAccount: string, scopes: string[], options?: getGoogleAccessTokenOptions): Promise<AccessTokenResponse>
+  static getGoogleAccessToken(googleServiceAccount: string, scopes: string[], options?: getGoogleAccessTokenOptions): Promise<AccessTokenResponse>
 }
 
 export interface JwtAuthMiddlewareOptions {
