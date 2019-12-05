@@ -17,8 +17,8 @@ export interface getGithubAccessTokenOptions {
 }
 
 export interface getGoogleAccessTokenOptions {
-  impersonate: string
-  expires: number
+  impersonate?: string
+  expires?: number
 }
 
 export namespace JwtUtils {
