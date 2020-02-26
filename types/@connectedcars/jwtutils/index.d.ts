@@ -61,7 +61,7 @@ export interface AccessTokenResponse {
 }
 
 export class JwtServiceAuth {
-  constructor(httpRequestHandler?: (method: string, url: string, headers: object, body: string | Buffer) => Promise<HttpHandlerResponse>)
+  constructor(httpRequestHandler?: (method: string, url: string, headers: object, body: string | Buffer) => Promise<HttpHandlerResponse>, options?: { endpoint?: string })
   getGithubAccessToken(privateKey: string, appId: string, installationId: string, appName: string, options?: getGithubAccessTokenOptions): Promise<AccessTokenResponse>
   getGoogleAccessTokenFromGCloudHelper(): Promise<AccessTokenResponse>
   static getGoogleAccessTokenFromGCloudHelper(): Promise<AccessTokenResponse>
