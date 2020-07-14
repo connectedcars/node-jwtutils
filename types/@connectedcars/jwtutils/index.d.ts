@@ -74,3 +74,19 @@ export interface JwtAuthMiddlewareOptions {
 }
 
 export function JwtAuthMiddleware(pubKeys: any, audiences: string[], mapper: (user: any) => void, options?: JwtAuthMiddlewareOptions): (request: any, response: any, next: () => void) => void
+
+export interface JwkKeysOptions {
+  defaultAlgoritms?: string[]
+  [x: string]: any // Allow any other fields
+}
+export class PubkeysHelper {
+  public fetchJwkKeys: (url: string, options?: JwkKeysOptions) => Promise<any>
+  constructor(
+    httpRequestHandler?: (
+      method: string,
+      url: string,
+      headers: any,
+      body: Buffer | string
+    ) => Promise<any>
+  )
+}
