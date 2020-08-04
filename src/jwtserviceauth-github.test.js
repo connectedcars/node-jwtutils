@@ -26,7 +26,7 @@ const pubKeys = {
 describe('JwtServiceAuth', () => {
   let [httpServer, listenPromise] = createTestHttpServer((req, res) => {
     try {
-      if (req.url === '/installations/1/access_tokens') {
+      if (req.url === '/app/installations/1/access_tokens') {
         let token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
         let body = JwtUtils.decode(token, pubKeys, [])
         res.statusCode = 201
