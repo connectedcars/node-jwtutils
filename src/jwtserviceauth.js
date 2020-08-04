@@ -71,7 +71,7 @@ class JwtServiceAuth {
     // Fetch access token for installation
     return this.httpRequestHandler(
       'POST',
-      `https://api.github.com/installations/${installationId}/access_tokens`,
+      `https://api.github.com/app/installations/${installationId}/access_tokens`,
       {
         Authorization: 'Bearer ' + jwt,
         'User-Agent': appName ? appName : 'jwtutils',
