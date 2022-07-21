@@ -80,6 +80,7 @@ export interface JwkKeysOptions {
   [x: string]: any // Allow any other fields
 }
 export class PubkeysHelper {
+  static fetchJwkKeys: (url: string, options?: JwkKeysOptions) => Promise<any>
   public fetchJwkKeys: (url: string, options?: JwkKeysOptions) => Promise<any>
   constructor(
     httpRequestHandler?: (
