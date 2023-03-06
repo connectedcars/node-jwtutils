@@ -17,6 +17,7 @@ if (process.argv.length < 4) {
 
 let pubkeysHelper = new PubkeysHelper()
 const pubKeys = {}
+const revokedTokens = {}
 
 const applicationId = process.argv[2]
 const tenants = process.argv[3].split(',')
@@ -135,7 +136,7 @@ app.get('/config', (req, res) => {
 
 app.use(
   '/api',
-  JwtAuthMiddleware(pubKeys, audiences, user => {
+  JwtAuthMiddleware(pubKeys, revokedTokens, audiences, user => {
     // Use e-mail as subject from the token
     // TODO: Validate that the issues has a email in the token
     user.subject = user.body.preferred_username

@@ -40,7 +40,7 @@ const pubKeys = {
   }
 }
 
-const revokedKeys = ['jtiId', 'test']
+const revokedTokens = ['jtiId', 'test']
 
 const audiences = ['http://localhost/']
 
@@ -54,7 +54,7 @@ describe('jwtMiddleware', () => {
       // Register endponts
       app.use(
         '/mapped',
-        JwtAuthMiddleware(pubKeys, revokedKeys, audiences, user => {
+        JwtAuthMiddleware(pubKeys, revokedTokens, audiences, user => {
           if (user.issuer === 'http://localhost/oauth/token') {
             // Map claims
             user.eMail = user.body.email
@@ -65,7 +65,7 @@ describe('jwtMiddleware', () => {
         '/async',
         JwtAuthMiddleware(
           pubKeys,
-          revokedKeys,
+          revokedTokens,
           audiences,
           user => {
             if (user.subject === 'error') {
@@ -79,11 +79,11 @@ describe('jwtMiddleware', () => {
       )
       app.use(
         '/anonymous',
-        JwtAuthMiddleware(pubKeys, revokedKeys, audiences, null, {
+        JwtAuthMiddleware(pubKeys, revokedTokens, audiences, null, {
           allowAnonymous: true
         })
       )
-      app.use('/', JwtAuthMiddleware(pubKeys, revokedKeys, audiences))
+      app.use('/', JwtAuthMiddleware(pubKeys, revokedTokens, audiences))
       app.use((err, req, res, next) => {
         if (err instanceof JwtVerifyError) {
           res.status(401).send(err.message)

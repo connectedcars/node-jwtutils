@@ -14,7 +14,7 @@ const JwtVerifyError = require('./jwtverifyerror')
  */
 function jwtAuthMiddleware(
   pubKeys,
-  revokedKeys,
+  revokedTokens,
   audiences,
   mapper = null,
   options = {}
@@ -41,7 +41,7 @@ function jwtAuthMiddleware(
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
-      if (revokedKeys.includes(decodedJwtBody.jti)) {
+      if (revokedTokens.includes(decodedJwtBody.jti)) {
         return next(new JwtVerifyError(`Revoked token`))
       }
 
