@@ -40,7 +40,12 @@ const pubKeys = {
   }
 }
 
-const revokedTokens = ['jtiId', 'test']
+const revokedTokens = {
+  tokens: [
+    { jti: 'jtiId', revokedAt: new Date() },
+    { jti: 'test', revokedAt: new Date() }
+  ]
+}
 
 const audiences = ['http://localhost/']
 

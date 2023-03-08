@@ -41,8 +41,10 @@ function jwtAuthMiddleware(
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
-      if (revokedTokens.includes(decodedJwtBody.jti)) {
-        return next(new JwtVerifyError(`Revoked token`))
+      for (const token of revokedTokens.tokens) {
+        if (token.jti == decodedJwtBody.jti) {
+          return next(new JwtVerifyError(`Revoked token`))
+        }
       }
 
       request.user = {
