@@ -7,6 +7,7 @@ const JwtVerifyError = require('./jwtverifyerror')
 /**
  *
  * @param {Object} pubKeys
+ * @param {Object} revokedTokens
  * @param {Array<string>} audiences
  * @param {Function} [mapper]
  * @param {Object} [options]
