@@ -20,7 +20,7 @@ const unixNow = Math.floor(Date.now() / 1000)
 const jwtBody = {
   aud: 'http://localhost/',
   iss: 'http://localhost/oauth/token',
-  jti: 'jtiIdValid',
+  jti: 'jtiValid',
   iat: unixNow,
   exp: unixNow + 600,
   scope: ['http://stuff', 'http://stuff2'],
@@ -42,7 +42,7 @@ const pubKeys = {
 
 const revokedTokens = {
   tokens: [
-    { jti: 'jtiId', revokedAt: new Date() },
+    { jti: 'jtiRevoked', revokedAt: new Date() },
     { jti: 'test', revokedAt: new Date() }
   ]
 }
@@ -182,7 +182,7 @@ describe('jwtMiddleware', () => {
     })
     it('should fail because of revoked token', () => {
       let customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.jti = 'jtiId'
+      customJwtBody.jti = 'jtiRevoked'
       let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       let responsePromise = doRequest('GET', 'localhost', port, '/', {
         Authorization: 'Bearer ' + jwt,
