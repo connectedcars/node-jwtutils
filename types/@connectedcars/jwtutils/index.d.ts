@@ -73,7 +73,7 @@ export interface JwtAuthMiddlewareOptions {
   allowAnonymous: boolean
 }
 
-export function JwtAuthMiddleware(pubKeys: any, audiences: string[], mapper: (user: any) => void, options?: JwtAuthMiddlewareOptions): (request: any, response: any, next: () => void) => void
+export function JwtAuthMiddleware(pubKeys: any, revokedTokens: Record<string, Date>, audiences: string[], mapper: (user: any) => void, options?: JwtAuthMiddlewareOptions): (request: any, response: any, next: () => void) => void
 
 export interface JwkKeysOptions {
   defaultAlgoritms?: string[]

@@ -20,6 +20,7 @@ const unixNow = Math.floor(Date.now() / 1000)
 const jwtBody = {
   aud: 'http://localhost/',
   iss: 'http://localhost/oauth/token',
+  jti: 'jtiValid',
   iat: unixNow,
   exp: unixNow + 600,
   scope: ['http://stuff', 'http://stuff2'],
@@ -39,6 +40,11 @@ const pubKeys = {
   }
 }
 
+const revokedTokens = {
+  jtiRevoked: new Date(),
+  test: new Date('2023-02-03')
+}
+
 const audiences = ['http://localhost/']
 
 describe('jwtMiddleware', () => {
@@ -51,7 +57,7 @@ describe('jwtMiddleware', () => {
       // Register endponts
       app.use(
         '/mapped',
-        JwtAuthMiddleware(pubKeys, audiences, user => {
+        JwtAuthMiddleware(pubKeys, revokedTokens, audiences, user => {
           if (user.issuer === 'http://localhost/oauth/token') {
             // Map claims
             user.eMail = user.body.email
@@ -62,6 +68,7 @@ describe('jwtMiddleware', () => {
         '/async',
         JwtAuthMiddleware(
           pubKeys,
+          revokedTokens,
           audiences,
           user => {
             if (user.subject === 'error') {
@@ -75,9 +82,11 @@ describe('jwtMiddleware', () => {
       )
       app.use(
         '/anonymous',
-        JwtAuthMiddleware(pubKeys, audiences, null, { allowAnonymous: true })
+        JwtAuthMiddleware(pubKeys, revokedTokens, audiences, null, {
+          allowAnonymous: true
+        })
       )
-      app.use('/', JwtAuthMiddleware(pubKeys, audiences))
+      app.use('/', JwtAuthMiddleware(pubKeys, revokedTokens, audiences))
       app.use((err, req, res, next) => {
         if (err instanceof JwtVerifyError) {
           res.status(401).send(err.message)
@@ -167,6 +176,20 @@ describe('jwtMiddleware', () => {
       return expect(responsePromise, 'to be fulfilled with value satisfying', {
         statusCode: 401,
         data: "Missing 'sub' in body"
+      })
+    })
+    it('should fail because of revoked token', () => {
+      let customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.jti = 'jtiRevoked'
+      let jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
+      let responsePromise = doRequest('GET', 'localhost', port, '/', {
+        Authorization: 'Bearer ' + jwt,
+        Accept: 'application/json',
+        'User-Agent': 'test'
+      })
+      return expect(responsePromise, 'to be fulfilled with value satisfying', {
+        statusCode: 401,
+        data: 'RevokedToken'
       })
     })
     it('should fail because of malform JSON', () => {

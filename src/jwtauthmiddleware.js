@@ -7,12 +7,19 @@ const JwtVerifyError = require('./jwtverifyerror')
 /**
  *
  * @param {Object} pubKeys
+ * @param {Object} revokedTokens
  * @param {Array<string>} audiences
  * @param {Function} [mapper]
  * @param {Object} [options]
  * @param {boolean} [options.allowAnonymous]
  */
-function jwtAuthMiddleware(pubKeys, audiences, mapper = null, options = {}) {
+function jwtAuthMiddleware(
+  pubKeys,
+  revokedTokens,
+  audiences,
+  mapper = null,
+  options = {}
+) {
   mapper = mapper || null
   options = options || {}
   return function(request, response, next) {
@@ -34,6 +41,9 @@ function jwtAuthMiddleware(pubKeys, audiences, mapper = null, options = {}) {
       let decodedJwtBody = jwtDecode(jwt, pubKeys, audiences)
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
+      }
+      if (revokedTokens[decodedJwtBody.jti]) {
+        return next(new JwtVerifyError(`RevokedToken`))
       }
 
       request.user = {

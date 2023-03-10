@@ -16,13 +16,14 @@ if (process.argv.length <= 2) {
 
 const audiences = [process.argv[2]]
 const pubKeys = {}
+const revokedTokens = {}
 
 const app = express()
 app.use('/', express.static(path.join(__dirname, 'public')))
 
 app.use(
   '/api',
-  JwtAuthMiddleware(pubKeys, audiences, user => {
+  JwtAuthMiddleware(pubKeys, revokedTokens, audiences, user => {
     // Use e-mail as subject for google tokens
     if (user.issuer === 'https://accounts.google.com') {
       user.subject = user.body.email
