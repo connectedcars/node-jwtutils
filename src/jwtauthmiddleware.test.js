@@ -41,10 +41,8 @@ const pubKeys = {
 }
 
 const revokedTokens = {
-  tokens: [
-    { jti: 'jtiRevoked', revokedAt: new Date() },
-    { jti: 'test', revokedAt: new Date() }
-  ]
+  jtiRevoked: new Date(),
+  test: new Date('2023-02-03')
 }
 
 const audiences = ['http://localhost/']
@@ -191,7 +189,7 @@ describe('jwtMiddleware', () => {
       })
       return expect(responsePromise, 'to be fulfilled with value satisfying', {
         statusCode: 401,
-        data: 'Revoked token'
+        data: 'RevokedToken'
       })
     })
     it('should fail because of malform JSON', () => {
