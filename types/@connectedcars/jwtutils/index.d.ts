@@ -61,7 +61,7 @@ export interface AccessTokenResponse {
 }
 
 export interface RevokedToken {
-  id?: number | string
+  id: number | string
   jti: string
   revokedAt: Date
 }
