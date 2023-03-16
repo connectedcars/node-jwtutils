@@ -60,6 +60,12 @@ export interface AccessTokenResponse {
   expiresAt: number
 }
 
+export interface RevokedToken {
+  id: number | string
+  jti: string
+  revokedAt: Date
+}
+
 export class JwtServiceAuth {
   constructor(httpRequestHandler?: (method: string, url: string, headers: object, body: string | Buffer) => Promise<HttpHandlerResponse>, options?: { endpoint?: string })
   getGithubAccessToken(privateKey: string, appId: string, installationId: string, appName: string, options?: getGithubAccessTokenOptions): Promise<AccessTokenResponse>
@@ -73,7 +79,7 @@ export interface JwtAuthMiddlewareOptions {
   allowAnonymous: boolean
 }
 
-export function JwtAuthMiddleware(pubKeys: any, revokedTokens: Record<string, Date>, audiences: string[], mapper: (user: any) => void, options?: JwtAuthMiddlewareOptions): (request: any, response: any, next: () => void) => void
+export function JwtAuthMiddleware(pubKeys: any, revokedTokens: Record<string, RevokedToken>, audiences: string[], mapper: (user: any) => void, options?: JwtAuthMiddlewareOptions): (request: any, response: any, next: () => void) => void
 
 export interface JwkKeysOptions {
   defaultAlgoritms?: string[]
