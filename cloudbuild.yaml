@@ -1,0 +1,11 @@
+steps:
+  - name: 'gcr.io/connectedcars-staging/cloudbuilder-wrapper.master:latest'
+    args: ['--update-url=https://build-api.connectedcars.io/cloudbuilder']
+    env:
+      - 'REPO_NAME=$REPO_NAME'
+      - 'GCP_PROJECT_ID=$PROJECT_ID'
+      - 'BUILD_ID=$BUILD_ID'
+      - 'BRANCH_NAME=$BRANCH_NAME'
+      - 'TAG_NAME=$TAG_NAME'
+      - 'COMMIT_SHA=$COMMIT_SHA'
+timeout: 3600s
