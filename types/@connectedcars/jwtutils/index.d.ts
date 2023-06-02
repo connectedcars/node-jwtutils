@@ -1,4 +1,6 @@
 // TypeScript Version: 3.0
+import type { KeyObject } from "crypto"
+
 
 export class JwtVerifyError extends Error {
   innerError: Error
@@ -22,7 +24,7 @@ export interface getGoogleAccessTokenOptions {
 }
 
 export namespace JwtUtils {
-  function encode(privateKey: string | null, header: any, body: any, privateKeyPassword?: string): string
+  function encode(privateKey: KeyObject| string | null, header: any, body: any, privateKeyPassword?: string): string
   function decode(jwt: string, publicKeys: any, audiences: string[], options?: JwtDecodeOptions): any
 }
 
