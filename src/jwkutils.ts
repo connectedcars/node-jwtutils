@@ -36,7 +36,7 @@ const prime256v1Oid = [
 const secp384r1Oid = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22] // OBJECT IDENTIFIER=1.3.132.0.34 - secp384r1
 const secp521r1Oid = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23] // OBJECT IDENTIFIER=1.3.132.0.35 - secp521r1
 
-function jwkToPem(jwk) {
+export function jwkToPem(jwk: Record<string, string>): string {
   switch (jwk.kty) {
     case 'RSA': {
       return rsaPublicJwkToPem(jwk)
@@ -50,26 +50,26 @@ function jwkToPem(jwk) {
   }
 }
 
-function rsaPublicJwkToPem(rsaPublicKeyJwk) {
-  let modulusBytes = asn1PositiveInteger(
+export function rsaPublicJwkToPem(rsaPublicKeyJwk: Record<string, string>): string {
+  const modulusBytes = asn1PositiveInteger(
     new Uint8Array(Buffer.from(rsaPublicKeyJwk.n, 'base64'))
   )
-  let exponentBytes = asn1PositiveInteger(
+  const exponentBytes = asn1PositiveInteger(
     new Uint8Array(Buffer.from(rsaPublicKeyJwk.e, 'base64'))
   )
 
-  let integerSequenceBytes = encodeAsn1Bytes(0x30, [
+  const integerSequenceBytes = encodeAsn1Bytes(0x30, [
     ...modulusBytes, // modulus
     ...exponentBytes // exponent
   ])
 
-  let bitStringBytes = encodeAsn1Bytes(
+  const bitStringBytes = encodeAsn1Bytes(
     0x03,
     // Sequence
     [0x00, ...integerSequenceBytes]
   )
 
-  let pemBytes = new Uint8Array(
+  const pemBytes = new Uint8Array(
     encodeAsn1Bytes(0x30, [
       // Header
       ...rsaPublicKeyOid,
@@ -81,8 +81,8 @@ function rsaPublicJwkToPem(rsaPublicKeyJwk) {
   return formatPemPublicKey(pemBytes)
 }
 
-function ecPublicKeyJwkToPem(ecPublicKeyJwk) {
-  let keyOid
+export function ecPublicKeyJwkToPem(ecPublicKeyJwk: Record<string, string>): string {
+  let keyOid: any[]
   switch (ecPublicKeyJwk.crv) {
     case 'K-256': {
       // Not part of the JWK standard
@@ -127,8 +127,8 @@ function ecPublicKeyJwkToPem(ecPublicKeyJwk) {
   return formatPemPublicKey(pemBytes)
 }
 
-function encodeAsn1Bytes(type, bytes) {
-  let lengthBytes
+function encodeAsn1Bytes(type: number, bytes: any[] | number[] | Uint8Array): any[] {
+  let lengthBytes: number[]
   if (bytes.length === 0) {
     lengthBytes = [0]
   } else if (bytes.length < 0x80) {
@@ -151,37 +151,23 @@ function encodeAsn1Bytes(type, bytes) {
   return [type, ...lengthBytes, ...bytes]
 }
 
-function asn1PositiveInteger(bytes) {
+function asn1PositiveInteger(bytes: Uint8Array): any[] {
   if (bytes[0] > 0x7f) {
     return encodeAsn1Bytes(0x02, [0x00, ...bytes])
   }
   return encodeAsn1Bytes(0x02, bytes)
 }
 
-function formatPemPublicKey(bytes) {
-  let pemBase64 = Buffer.from(bytes.buffer)
+function formatPemPublicKey(bytes: Uint8Array): string {
+  const pemBase64 = Buffer.from(bytes.buffer)
     .toString('base64')
     .match(/.{1,64}/g)
-    .join('\n')
-  return `-----BEGIN PUBLIC KEY-----\n${pemBase64}\n-----END PUBLIC KEY-----`
-}
-
-function hexDump(bytes) {
-  console.log(
-    Buffer.from(bytes)
-      .toString('hex')
-      .toUpperCase()
-      .match(/.{1,32}/g)
-      .join('\n')
-      .replace(/(\w\w)/g, '$1 ')
-      .replace(/\s$/, '')
-  )
-}
-
-module.exports = {
-  rsaPublicJwkToPem,
-  ecPublicKeyJwkToPem,
-  jwkToPem
+  
+  if(!pemBase64) {
+    return ''
+  }
+    
+  return `-----BEGIN PUBLIC KEY-----\n${pemBase64.join('\n')}\n-----END PUBLIC KEY-----`
 }
 
 // Links
