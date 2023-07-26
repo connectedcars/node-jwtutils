@@ -25,12 +25,10 @@ const ProcessUtils = require('./processutils')
 class JwtServiceAuth {
   /**
    * Set http request handler for all external http calls
-   * @param {{(method:string, url:string, headers:Object, body:string|Buffer): Promise<httpHandlerResponse>}} httpRequestHandler
    * @param {object} options
    * @param {string} [options.endpoint=https://www.googleapis.com/oauth2/v4/token]
    */
-  constructor(httpRequestHandler = defaultHttpRequestHandler, options = {}) {
-    this.httpRequestHandler = httpRequestHandler
+  constructor(options = {}) {
     this.authEndpoint =
       options.endpoint || 'https://www.googleapis.com/oauth2/v4/token'
   }
@@ -69,6 +67,7 @@ class JwtServiceAuth {
     let jwt = jwtEncode(privateKey, jwtHeader, jwtBody)
 
     // Fetch access token for installation
+    // return axios.post()
     return this.httpRequestHandler(
       'POST',
       `https://api.github.com/app/installations/${installationId}/access_tokens`,
