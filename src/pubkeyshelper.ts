@@ -1,15 +1,7 @@
-import log from '@connectedcars/logutil'
-import axios, { AxiosResponse } from 'axios'
+import { AxiosResponse } from 'axios'
 import * as jwkUtils from './jwkutils'
 import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
 
-interface ErrorContext {
-  url: string
-  message: string
-  headers: { [key: string]: string }
-  status?: number
-  data?: unknown
-}
 
 interface Options {
   defaultAlgorithms?: string[]
@@ -20,12 +12,9 @@ export class PubkeysHelper {
   private requestHandler: (method: string, url: string, headers?: Record<string, unknown>, body?: unknown) => Promise<AxiosResponse | null>
 
   constructor(httpRequestHandler?: (method: string, url: string, headers?: Record<string, unknown>, body?: unknown) => Promise<AxiosResponse | null>) {
-    if(!httpRequestHandler) {
-      this.requestHandler = defaultHttpRequestHandler
-      return
-    }
-    this.requestHandler = httpRequestHandler
+    this.requestHandler = httpRequestHandler || defaultHttpRequestHandler
   }
+
   public async fetchJwkKeys(url: string, options: Options = {}): Promise<Record<string, string> | null> {
     const defaultAlgorithms = options.defaultAlgorithms || []
     delete options.defaultAlgorithms
