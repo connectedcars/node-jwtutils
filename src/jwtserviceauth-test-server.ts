@@ -3,6 +3,7 @@ import querystring from 'querystring'
 import { JwtUtils } from './index'
 
 import { rsaPrivateKey, rsaPublicKey } from './testresources'
+import { IncomingMessage, ServerResponse } from 'http'
 
 
 const pubKeys = {
@@ -34,7 +35,7 @@ export class JwtServiceAuthTestServer extends HttpServer {
                       ])
                       if (body.scope !== '') {
                         res.statusCode = 200
-                        res.end(JSON.stringify({ statusCode: 404, access_token: 'ok', expires_in: 3600 }))
+                        res.end(JSON.stringify({ access_token: 'ok', expires_in: 3600 }))
                       } else {
                         res.statusCode = 400
                         res.end(JSON.stringify({ error: 'scopes not set' }))
@@ -46,11 +47,10 @@ export class JwtServiceAuthTestServer extends HttpServer {
                   })
             }
             default: {
-                return req.on('end', () => {
-                    res.statusCode = 404
-                    res.end()
-              })
-            }
+                res.statusCode = 400
+                return res.end(JSON.stringify({ description: 'response.statusCode not 200' }))
+              }
+            
           }
         }
       }

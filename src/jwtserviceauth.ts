@@ -1,6 +1,6 @@
 import querystring from 'querystring'
 import jwtEncode from './jwtencode'
-import JwtServiceAuthError from './jwtserviceautherror'
+import {JwtServiceAuthError} from './jwtserviceautherror'
 import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
 import ProcessUtils from './processutils'
 import { AccessTokenResponse } from '../types/@connectedcars/jwtutils'
@@ -108,7 +108,7 @@ export class JwtServiceAuth {
       })
     }
 
-    public async getGoogleAccessToken(keyFileData: string, scopes: string[] = null, options: Options = {}): Promise<AccessTokenResponse> {
+    public async getGoogleAccessToken(keyFileData: string, scopes: string[] | number = null, options: Options = {}): Promise<GoogleAccessToken> {
       const mergedConfig = Object.assign({}, options, {
         endpoint: this.authEndpoint
       })
@@ -118,9 +118,9 @@ export class JwtServiceAuth {
     private async _getGoogleAccessToken(
       httpRequestHandler: (method: string, url: string, headers?: Record<string, unknown>, body?: unknown) => Promise<AxiosResponse | null>,
       keyFileData: string,
-      scopes: string[],
+      scopes: string[] | number,
       options: Options = {}
-    ): Promise<AccessTokenResponse> {
+    ): Promise<GoogleAccessToken> {
       // TODO: Remove in V2.0
       // Support old interface for expires
       if (typeof scopes === 'number') {
@@ -131,7 +131,7 @@ export class JwtServiceAuth {
             expires: scopes
           }
         }
-        scopes = null
+        scopes = null as string[]
       }
     
       scopes = scopes ? scopes : ['https://www.googleapis.com/auth/userinfo.email']
@@ -174,45 +174,43 @@ export class JwtServiceAuth {
       // Be pessimistic with expiry time so start time before doing the request    
       // Fetch access token
 
-      //todo: grace any code that isn't 200 is returning null
-      try{
-      const result = await httpRequestHandler(
-        'POST',
-        this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token',
-        {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        formData
-      )}
-      catch(err) {
-        console.log(err.response.data)
-      }
-
-      if (!result) {
-        return null
-      }
-      const googleAccessToken = this.formatGoogleAccessToken(result.data)
-      if (!googleAccessToken) {
-        return null
-      }
-      return googleAccessToken
-  }
-
-  private formatGoogleAccessToken(response: any): GoogleAccessToken {
-    if (response.statusCode === 200 || response.status == 200) {
-      let now = new Date().getTime()
-      return {
-        accessToken: response.access_token,
-        expiresIn: response.expires_in,
-        expiresAt: now + response.expires_in * 1000
-      }
-    } else {
-      throw new JwtServiceAuthError('response.statusCode not 200', {
-        statusCode: response.statusCode || response.status,
-        data: Buffer.from(response.data).toString('utf8')
+      return await httpRequestHandler('POST',
+      this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token',
+      {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      formData).then(response => {
+        if (response.statusCode === 200 || response.status == 200) {
+          let now = new Date().getTime()
+          return {
+            accessToken: response.data.access_token,
+            expiresIn: response.data.expires_in,
+            expiresAt: now + response.data.expires_in * 1000
+          }
+        } else {
+          throw new JwtServiceAuthError('response.statusCode not 200', {
+            statusCode: response.statusCode || response.status,
+            data: Buffer.from(response.data).toString('utf8')
+          })
+        }
       })
-    }
   }
+
+  // private formatGoogleAccessToken(response: any): GoogleAccessToken {
+  //   if (response.statusCode === 200 || response.status == 200) {
+  //     let now = new Date().getTime()
+  //     return {
+  //       accessToken: response.access_token,
+  //       expiresIn: response.expires_in,
+  //       expiresAt: now + response.expires_in * 1000
+  //     }
+  //   } else {
+  //     throw new JwtServiceAuthError('response.statusCode not 200', {
+  //       statusCode: response.statusCode || response.status,
+  //       data: Buffer.from(response.data).toString('utf8')
+  //     })
+  //   }
+  // }
 
   public async getGoogleAccessTokenFromGCloudHelper(): Promise<GoogleAccessToken>  {
     let [gcloudConfigHelper, resultPromise] = ProcessUtils.runProcessAsync(
