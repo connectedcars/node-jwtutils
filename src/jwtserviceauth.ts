@@ -1,6 +1,5 @@
 import querystring from 'querystring'
 import jwtEncode from './jwtencode'
-import {JwtServiceAuthError} from './jwtserviceautherror'
 import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
 import * as ProcessUtils from './processutils'
 import { AccessTokenResponse } from '../types/@connectedcars/jwtutils'

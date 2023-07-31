@@ -1,11 +1,5 @@
 import { rsaPrivateKey, rsaPublicKey } from './testresources'
-
-// import { JwtServiceAuth, } from './index'
 import { JwtServiceAuth } from './jwtserviceauth'
-
-import fs from 'fs'
-import path from 'path'
-import * as tmp from 'tmp'
 
 import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
 

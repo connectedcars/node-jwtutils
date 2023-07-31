@@ -1,10 +1,6 @@
-// @ts-check
-'use strict'
+import * as jwkUtils from './jwkutils'
 
-const expect = require('unexpected')
-const jwkUtils = require('./jwkutils')
-
-const {
+import {
   rsaPublicKey,
   rsaPublicKeyJwk,
   rsaPublicKeyEncrypted,
@@ -13,24 +9,24 @@ const {
   rsaPublicKey4096Jwk,
   ecPublicKey,
   ecPublicKeyJwk
-} = require('./testresources')
+} from './testresources'
 
 describe('jwkutils', () => {
   it('rsaPublicJwkToPem 1024bit', () => {
     let generatedPem = jwkUtils.rsaPublicJwkToPem(rsaPublicKeyJwk)
-    expect(generatedPem, 'to equal', rsaPublicKey)
+    expect(generatedPem).toEqual(rsaPublicKey)
   })
   it('rsaPublicJwkToPem 2048bit', () => {
     let generatedPem = jwkUtils.rsaPublicJwkToPem(rsaPublicKeyEncryptedJwk)
-    expect(generatedPem, 'to equal', rsaPublicKeyEncrypted)
+    expect(generatedPem).toEqual(rsaPublicKeyEncrypted)
   })
   it('rsaPublicJwkToPem 4096bit', () => {
     let generatedPem = jwkUtils.rsaPublicJwkToPem(rsaPublicKey4096Jwk)
-    expect(generatedPem, 'to equal', rsaPublicKey4096)
+    expect(generatedPem).toEqual(rsaPublicKey4096)
   })
   it('ecPublicJwkToPem K-256', () => {
     let generatedPem = jwkUtils.ecPublicKeyJwkToPem(ecPublicKeyJwk)
-    expect(generatedPem, 'to equal', ecPublicKey)
+    expect(generatedPem).toEqual(ecPublicKey)
   })
   it('ecPublicJwkToPem P-256', () => {
     let jwk = {
@@ -45,7 +41,7 @@ describe('jwkutils', () => {
       'oPVvfJqpv1818lrcENkew28pRvlVvIY+pwAV/gUa4+EnZfLbXmhYPD/WNw==\n' +
       '-----END PUBLIC KEY-----'
     let generatedPem = jwkUtils.ecPublicKeyJwkToPem(jwk)
-    expect(generatedPem, 'to equal', expected)
+    expect(generatedPem).toEqual(expected)
   })
   it('ecPublicJwkToPem P-384', () => {
     var jwk = {
@@ -61,7 +57,7 @@ describe('jwkutils', () => {
       'zy3dc1IZtACUngU2xMDDMsi0gDL9jLiU\n' +
       '-----END PUBLIC KEY-----'
     let generatedPem = jwkUtils.ecPublicKeyJwkToPem(jwk)
-    expect(generatedPem, 'to equal', expected)
+    expect(generatedPem).toEqual(expected)
   })
   it('ecPublicJwkToPem P-521', () => {
     var jwk = {
@@ -80,12 +76,12 @@ describe('jwkutils', () => {
       'VTHWyg5a6NdvW4IRvsY=\n' +
       '-----END PUBLIC KEY-----'
     let generatedPem = jwkUtils.ecPublicKeyJwkToPem(jwk)
-    expect(generatedPem, 'to equal', expected)
+    expect(generatedPem).toEqual(expected)
   })
   it('jwkToPem K-256, RSA', () => {
     let generatedEcPem = jwkUtils.jwkToPem(ecPublicKeyJwk)
-    expect(generatedEcPem, 'to equal', ecPublicKey)
+    expect(generatedEcPem).toEqual(ecPublicKey)
     let generatedRsaPem = jwkUtils.jwkToPem(rsaPublicKeyJwk)
-    expect(generatedRsaPem, 'to equal', rsaPublicKey)
+    expect(generatedRsaPem).toEqual(rsaPublicKey)
   })
 })

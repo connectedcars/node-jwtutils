@@ -1,25 +1,24 @@
-// @ts-check
-'use strict'
+import jwtDecode from './jwtdecode'
+import JwtVerifyError from './jwtverifyerror'
 
-const jwtDecode = require('./jwtdecode')
-const JwtVerifyError = require('./jwtverifyerror')
+export interface RevokedToken {
+  id?: number | string
+  jti: string
+  revokedAt: Date
+}
+interface Options {
+  allowAnonymous?: boolean
+}
 
-/**
- *
- * @param {Object} pubKeys
- * @param {Object} revokedTokens
- * @param {Array<string>} audiences
- * @param {Function} [mapper]
- * @param {Object} [options]
- * @param {boolean} [options.allowAnonymous]
- */
-function jwtAuthMiddleware(
-  pubKeys,
-  revokedTokens,
-  audiences,
+
+//todo: grace make this callable in a better way ie import JwtAuthMiddleware from file
+export function JwtAuthMiddleware(
+  pubKeys: Record<string, Record<string, unknown>>,
+  revokedTokens: Record<string, RevokedToken>,
+  audiences: string[],
   mapper = null,
-  options = {}
-) {
+  options: Options = {}
+): (request: any, response: any, next: (error?: Error) => void) => void {
   mapper = mapper || null
   options = options || {}
   return function(request, response, next) {
@@ -80,7 +79,7 @@ function jwtAuthMiddleware(
   }
 }
 
-function isPromise(value) {
+function isPromise(value: Promise<unknown>): boolean {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -88,4 +87,3 @@ function isPromise(value) {
   )
 }
 
-module.exports = jwtAuthMiddleware

@@ -50,7 +50,7 @@ export function jwkToPem(jwk: Record<string, string>): string {
   }
 }
 
-function rsaPublicJwkToPem(rsaPublicKeyJwk) {
+export function rsaPublicJwkToPem(rsaPublicKeyJwk: Record<string, string>): string {
   let modulusBytes = asn1PositiveInteger(
     new Uint8Array(Buffer.from(rsaPublicKeyJwk.n, 'base64'))
   )
@@ -81,7 +81,7 @@ function rsaPublicJwkToPem(rsaPublicKeyJwk) {
   return formatPemPublicKey(pemBytes)
 }
 
-function ecPublicKeyJwkToPem(ecPublicKeyJwk) {
+export function ecPublicKeyJwkToPem(ecPublicKeyJwk: Record<string, string>): string {
   let keyOid
   switch (ecPublicKeyJwk.crv) {
     case 'K-256': {
@@ -127,8 +127,8 @@ function ecPublicKeyJwkToPem(ecPublicKeyJwk) {
   return formatPemPublicKey(pemBytes)
 }
 
-function encodeAsn1Bytes(type, bytes) {
-  let lengthBytes
+export function encodeAsn1Bytes(type: number, bytes: Uint8Array | number[]): Uint8Array | number[] {
+  let lengthBytes: number[]
   if (bytes.length === 0) {
     lengthBytes = [0]
   } else if (bytes.length < 0x80) {
@@ -151,14 +151,14 @@ function encodeAsn1Bytes(type, bytes) {
   return [type, ...lengthBytes, ...bytes]
 }
 
-function asn1PositiveInteger(bytes) {
+export function asn1PositiveInteger(bytes: Uint8Array | number[]): Uint8Array | number[] {
   if (bytes[0] > 0x7f) {
     return encodeAsn1Bytes(0x02, [0x00, ...bytes])
   }
   return encodeAsn1Bytes(0x02, bytes)
 }
 
-function formatPemPublicKey(bytes) {
+export function formatPemPublicKey(bytes: Uint8Array): string {
   let pemBase64 = Buffer.from(bytes.buffer)
     .toString('base64')
     .match(/.{1,64}/g)
@@ -166,17 +166,17 @@ function formatPemPublicKey(bytes) {
   return `-----BEGIN PUBLIC KEY-----\n${pemBase64}\n-----END PUBLIC KEY-----`
 }
 
-function hexDump(bytes) {
-  console.log(
-    Buffer.from(bytes)
-      .toString('hex')
-      .toUpperCase()
-      .match(/.{1,32}/g)
-      .join('\n')
-      .replace(/(\w\w)/g, '$1 ')
-      .replace(/\s$/, '')
-  )
-}
+// export function hexDump(bytes) {
+//   console.log(
+//     Buffer.from(bytes)
+//       .toString('hex')
+//       .toUpperCase()
+//       .match(/.{1,32}/g)
+//       .join('\n')
+//       .replace(/(\w\w)/g, '$1 ')
+//       .replace(/\s$/, '')
+//   )
+// }
 
 // Links
 // * https://github.com/jrnker/CSharp-easy-RSA-PEM/blob/48349cfc010d6c6acf9feb12282431d9d03fd28c/CSharp-easy-RSA-PEM/CSharp-easy-RSA-PEM/AsnKeyBuilder.cs
