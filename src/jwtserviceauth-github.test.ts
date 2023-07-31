@@ -7,21 +7,8 @@ import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
 import { JwtServiceAuthError } from './jwtserviceautherror'
 import sinon from 'sinon'
 
-const pubKeys = {
-  '1': {
-    'default@RS256': {
-      publicKey: rsaPublicKey,
-      validators: {
-        aud: () => {
-          return true
-        }
-      }
-    }
-  }
-}
 
 describe('JwtServiceAuth', () => {
-
   const server = new JwtServiceAuthTestServer()
   let clock: sinon.SinonFakeTimers
 

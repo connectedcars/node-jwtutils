@@ -1,10 +1,7 @@
-// @ts-check
-'use strict'
+import crypto from 'crypto'
+import {JwtVerifyError} from './jwtverifyerror'
 
-const crypto = require('crypto')
-const JwtVerifyError = require('./jwtverifyerror.js')
-
-const base64UrlSafe = require('./base64urlsafe')
+import * as base64UrlSafe from './base64urlsafe'
 
 const defaultOptions = {
   expiresSkew: 0,
@@ -13,35 +10,19 @@ const defaultOptions = {
   fixup: null
 }
 
-/**
- *
- * @param {string} jwt
- * @param {Object} publicKeys
- * @param {Array<string>} audiences
- * @param {Object} [options]
- * @param {Object} [options.expiresSkew=0]
- * @param {Object} [options.expiresMax=0]
- * @param {Object} [options.nbfIatSkew=300]
- * @param {Function<header,body,void>} [options.fixup]
- */
-function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
-  if (typeof jwt !== 'string') {
-    throw new Error('jwt needs to a string')
-  }
+interface Options {
+  expiresSkew: number
+  expiresMax: number
+  nbfIatSkew: number
+  fixup: Function | null
+  validators?: Record<string, (() => boolean)>
+}
 
-  if (typeof publicKeys !== 'object' || Array.isArray(publicKeys)) {
-    throw new Error(
-      'publicKeys needs to be a map of { issuer: { keyid: "PEM encoded key" }'
-    )
-  }
-
-  if (!Array.isArray(audiences)) {
-    throw new Error('audiences needs to be an array of allowed audiences')
-  }
-
+export function jwtDecode(jwt: string, publicKeys: Record<string, Record<string, unknown>>, audiences: string[], options: Options = defaultOptions): Record<string, unknown> {
   if (typeof options === 'number') {
     // Backwards compatibility with old api
     options = {
+      ...defaultOptions,
       nbfIatSkew: options
     }
   }
@@ -107,19 +88,20 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
   }
 
   // Find public key
-  let pubkeyOrSharedKey =
+  //todo: grace find better way to handle this
+  let pubkeyOrSharedKey=
     typeof header.kid === 'string'
-      ? issuer[`${header.kid}@${header.alg}`]
-      : issuer[`default@${header.alg}`]
+      ? issuer[`${header.kid}@${header.alg}`] as string
+      : issuer[`default@${header.alg}`] as string
 
-  let issuerOptions = {}
+  let issuerOptions = {} as Options
   if (
     typeof pubkeyOrSharedKey === 'object' &&
     pubkeyOrSharedKey !== null &&
-    pubkeyOrSharedKey.publicKey
+    pubkeyOrSharedKey['publicKey']
   ) {
     issuerOptions = pubkeyOrSharedKey
-    pubkeyOrSharedKey = pubkeyOrSharedKey.publicKey
+    pubkeyOrSharedKey = pubkeyOrSharedKey['publicKey']
   }
 
   if (!pubkeyOrSharedKey) {
@@ -161,11 +143,11 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
   Object.assign(validators, options.validators || {})
   Object.assign(validators, issuerOptions.validators || {})
 
-  let validationOptions = {}
+  let validationOptions = {} as Options
   Object.assign(validationOptions, options)
   Object.assign(validationOptions, issuerOptions)
 
-  validators.aud(body, audiences, validationOptions)
+  validators.aud(body, audiences)
   validators.iat(body, unixNow, validationOptions)
   validators.nbf(body, unixNow, validationOptions)
   validators.exp(body, unixNow, validationOptions)
@@ -173,7 +155,7 @@ function jwtDecode(jwt, publicKeys, audiences, options = defaultOptions) {
   return body
 }
 
-function validateNotBefore(body, unixNow, options) {
+function validateNotBefore(body: Record<string, unknown>, unixNow: number, options: Options): void {
   if (body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
     throw new JwtVerifyError(
       `Not before in the future by more than ${options.nbfIatSkew} seconds`
@@ -181,7 +163,7 @@ function validateNotBefore(body, unixNow, options) {
   }
 }
 
-function validateIssuedAt(body, unixNow, options) {
+function validateIssuedAt(body: Record<string, unknown>, unixNow: number, options: Options): void {
   if (body.iat && body.iat > unixNow + options.nbfIatSkew) {
     throw new JwtVerifyError(
       `Issued at in the future by more than ${options.nbfIatSkew} seconds`
@@ -189,26 +171,31 @@ function validateIssuedAt(body, unixNow, options) {
   }
 }
 
-function validateAudience(body, audiences, options) {
+function validateAudience(body: Record<string, unknown>, audiences: string[]): void {
   let auds = Array.isArray(body.aud) ? body.aud : [body.aud]
   if (!auds.some(aud => audiences.includes(aud))) {
     throw new JwtVerifyError(`Unknown audience '${auds.join(',')}'`)
   }
 }
 
-function validateExpires(body, unixNow, options) {
+function validateExpires(body: Record<string, unknown>, unixNow: number, options: Options) {
   if (!body.exp) {
     throw new JwtVerifyError(`No expires set on token`)
   }
   let notBefore = body.iat || body.nbf || unixNow
-  if (options.expiresMax && body.exp > notBefore + options.expiresMax) {
-    throw new JwtVerifyError(
-      `Expires in the future by more than ${options.expiresMax} seconds`
-    )
+  if(typeof notBefore === 'number') {
+    if (options.expiresMax && body.exp > notBefore + options.expiresMax) {
+      throw new JwtVerifyError(
+        `Expires in the future by more than ${options.expiresMax} seconds`
+      )
+    }
+  } else {
+    throw new JwtVerifyError('body.iat || body.nbf is unknown type')
   }
-  if (body.exp + (options.expiresSkew || 0) <= unixNow) {
+
+  if (typeof body.exp === 'number' && body.exp + (options.expiresSkew || 0) <= unixNow) {
     throw new JwtVerifyError('Token has expired')
+  } else {
+    throw new JwtVerifyError('body.exp is unknown type')
   }
 }
-
-module.exports = jwtDecode
