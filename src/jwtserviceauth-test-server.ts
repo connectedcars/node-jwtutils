@@ -9,6 +9,16 @@ import { IncomingMessage, ServerResponse } from 'http'
 const pubKeys = {
     'buildstatus@nversion-168820.iam.gserviceaccount.com': {
       '76d81ae69ce620a517b140fc73dbae61e88b34bc@RS256': rsaPublicKey
+    },
+    '1': {
+      'default@RS256': {
+        publicKey: rsaPublicKey,
+        validators: {
+          aud: () => {
+            return true
+          }
+        }
+      }
     }
   }
 
@@ -16,8 +26,6 @@ const pubKeys = {
 export class JwtServiceAuthTestServer extends HttpServer {
   public constructor() {
     super({}, async (req, res) => {
-      switch (req.method) {
-        case 'POST': {
           switch (req.url) {
             case '/oauth2/v4/token': {
                 let chunks = []
@@ -46,17 +54,32 @@ export class JwtServiceAuthTestServer extends HttpServer {
                     }
                   })
             }
+            case '/app/installations/1/access_tokens': {
+              let token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
+              let body = JwtUtils.decode(token, pubKeys, [])
+              res.statusCode = 201
+              return req.on('end', () => {
+                res.end(
+                  JSON.stringify({
+                    token: 'v1.1f699f1069f60xxx',
+                    expires_at: new Date(
+                      new Date().getTime() + 3600 * 1000
+                    ).toISOString()
+                  })
+                )
+              })
+              
+            }
             default: {
                 res.statusCode = 400
                 return res.end(JSON.stringify({ description: 'response.statusCode not 200' }))
               }
             
-          }
-        }
-      }
-      res.statusCode = 404
-      res.end()
-      return
-    })
+          
+            }
+       
+      })
+     
+    }
   }
-}
+

@@ -5,17 +5,13 @@ import { JwtServiceAuth } from './jwtserviceauth'
 
 import fs from 'fs'
 import path from 'path'
-import tmp from 'tmp'
+import * as tmp from 'tmp'
 
 import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
 
-import r2 from 'r2'
-import curl from 'url'
 import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
 import { JwtServiceAuthError } from './jwtserviceautherror'
-
-//todo: grace rewrite this test
-
+import sinon from 'sinon'
 
 const googleKeyFileData = {
   type: 'service_account',
@@ -34,8 +30,8 @@ const googleKeyFileData = {
 
 
 describe('JwtServiceAuth', () => {
-  // Setup httpRequestHandler
   const server = new JwtServiceAuthTestServer()
+  let clock: sinon.SinonFakeTimers
 
   let httpRequestHandlerR2  = null
   let baseUrl = null
@@ -43,14 +39,18 @@ describe('JwtServiceAuth', () => {
     await server.start()
     baseUrl = `http://localhost:${server.listenPort}`
     httpRequestHandlerR2 = defaultHttpRequestHandler
+
+    clock = sinon.useFakeTimers()
   })
 
   afterEach(async () => {
     server.reset()
+    clock.restore()
   })
 
   afterAll(async () => {
     await server.stop()
+    sinon.restore()
   })
 
   describe('getGoogleAccessToken', () => {
@@ -135,90 +135,68 @@ describe('JwtServiceAuth', () => {
     })
   })
 
-  // describe('getGoogleAccessTokenFromGCloudHelper', () => {
-  //   const tmpdir
-  //   const oldPath
-  //   before(() => {
-  //     tmpdir = tmp.dirSync()
-  //     oldPath = process.env['PATH']
-  //     process.env['PATH'] = `${tmpdir.name}${path.delimiter}${oldPath}`
-  //     const configString = JSON.stringify(
-  //       {
-  //         configuration: {
-  //           active_configuration: 'buildstatus',
-  //           properties: {
-  //             compute: {
-  //               region: 'europe-west1',
-  //               zone: 'europe-west1-a'
-  //             },
-  //             core: {
-  //               account: 'troels@connectedcars.dk',
-  //               disable_usage_reporting: 'True',
-  //               project: 'buildstatus'
-  //             }
-  //           }
-  //         },
-  //         credential: {
-  //           access_token: 'ok',
-  //           token_expiry: new Date(
-  //             new Date().getTime() + 3600 * 1000
-  //           ).toISOString()
-  //         },
-  //         sentinels: {
-  //           config_sentinel: '/user/buildstatus/.config/gcloud/config_sentinel'
-  //         }
-  //       },
-  //       null,
-  //       2
-  //     )
-  //     fs.writeFileSync(
-  //       `${tmpdir.name}/gcloud`,
-  //       `#!${process.argv[0]}\nconsole.log(\`${configString}\`)`
-  //     )
-  //     fs.chmodSync(`${tmpdir.name}/gcloud`, '755')
-  //   })
-  //   after(() => {
-  //     process.env['PATH'] = oldPath
-  //     fs.unlinkSync(`${tmpdir.name}/gcloud`)
-  //     tmpdir.removeCallback()
-  //   })
+  describe('getGoogleAccessTokenFromGCloudHelper', () => {
+    let tmpdir = null
+    let oldPath = null
+    beforeAll(() => {
+      tmpdir = tmp.dirSync({unsafeCleanup: true} as tmp.Options)
+      process.env.PATH = `${tmpdir.name}${path.delimiter}${oldPath}`
+      oldPath = process.env.PATH
+      const configString = JSON.stringify(
+        {
+          configuration: {
+            active_configuration: 'buildstatus',
+            properties: {
+              compute: {
+                region: 'europe-west1',
+                zone: 'europe-west1-a'
+              },
+              core: {
+                account: 'troels@connectedcars.dk',
+                disable_usage_reporting: 'True',
+                project: 'buildstatus'
+              }
+            }
+          },
+          credential: {
+            access_token: 'ok',
+            token_expiry: new Date(
+              new Date().getTime() + 3600 * 1000
+            ).toISOString()
+          },
+          sentinels: {
+            config_sentinel: '/user/buildstatus/.config/gcloud/config_sentinel'
+          }
+        },
+        null,
+        2
+      )
+      fs.writeFileSync(
+        `${tmpdir.name}/gcloud`,
+        `#!${process.argv[0]}\nconsole.log(\`${configString}\`)`
+      )
+      fs.chmodSync(`${tmpdir.name}/gcloud`, '755')
+    })
+    afterAll(() => {
+      process.env['PATH'] = oldPath
+      fs.unlinkSync(`${tmpdir.name}/gcloud`)
+      tmpdir.removeCallback()
+    })
 
-  //   it('should succeed with ok token', function() {
-  //     this.timeout(10000)
-  //     this.slow(5000)
-  //     const jwtServiceAuth = new JwtServiceAuth()
-  //     const accessTokenPromise = jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
-  //     return expect(
-  //       accessTokenPromise,
-  //       'to be fulfilled with value satisfying',
-  //       {
-  //         accessToken: 'ok',
-  //         expiresIn: expect
-  //           .it('to be a number')
-  //           .and('to be greater than', 1000),
-  //         expiresAt: expect
-  //           .it('to be a number')
-  //           .and('to be greater than', 1500000000)
-  //       }
-  //     )
-  //   })
-  //   it('static should succeed with ok token ', function() {
-  //     this.timeout(10000)
-  //     this.slow(5000)
-  //     const accessTokenPromise = JwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
-  //     return expect(
-  //       accessTokenPromise,
-  //       'to be fulfilled with value satisfying',
-  //       {
-  //         accessToken: 'ok',
-  //         expiresIn: expect
-  //           .it('to be a number')
-  //           .and('to be greater than', 1000),
-  //         expiresAt: expect
-  //           .it('to be a number')
-  //           .and('to be greater than', 1500000000)
-  //       }
-  //     )
-  //   })
-  // })
+    it('should succeed with ok token', async function() {
+      clock.tick(5000)
+      const jwtServiceAuth = new JwtServiceAuth(null, {
+        command: `${tmpdir.name}/gcloud`
+      })
+      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
+      return expect(
+        accessTokenPromise).toEqual(
+        {
+          accessToken: 'ok',
+          expiresIn: expect.any(Number),
+          expiresAt: expect.any(Number)
+        }
+      )
+    })
+  })
 })

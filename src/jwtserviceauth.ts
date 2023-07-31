@@ -2,7 +2,7 @@ import querystring from 'querystring'
 import jwtEncode from './jwtencode'
 import {JwtServiceAuthError} from './jwtserviceautherror'
 import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
-import ProcessUtils from './processutils'
+import * as ProcessUtils from './processutils'
 import { AccessTokenResponse } from '../types/@connectedcars/jwtutils'
 import { AxiosResponse } from 'axios'
 
@@ -25,6 +25,7 @@ interface Options {
   endpoint?: string
   expires?: number
   impersonate?: string
+  command?: string
 }
 
 export interface JwtBody {
@@ -44,18 +45,20 @@ interface GoogleAccessToken {
 
 export class JwtServiceAuth {
     private requestHandler: (method: string, url: string, headers?: Record<string, unknown>, body?: unknown) => Promise<AxiosResponse | null>
-    private authEndpoint: string
+    private authEndpoint: string | null
+    private command: string
 
     constructor(httpRequestHandler?: (method: string, url: string, headers?: Record<string, unknown>, body?: unknown) => Promise<AxiosResponse | null>, options: Options = {}) {
       this.requestHandler = httpRequestHandler || defaultHttpRequestHandler
-      this.authEndpoint = options.endpoint || 'https://www.googleapis.com/oauth2/v4/token'
+      this.authEndpoint = options.endpoint || null
+      this.command = options.command || 'gcloud'
     }
 
     public async getGithubAccessToken(
       privateKey: string,
-      appId: string,
-      installationId: string,
-      appName: string,
+      appId: number,
+      installationId: number,
+      appName?: string,
       options: Options = {}
     ): Promise<AccessTokenResponse> {
       let expires = options.expires ? options.expires : 600
@@ -78,7 +81,7 @@ export class JwtServiceAuth {
       // return axios.post()
       return this.requestHandler(
         'POST',
-        `https://api.github.com/app/installations/${installationId}/access_tokens`,
+        this.authEndpoint || `https://api.github.com/app/installations/${installationId}/access_tokens`,
         {
           Authorization: 'Bearer ' + jwt,
           'User-Agent': appName ? appName : 'jwtutils',
@@ -86,10 +89,8 @@ export class JwtServiceAuth {
         },
         undefined
       ).then(response => {
-        if (response.statusCode === 201) {
-          let authResponse = JSON.parse(
-            Buffer.from(response.data).toString('utf8')
-          )
+        if (response.statusCode === 201 || response.status === 201) {
+          let authResponse = response.data
           let now = new Date().getTime()
           let expiresAt = new Date(authResponse.expires_at).getTime()
           return Promise.resolve({
@@ -97,20 +98,32 @@ export class JwtServiceAuth {
             expiresIn: Math.ceil((expiresAt - now) / 1000),
             expiresAt: expiresAt
           })
-        } else {
-          return Promise.reject(
-            new JwtServiceAuthError('response.statusCode not 200', {
-              statusCode: response.statusCode,
-              data: Buffer.from(response.data).toString('utf8')
-            })
-          )
+        }
+      })
+    }
+
+    public async getGoogleAccessTokenFromGCloudHelper(): Promise<GoogleAccessToken>  {
+      let resultPromise = ProcessUtils.runProcessAsync(
+        this.command,
+        ['config', 'config-helper', '--format=json'],
+        { closeStdin: true }
+      )
+  
+      return await resultPromise.then(result => {
+        let config = JSON.parse(result.stdout)
+        let now = new Date().getTime()
+        let expiresAt = new Date(config.credential.token_expiry).getTime()
+        return {
+          accessToken: config.credential.access_token,
+          expiresIn: Math.ceil((expiresAt - now) / 1000),
+          expiresAt: expiresAt
         }
       })
     }
 
     public async getGoogleAccessToken(keyFileData: string, scopes: string[] | number = null, options: Options = {}): Promise<GoogleAccessToken> {
       const mergedConfig = Object.assign({}, options, {
-        endpoint: this.authEndpoint
+        endpoint: this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token'
       })
       return await this._getGoogleAccessToken(this.requestHandler, keyFileData, scopes, mergedConfig)
     }
@@ -187,47 +200,7 @@ export class JwtServiceAuth {
             expiresIn: response.data.expires_in,
             expiresAt: now + response.data.expires_in * 1000
           }
-        } else {
-          throw new JwtServiceAuthError('response.statusCode not 200', {
-            statusCode: response.statusCode || response.status,
-            data: Buffer.from(response.data).toString('utf8')
-          })
         }
       })
-  }
-
-  // private formatGoogleAccessToken(response: any): GoogleAccessToken {
-  //   if (response.statusCode === 200 || response.status == 200) {
-  //     let now = new Date().getTime()
-  //     return {
-  //       accessToken: response.access_token,
-  //       expiresIn: response.expires_in,
-  //       expiresAt: now + response.expires_in * 1000
-  //     }
-  //   } else {
-  //     throw new JwtServiceAuthError('response.statusCode not 200', {
-  //       statusCode: response.statusCode || response.status,
-  //       data: Buffer.from(response.data).toString('utf8')
-  //     })
-  //   }
-  // }
-
-  public async getGoogleAccessTokenFromGCloudHelper(): Promise<GoogleAccessToken>  {
-    let [gcloudConfigHelper, resultPromise] = ProcessUtils.runProcessAsync(
-      `gcloud`,
-      ['config', 'config-helper', '--format=json'],
-      { closeStdin: true }
-    )
-
-    return resultPromise.then(result => {
-      let config = JSON.parse(result.stdout)
-      let now = new Date().getTime()
-      let expiresAt = new Date(config.credential.token_expiry).getTime()
-      return {
-        accessToken: config.credential.access_token,
-        expiresIn: Math.ceil((expiresAt - now) / 1000),
-        expiresAt: expiresAt
-      }
-    })
   }
 }
