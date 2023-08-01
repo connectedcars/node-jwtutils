@@ -1,14 +1,14 @@
+import { AxiosResponse } from 'axios'
 import fs from 'fs'
 import path from 'path'
 import sinon from 'sinon'
 import * as tmp from 'tmp'
 
 import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
-// import { JwtServiceAuth, } from './index'
 import { JwtServiceAuth } from './jwtserviceauth'
 import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
 import { JwtServiceAuthError } from './jwtserviceautherror'
-import { rsaPrivateKey, rsaPublicKey } from './testresources'
+import { rsaPrivateKey } from './testresources'
 
 const googleKeyFileData = {
   type: 'service_account',
@@ -28,8 +28,15 @@ describe('JwtServiceAuth', () => {
   const server = new JwtServiceAuthTestServer()
   let clock: sinon.SinonFakeTimers
 
-  let httpRequestHandlerR2 = null
-  let baseUrl = null
+  let httpRequestHandlerR2:
+    | ((
+        method: string,
+        url: string,
+        headers?: Record<string, string | number>,
+        body?: unknown
+      ) => Promise<AxiosResponse<any, any>>)
+    | undefined
+  let baseUrl: string
   beforeAll(async () => {
     await server.start()
     baseUrl = `http://localhost:${server.listenPort}`
@@ -73,11 +80,7 @@ describe('JwtServiceAuth', () => {
 
     it('should succeed with ok token old expires interface', async () => {
       const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, { endpoint: `${baseUrl}/oauth2/v4/token` })
-      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(
-        JSON.stringify(googleKeyFileData),
-        3600,
-        null
-      )
+      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(JSON.stringify(googleKeyFileData), 3600)
       return expect(accessTokenPromise).toEqual({
         accessToken: 'ok',
         expiresAt: expect.any(Number),
@@ -113,10 +116,10 @@ describe('JwtServiceAuth', () => {
   })
 
   describe('getGoogleAccessTokenFromGCloudHelper', () => {
-    let tmpdir = null
-    let oldPath = null
+    let tmpdir: tmp.DirResult
+    let oldPath: string
     beforeAll(() => {
-      tmpdir = tmp.dirSync({ unsafeCleanup: true } as tmp.Options)
+      tmpdir = tmp.dirSync({ unsafeCleanup: true })
       process.env.PATH = `${tmpdir.name}${path.delimiter}${oldPath}`
       oldPath = process.env.PATH
       const configString = JSON.stringify(
@@ -157,7 +160,7 @@ describe('JwtServiceAuth', () => {
 
     it('should succeed with ok token', async function () {
       clock.tick(5000)
-      const jwtServiceAuth = new JwtServiceAuth(null, {
+      const jwtServiceAuth = new JwtServiceAuth(undefined, {
         command: `${tmpdir.name}/gcloud`
       })
       const accessTokenPromise = await jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()

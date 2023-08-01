@@ -1,13 +1,12 @@
 import crypto from 'crypto'
 
 import * as base64UrlSafe from '../base64urlsafe'
-import { JwtBody } from './jwtdecode'
 
 export function encode(
   privateKey: string,
   header: Record<string, unknown>,
-  body: JwtBody,
-  privateKeyPassword = null
+  body: Record<string, unknown>,
+  privateKeyPassword: string | null = null
 ): string {
   let signAlgo = null
   let hmacAlgo = null

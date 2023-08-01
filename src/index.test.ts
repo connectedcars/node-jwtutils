@@ -1,5 +1,4 @@
 import { JwtUtils, JwtVerifyError } from './index'
-import { JwtBody } from './JwtUtils/jwtdecode'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './testresources'
 // const oldJwtUtils = require('./index')
 
@@ -17,7 +16,7 @@ const jwtBody = {
   iat: unixNow,
   exp: unixNow + 600,
   scope: ['http://stuff', 'http://stuff2']
-} as JwtBody
+}
 
 const pubKeys = {
   'test@test.com': {
@@ -90,21 +89,19 @@ describe('jwtUtils', () => {
         const customJwtHeader = Object.assign({}, jwtHeader)
         customJwtHeader.kid = '2'
         customJwtHeader.alg = algo
-        const jwt = JwtUtils.encode(null, customJwtHeader, jwtBody, 'sharedkey')
+        const jwt = JwtUtils.encode('', customJwtHeader, jwtBody, 'sharedkey')
         const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
         expect(jwtBody).toEqual(decodedJwtBody)
       }
     })
     it('success without kid', () => {
-      const customJwtHeader = Object.assign({}, jwtHeader)
-      delete customJwtHeader.kid
+      const customJwtHeader = { typ: jwtHeader.typ, alg: jwtHeader.alg }
       const jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
       expect(jwtBody).toEqual(decodedJwtBody)
     })
     it('success with array aud', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.aud = ['https://myhost/oauth/token', 'https://host/oauth/token']
+      const customJwtBody = { ...jwtBody, aud: ['https://myhost/oauth/token', 'https://host/oauth/token'] }
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
       expect(customJwtBody).toEqual(decodedJwtBody)
@@ -145,10 +142,7 @@ describe('jwtUtils', () => {
       ).toThrow(new JwtVerifyError('Expires in the future by more than 600 seconds'))
     })
     it('token outside maximum expires using nbf', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.exp += 172800
-      customJwtBody.nbf = customJwtBody.iat
-      delete customJwtBody.iat
+      const customJwtBody = { ...jwtBody, exp: jwtBody.exp + 172800, nbf: jwtBody.iat }
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() =>
         JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
@@ -157,9 +151,7 @@ describe('jwtUtils', () => {
       ).toThrow(new JwtVerifyError('Expires in the future by more than 600 seconds'))
     })
     it('token outside maximum expires using unixNow', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.exp += 172800
-      delete customJwtBody.iat
+      const customJwtBody = { ...jwtBody, exp: jwtBody.exp + 172800 }
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() =>
         JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
@@ -183,16 +175,24 @@ describe('jwtUtils', () => {
       )
     })
     it('missing exp', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      delete customJwtBody.exp
+      const customJwtBody = {
+        aud: 'https://host/oauth/token',
+        iss: 'test@test.com',
+        iat: unixNow,
+        scope: ['http://stuff', 'http://stuff2']
+      }
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('No expires set on token')
       )
     })
     it('missing iss', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      delete customJwtBody.iss
+      const customJwtBody = {
+        aud: 'https://host/oauth/token',
+        iat: unixNow,
+        exp: unixNow + 600,
+        scope: ['http://stuff', 'http://stuff2']
+      }
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('No issuer set')
@@ -207,8 +207,10 @@ describe('jwtUtils', () => {
       )
     })
     it('nbf invalid', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.nbf = customJwtBody.iat + 1200
+      const customJwtBody = {
+        ...jwtBody,
+        nbf: jwtBody.iat + 1200
+      }
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('Not before in the future by more than 300 seconds')
@@ -249,7 +251,7 @@ describe('jwtUtils', () => {
       const customJwtHeader = Object.assign({}, jwtHeader)
       customJwtHeader.kid = '5'
       customJwtHeader.alg = 'HS256'
-      const jwt = JwtUtils.encode(null, customJwtHeader, jwtBody, 'sharedkey')
+      const jwt = JwtUtils.encode('', customJwtHeader, jwtBody, 'sharedkey')
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError(`Verification failed with alg 'HS256'`)
       )
@@ -285,7 +287,7 @@ describe('jwtUtils', () => {
         pubKeys,
         ['https://host/oauth/token'],
         {
-          fixup: (header, body) => {
+          fixup: (header: { kid: string }, body: { iss: string; aud: string; exp: any; iat: number }) => {
             header.kid = '2'
             body.iss = 'test@test.com'
             body.aud = 'https://host/oauth/token'

@@ -1,10 +1,8 @@
-import { AxiosResponse } from 'axios'
-
+import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
 import { JwtUtils } from './index'
 import { JwtAuthMiddlewareServer } from './jwtauthmiddleware-test-server'
 import { JwtServiceAuthError } from './jwtserviceautherror'
 import { ecPrivateKey } from './testresources'
-const { default: axios } = require('axios')
 
 const jwtHeader = {
   typ: 'JWT',
@@ -48,7 +46,7 @@ describe('jwtMiddleware', () => {
   describe('authentication', () => {
     it('should return ok', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
-      const responsePromise = await doRequest('GET', `${getServerAddress()}/`, {
+      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
         'User-Agent': 'test'
@@ -58,7 +56,7 @@ describe('jwtMiddleware', () => {
     })
 
     it('should return ok for anonymous', async () => {
-      const responsePromise = await doRequest('GET', `${getServerAddress()}/anonymous`, {
+      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/anonymous`, {
         Accept: 'application/json',
         'User-Agent': 'test'
       })
@@ -67,11 +65,18 @@ describe('jwtMiddleware', () => {
       expect(responsePromise).toHaveProperty('status', 200)
     })
     it('should fail for anonymous with invalid token', async () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      delete customJwtBody.sub
+      const customJwtBody = {
+        aud: 'http://localhost/',
+        jti: 'jtiValid',
+        iat: unixNow,
+        exp: unixNow + 600,
+        scope: ['http://stuff', 'http://stuff2'],
+        sub: 'subject@domain.tld',
+        email: 'test@domain.tld'
+      }
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        doRequest('GET', `${getServerAddress()}/anonymous`, {
+        defaultHttpRequestHandler('GET', `${getServerAddress()}/anonymous`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -80,7 +85,7 @@ describe('jwtMiddleware', () => {
     })
     it('should return ok with a new e-mail', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
-      const responsePromise = await doRequest('GET', `${getServerAddress()}/mapped`, {
+      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/mapped`, {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
         'User-Agent': 'test'
@@ -89,11 +94,18 @@ describe('jwtMiddleware', () => {
       expect(responsePromise).toHaveProperty('status', 200)
     })
     it('should fail because of missing sub', async () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      delete customJwtBody.sub
+      const customJwtBody = {
+        aud: 'http://localhost/',
+        iss: 'http://localhost/oauth/token',
+        jti: 'jtiValid',
+        iat: unixNow,
+        exp: unixNow + 600,
+        scope: ['http://stuff', 'http://stuff2'],
+        email: 'test@domain.tld'
+      }
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        doRequest('GET', `${getServerAddress()}/`, {
+        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -105,7 +117,7 @@ describe('jwtMiddleware', () => {
       customJwtBody.jti = 'jtiRevoked'
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        doRequest('GET', `${getServerAddress()}/`, {
+        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -115,7 +127,7 @@ describe('jwtMiddleware', () => {
     it('should fail because of malform JSON', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
       await expect(
-        doRequest('GET', `${getServerAddress()}/`, {
+        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt.substr(2),
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -127,7 +139,7 @@ describe('jwtMiddleware', () => {
       customJwtHeader.kid = '2'
       const jwt = JwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
       await expect(
-        doRequest('GET', `${getServerAddress()}/`, {
+        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -136,7 +148,7 @@ describe('jwtMiddleware', () => {
     })
     it('should fail with not allowed because it has no token', async () => {
       await expect(
-        doRequest('GET', `${getServerAddress()}/`, {
+        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Accept: 'application/json',
           'User-Agent': 'test'
         })
@@ -147,7 +159,7 @@ describe('jwtMiddleware', () => {
       customJwtBody.sub = 'error'
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        doRequest('GET', `${getServerAddress()}/async`, {
+        defaultHttpRequestHandler('GET', `${getServerAddress()}/async`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test',
@@ -157,7 +169,7 @@ describe('jwtMiddleware', () => {
     })
     it('should success with async', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
-      const responsePromise = await doRequest('GET', `${getServerAddress()}/async`, {
+      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/async`, {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
         'User-Agent': 'test'
@@ -167,20 +179,3 @@ describe('jwtMiddleware', () => {
     })
   })
 })
-
-async function doRequest(
-  method: string,
-  url: string,
-  headers?: Record<string, unknown>,
-  body?: unknown
-): Promise<AxiosResponse> {
-  try {
-    const res = await axios({ method: method, url: url, headers: headers, data: body })
-    return res
-  } catch (e) {
-    throw new JwtServiceAuthError(e.message, {
-      statusCode: e.response.statusCode || e.response.status,
-      data: e.response.data
-    })
-  }
-}

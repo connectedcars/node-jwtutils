@@ -26,7 +26,8 @@ export class JwtServiceAuthTestServer extends HttpServer {
     super({}, async (req, res) => {
       switch (req.url) {
         case '/oauth2/v4/token': {
-          const chunks = []
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const chunks: any[] = []
           req.on('data', chunk => {
             chunks.push(chunk)
           })
@@ -49,8 +50,16 @@ export class JwtServiceAuthTestServer extends HttpServer {
           })
         }
         case '/app/installations/1/access_tokens': {
+          if (!req.headers['authorization']) {
+            res.statusCode = 400
+            return res.end(JSON.stringify('Auth error'))
+          }
           const token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
           const body = JwtUtils.decode(token, pubKeys, [])
+          if (!body) {
+            res.statusCode = 400
+            return res.end(JSON.stringify('Decoding failure'))
+          }
           res.statusCode = 201
           return req.on('end', () => {
             res.end(

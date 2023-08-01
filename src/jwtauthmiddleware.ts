@@ -1,3 +1,6 @@
+import { Request, Response } from 'express'
+import http from 'http'
+
 import { JwtUtils } from './index'
 import { JwtVerifyError } from './jwtverifyerror'
 
@@ -7,14 +10,19 @@ export interface RevokedToken {
   revokedAt: Date
 }
 
-//todo: grace make this callable in a better way ie import JwtAuthMiddleware from file
 export function JwtAuthMiddleware(
   pubKeys: Record<string, Record<string, unknown>>,
   revokedTokens: Record<string, RevokedToken>,
   audiences: string[],
-  mapper = null,
-  options: Record<string, unknown> = {}
-): (request: any, response: any, next: (error?: Error) => void) => void {
+  mapper: unknown | null = null,
+  options: Record<string, string | number | string[] | boolean> = {}
+): (
+  request: Request & { user?: Record<string, unknown> } & { jwtAuthMiddlewareProcessed?: boolean } & {
+    headers: http.IncomingHttpHeaders
+  },
+  response: Response,
+  next: (err?: Error | null) => void
+) => void {
   mapper = mapper || null
   options = options || {}
   return function (request, response, next) {
@@ -27,6 +35,9 @@ export function JwtAuthMiddleware(
         return next()
       }
       return next(new JwtVerifyError('Not allowed'))
+    }
+    if (!request.headers.authorization) {
+      return next(new JwtVerifyError('Missing authorization'))
     }
     try {
       const jwt = request.headers.authorization.substring(7)
@@ -57,7 +68,7 @@ export function JwtAuthMiddleware(
             request.jwtAuthMiddlewareProcessed = true
             next()
           })
-          .catch(e => next(e))
+          .catch((e: Error) => next(e))
       } else {
         request.jwtAuthMiddlewareProcessed = true
         return next()
