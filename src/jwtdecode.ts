@@ -10,15 +10,8 @@ const defaultOptions = {
   fixup: null
 }
 
-interface Options {
-  expiresSkew: number
-  expiresMax: number
-  nbfIatSkew: number
-  fixup: Function | null
-  validators?: Record<string, (() => boolean)>
-}
 
-export function jwtDecode(jwt: string, publicKeys: Record<string, Record<string, unknown>>, audiences: string[], options: Options = defaultOptions): Record<string, unknown> {
+export function jwtDecode(jwt: string, publicKeys: Record<string, Record<string, unknown>>, audiences: string[], options: Record<string, unknown> = defaultOptions): Record<string, unknown> {
   if (typeof options === 'number') {
     // Backwards compatibility with old api
     options = {
@@ -94,7 +87,7 @@ export function jwtDecode(jwt: string, publicKeys: Record<string, Record<string,
       ? issuer[`${header.kid}@${header.alg}`] as string
       : issuer[`default@${header.alg}`] as string
 
-  let issuerOptions = {} as Options
+  let issuerOptions: Record<string, unknown> = {}
   if (
     typeof pubkeyOrSharedKey === 'object' &&
     pubkeyOrSharedKey !== null &&
@@ -143,7 +136,7 @@ export function jwtDecode(jwt: string, publicKeys: Record<string, Record<string,
   Object.assign(validators, options.validators || {})
   Object.assign(validators, issuerOptions.validators || {})
 
-  let validationOptions = {} as Options
+  let validationOptions = {}
   Object.assign(validationOptions, options)
   Object.assign(validationOptions, issuerOptions)
 
@@ -155,19 +148,23 @@ export function jwtDecode(jwt: string, publicKeys: Record<string, Record<string,
   return body
 }
 
-function validateNotBefore(body: Record<string, unknown>, unixNow: number, options: Options): void {
-  if (body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
-    throw new JwtVerifyError(
-      `Not before in the future by more than ${options.nbfIatSkew} seconds`
-    )
+function validateNotBefore(body: Record<string, unknown>, unixNow: number, options: Record<string, unknown>): void {
+  if(typeof options.nbfIatSkew === 'number') {
+    if (body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
+      throw new JwtVerifyError(
+        `Not before in the future by more than ${options.nbfIatSkew} seconds`
+      )
+    }
   }
 }
 
-function validateIssuedAt(body: Record<string, unknown>, unixNow: number, options: Options): void {
-  if (body.iat && body.iat > unixNow + options.nbfIatSkew) {
-    throw new JwtVerifyError(
-      `Issued at in the future by more than ${options.nbfIatSkew} seconds`
-    )
+function validateIssuedAt(body: Record<string, unknown>, unixNow: number, options: Record<string, unknown>): void {
+  if(typeof options.nbfIatSkew === 'number') {
+    if (body.iat && body.iat > unixNow + options.nbfIatSkew) {
+      throw new JwtVerifyError(
+        `Issued at in the future by more than ${options.nbfIatSkew} seconds`
+      )
+    }
   }
 }
 
@@ -178,12 +175,12 @@ function validateAudience(body: Record<string, unknown>, audiences: string[]): v
   }
 }
 
-function validateExpires(body: Record<string, unknown>, unixNow: number, options: Options) {
+function validateExpires(body: Record<string, unknown>, unixNow: number, options: Record<string, unknown>) {
   if (!body.exp) {
     throw new JwtVerifyError(`No expires set on token`)
   }
   let notBefore = body.iat || body.nbf || unixNow
-  if(typeof notBefore === 'number') {
+  if(typeof notBefore === 'number' && typeof options.expiresMax === 'number') {
     if (options.expiresMax && body.exp > notBefore + options.expiresMax) {
       throw new JwtVerifyError(
         `Expires in the future by more than ${options.expiresMax} seconds`
@@ -193,8 +190,10 @@ function validateExpires(body: Record<string, unknown>, unixNow: number, options
     throw new JwtVerifyError('body.iat || body.nbf is unknown type')
   }
 
-  if (typeof body.exp === 'number' && body.exp + (options.expiresSkew || 0) <= unixNow) {
-    throw new JwtVerifyError('Token has expired')
+  if (typeof body.exp === 'number' && typeof options.expiresSkew === 'number'){
+    if(body.exp + (options.expiresSkew || 0) <= unixNow) {
+      throw new JwtVerifyError('Token has expired')
+    }
   } else {
     throw new JwtVerifyError('body.exp is unknown type')
   }

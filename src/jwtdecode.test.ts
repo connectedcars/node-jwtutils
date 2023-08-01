@@ -1,7 +1,5 @@
-import { JwtServiceAuthError } from './jwtserviceautherror'
 import * as JwtUtils from './jwtdecode'
 import {JwtVerifyError} from './jwtverifyerror'
-import { rsaPublicKey } from './testresources'
 
 const audiences = []
 
@@ -42,9 +40,6 @@ const testJwtWrongAlg =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzEyOCJ9.eyJhdWQiOiJodHRwczovL2hvc3Qvb2F1dGgvdG9rZW4iLCJpc3MiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNTAzMzM2NzU5LCJleHAiOjE1MDMzMzczNTksInNjb3BlIjpbImh0dHA6Ly9zdHVmZiIsImh0dHA6Ly9zdHVmZjIiXX0.12co2gXwBxmZ2uLJecd26bfteCLBx7jgu_9rp2hhKAHWA4qFKm1HcQOZXqDvHkjflQDtNAQ1ZUUf3U8kntUUAmMOjhHx0BspC-xuaTFylZWqj--A2_w9e7JSk46TF_x3e_hZLB3rtyuSEAPMh_nOCsmM-4A2fnQx0Y5p-Bwbt0I'
 
 describe('jwtUtils', () => {
-  beforeEach(async () => {
-
-  })
   describe('jwtDecode', () => {  
     it('decodes', () => {
       expect(JwtUtils.jwtDecode(testJwt, pubKeys, audiences, defaultOptions)).toEqual({ "aud": "https://host/oauth/token",
@@ -55,7 +50,7 @@ describe('jwtUtils', () => {
            "http://stuff",
            "http://stuff2",
          ]
-    })
+      })
     })  
     it('too few spaces', () => {
       expect(() => JwtUtils.jwtDecode('hello.test', pubKeys, audiences)).toThrow(new JwtVerifyError('JWT does not contain 3 dots'))
