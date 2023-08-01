@@ -1,17 +1,14 @@
-import { rsaPrivateKey, rsaPublicKey } from './testresources'
-
-// import { JwtServiceAuth, } from './index'
-import { JwtServiceAuth } from './jwtserviceauth'
-
 import fs from 'fs'
 import path from 'path'
+import sinon from 'sinon'
 import * as tmp from 'tmp'
 
-import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
-
 import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
+// import { JwtServiceAuth, } from './index'
+import { JwtServiceAuth } from './jwtserviceauth'
+import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
 import { JwtServiceAuthError } from './jwtserviceautherror'
-import sinon from 'sinon'
+import { rsaPrivateKey, rsaPublicKey } from './testresources'
 
 const googleKeyFileData = {
   type: 'service_account',
@@ -27,13 +24,11 @@ const googleKeyFileData = {
     'https://www.googleapis.com/robot/v1/metadata/x509/servicename%40test-project.iam.gserviceaccount.com'
 }
 
-
-
 describe('JwtServiceAuth', () => {
   const server = new JwtServiceAuthTestServer()
   let clock: sinon.SinonFakeTimers
 
-  let httpRequestHandlerR2  = null
+  let httpRequestHandlerR2 = null
   let baseUrl = null
   beforeAll(async () => {
     await server.start()
@@ -55,83 +50,65 @@ describe('JwtServiceAuth', () => {
 
   describe('getGoogleAccessToken', () => {
     it('should succeed with ok token', async () => {
-      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2,  {endpoint: `${baseUrl}/oauth2/v4/token`})
-      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(
-        JSON.stringify(googleKeyFileData)
-      )
-      return expect(
-        accessTokenPromise).toEqual(
-        {
-          accessToken: 'ok',
-          expiresAt: expect.any(Number),
-          expiresIn: expect.any(Number)
-        }
-      )
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, { endpoint: `${baseUrl}/oauth2/v4/token` })
+      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(JSON.stringify(googleKeyFileData))
+      return expect(accessTokenPromise).toEqual({
+        accessToken: 'ok',
+        expiresAt: expect.any(Number),
+        expiresIn: expect.any(Number)
+      })
     })
 
     it('should succeed with ok token with other scope', async () => {
-      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, {endpoint: `${baseUrl}/oauth2/v4/token`})
-      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(
-        JSON.stringify(googleKeyFileData),
-        ['https://www.googleapis.com/auth/admin.datatransfer']
-      )
-      return expect(
-        accessTokenPromise).toEqual(
-        {
-          accessToken: 'ok',
-          expiresAt: expect.any(Number),
-          expiresIn: expect.any(Number)
-        }
-      )
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, { endpoint: `${baseUrl}/oauth2/v4/token` })
+      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(JSON.stringify(googleKeyFileData), [
+        'https://www.googleapis.com/auth/admin.datatransfer'
+      ])
+      return expect(accessTokenPromise).toEqual({
+        accessToken: 'ok',
+        expiresAt: expect.any(Number),
+        expiresIn: expect.any(Number)
+      })
     })
 
     it('should succeed with ok token old expires interface', async () => {
-      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, {endpoint: `${baseUrl}/oauth2/v4/token`})
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, { endpoint: `${baseUrl}/oauth2/v4/token` })
       const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(
         JSON.stringify(googleKeyFileData),
         3600,
         null
       )
-      return expect(
-        accessTokenPromise).toEqual(
-        {
-          accessToken: 'ok',
-          expiresAt: expect.any(Number),
-          expiresIn: expect.any(Number)
-        }
-      )
+      return expect(accessTokenPromise).toEqual({
+        accessToken: 'ok',
+        expiresAt: expect.any(Number),
+        expiresIn: expect.any(Number)
+      })
     })
 
-
     it('should fail', async () => {
-      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2,  {endpoint: `${baseUrl}`})
-      await expect(jwtServiceAuth.getGoogleAccessToken(
-        JSON.stringify(googleKeyFileData)
-      )).rejects.toThrow(new JwtServiceAuthError('Request failed with status code 400'))
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, { endpoint: `${baseUrl}` })
+      await expect(jwtServiceAuth.getGoogleAccessToken(JSON.stringify(googleKeyFileData))).rejects.toThrow(
+        new JwtServiceAuthError('Request failed with status code 400')
+      )
     })
 
     it('should fail with bad input', async () => {
-      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2,  {endpoint: `${baseUrl}/oauth2/v4/token`})
-      await expect(jwtServiceAuth.getGoogleAccessToken(
-        '{}'
-      )).rejects.toThrow(new JwtServiceAuthError('Only supports service account keyFiles'))
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, { endpoint: `${baseUrl}/oauth2/v4/token` })
+      await expect(jwtServiceAuth.getGoogleAccessToken('{}')).rejects.toThrow(
+        new JwtServiceAuthError('Only supports service account keyFiles')
+      )
     })
 
     it('should succeed with ok token and impersonate', async () => {
-      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, {endpoint: `${baseUrl}/oauth2/v4/token`})
-      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(
-        JSON.stringify(googleKeyFileData),
-        null,
-        { impersonate: 'test' }
-      )
-      return expect(
-        accessTokenPromise).toEqual(
-        {
-          accessToken: 'ok',
-          expiresAt: expect.any(Number),
-          expiresIn: expect.any(Number)
-        }
-      )
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, { endpoint: `${baseUrl}/oauth2/v4/token` })
+      const accessTokenPromise = await jwtServiceAuth.getGoogleAccessToken(JSON.stringify(googleKeyFileData), null, {
+        impersonate: 'test'
+      })
+      return expect(accessTokenPromise).toEqual({
+        accessToken: 'ok',
+        expiresAt: expect.any(Number),
+        expiresIn: expect.any(Number)
+      })
     })
   })
 
@@ -139,7 +116,7 @@ describe('JwtServiceAuth', () => {
     let tmpdir = null
     let oldPath = null
     beforeAll(() => {
-      tmpdir = tmp.dirSync({unsafeCleanup: true} as tmp.Options)
+      tmpdir = tmp.dirSync({ unsafeCleanup: true } as tmp.Options)
       process.env.PATH = `${tmpdir.name}${path.delimiter}${oldPath}`
       oldPath = process.env.PATH
       const configString = JSON.stringify(
@@ -160,9 +137,7 @@ describe('JwtServiceAuth', () => {
           },
           credential: {
             access_token: 'ok',
-            token_expiry: new Date(
-              new Date().getTime() + 3600 * 1000
-            ).toISOString()
+            token_expiry: new Date(new Date().getTime() + 3600 * 1000).toISOString()
           },
           sentinels: {
             config_sentinel: '/user/buildstatus/.config/gcloud/config_sentinel'
@@ -171,10 +146,7 @@ describe('JwtServiceAuth', () => {
         null,
         2
       )
-      fs.writeFileSync(
-        `${tmpdir.name}/gcloud`,
-        `#!${process.argv[0]}\nconsole.log(\`${configString}\`)`
-      )
+      fs.writeFileSync(`${tmpdir.name}/gcloud`, `#!${process.argv[0]}\nconsole.log(\`${configString}\`)`)
       fs.chmodSync(`${tmpdir.name}/gcloud`, '755')
     })
     afterAll(() => {
@@ -183,20 +155,17 @@ describe('JwtServiceAuth', () => {
       tmpdir.removeCallback()
     })
 
-    it('should succeed with ok token', async function() {
+    it('should succeed with ok token', async function () {
       clock.tick(5000)
       const jwtServiceAuth = new JwtServiceAuth(null, {
         command: `${tmpdir.name}/gcloud`
       })
       const accessTokenPromise = await jwtServiceAuth.getGoogleAccessTokenFromGCloudHelper()
-      return expect(
-        accessTokenPromise).toEqual(
-        {
-          accessToken: 'ok',
-          expiresIn: expect.any(Number),
-          expiresAt: expect.any(Number)
-        }
-      )
+      return expect(accessTokenPromise).toEqual({
+        accessToken: 'ok',
+        expiresIn: expect.any(Number),
+        expiresAt: expect.any(Number)
+      })
     })
   })
 })

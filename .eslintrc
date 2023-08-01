@@ -1,3 +1,5 @@
 {
-  "extends": "./node_modules/@connectedcars/setup/.eslintrc"
+  "extends": "./node_modules/@connectedcars/setup/.eslintrc",
+  // Force eslint to use local installed parser not the one from ./node_modules/@connectedcars/setup
+  "parser": "@typescript-eslint/parser"
 }

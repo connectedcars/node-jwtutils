@@ -1,0 +1,13 @@
+{
+  "extends": "./node_modules/@connectedcars/setup/tsconfig",
+  // All paths need to reset or they would be pointing to ./node_modules/@connectedcars/setup
+  "compilerOptions": {
+    "outDir": "build/dist",
+    "rootDir": "./"
+  },
+  "exclude": [
+    "build",
+    "node_modules",
+    "coverage"
+  ]
+}

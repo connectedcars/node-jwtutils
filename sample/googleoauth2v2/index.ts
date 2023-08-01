@@ -1,13 +1,11 @@
-'use strict'
+import path from 'path'
 
-const path = require('path')
+import express from 'express'
 
-const express = require('express')
+import { JwtAuthMiddleware, JwtVerifyError } from '../../src/.'
 
-const { JwtAuthMiddleware, JwtVerifyError } = require('../../src/.')
-
-const request = require('request')
-const jwkToPem = require('jwk-to-pem')
+import request from 'request'
+import jwkToPem from 'jwk-to-pem'
 
 if (process.argv.length <= 2) {
   console.error('node index.js "google-oauth-cclientid"')

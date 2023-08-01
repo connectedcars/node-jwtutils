@@ -1,15 +1,11 @@
-import jwtDecode from './jwtdecode'
-import JwtVerifyError from './jwtverifyerror'
+import { JwtUtils } from './index'
+import { JwtVerifyError } from './jwtverifyerror'
 
 export interface RevokedToken {
   id?: number | string
   jti: string
   revokedAt: Date
 }
-interface Options {
-  allowAnonymous?: boolean
-}
-
 
 //todo: grace make this callable in a better way ie import JwtAuthMiddleware from file
 export function JwtAuthMiddleware(
@@ -17,15 +13,12 @@ export function JwtAuthMiddleware(
   revokedTokens: Record<string, RevokedToken>,
   audiences: string[],
   mapper = null,
-  options: Options = {}
+  options: Record<string, unknown> = {}
 ): (request: any, response: any, next: (error?: Error) => void) => void {
   mapper = mapper || null
   options = options || {}
-  return function(request, response, next) {
-    if (
-      request.jwtAuthMiddlewareProcessed ||
-      (request.user || {}).authenticated === true
-    ) {
+  return function (request, response, next) {
+    if (request.jwtAuthMiddlewareProcessed || (request.user || {}).authenticated === true) {
       return next() // Skip authentication if we already authenticated
     }
     if (!(request.headers.authorization || '').startsWith('Bearer ')) {
@@ -36,8 +29,8 @@ export function JwtAuthMiddleware(
       return next(new JwtVerifyError('Not allowed'))
     }
     try {
-      let jwt = request.headers.authorization.substring(7)
-      let decodedJwtBody = jwtDecode(jwt, pubKeys, audiences)
+      const jwt = request.headers.authorization.substring(7)
+      const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, audiences)
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
@@ -80,10 +73,5 @@ export function JwtAuthMiddleware(
 }
 
 function isPromise(value: Promise<unknown>): boolean {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.then === 'function'
-  )
+  return typeof value === 'object' && value !== null && typeof value.then === 'function'
 }
-

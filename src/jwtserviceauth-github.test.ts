@@ -1,18 +1,16 @@
-import { rsaPrivateKey, rsaPublicKey } from './testresources'
-import { JwtServiceAuth } from './jwtserviceauth'
-
-import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
-
-import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
-import { JwtServiceAuthError } from './jwtserviceautherror'
 import sinon from 'sinon'
 
+import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
+import { JwtServiceAuth } from './jwtserviceauth'
+import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
+import { JwtServiceAuthError } from './jwtserviceautherror'
+import { rsaPrivateKey, rsaPublicKey } from './testresources'
 
 describe('JwtServiceAuth', () => {
   const server = new JwtServiceAuthTestServer()
   let clock: sinon.SinonFakeTimers
 
-  let httpRequestHandlerR2  = null
+  let httpRequestHandlerR2 = null
   let baseUrl = null
   beforeAll(async () => {
     await server.start()
@@ -32,30 +30,25 @@ describe('JwtServiceAuth', () => {
     sinon.restore()
   })
 
-  
   describe('getGithubAccessToken', () => {
     it('should succeed with ok token', async () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, {endpoint: `${baseUrl}/app/installations/1/access_tokens`})
-      let accessTokenPromise = await jwtServiceAuth.getGithubAccessToken(
-        rsaPrivateKey,
-        1,
-        1
-      )
-      return expect(
-        accessTokenPromise).
-        toEqual(
-        {
-          accessToken: 'v1.1f699f1069f60xxx',
-          expiresAt: 3600000,
-          expiresIn: 3600
-        }
-      )
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, {
+        endpoint: `${baseUrl}/app/installations/1/access_tokens`
+      })
+      const accessTokenPromise = await jwtServiceAuth.getGithubAccessToken(rsaPrivateKey, 1, 1)
+      return expect(accessTokenPromise).toEqual({
+        accessToken: 'v1.1f699f1069f60xxx',
+        expiresAt: 3600000,
+        expiresIn: 3600
+      })
     })
     it('should fail', async () => {
-      let jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, {endpoint: `${baseUrl}/app/installations/2/access_tokens`})
-      await expect(jwtServiceAuth.getGithubAccessToken(rsaPrivateKey, 0, 1)).rejects.toThrow(new JwtServiceAuthError('Request failed with status code 400'))
+      const jwtServiceAuth = new JwtServiceAuth(httpRequestHandlerR2, {
+        endpoint: `${baseUrl}/app/installations/2/access_tokens`
+      })
+      await expect(jwtServiceAuth.getGithubAccessToken(rsaPrivateKey, 0, 1)).rejects.toThrow(
+        new JwtServiceAuthError('Request failed with status code 400')
+      )
     })
   })
 })
-
-

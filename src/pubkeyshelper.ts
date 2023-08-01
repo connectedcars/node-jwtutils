@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios'
-import * as jwkUtils from './jwkutils'
-import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
 
+import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
+import * as jwkUtils from './jwkutils'
 
 interface Options {
   defaultAlgorithms?: string[]
@@ -9,9 +9,21 @@ interface Options {
 }
 
 export class PubkeysHelper {
-  private requestHandler: (method: string, url: string, headers?: Record<string, unknown>, body?: unknown) => Promise<AxiosResponse | null>
+  private requestHandler: (
+    method: string,
+    url: string,
+    headers?: Record<string, unknown>,
+    body?: unknown
+  ) => Promise<AxiosResponse | null>
 
-  constructor(httpRequestHandler?: (method: string, url: string, headers?: Record<string, unknown>, body?: unknown) => Promise<AxiosResponse | null>) {
+  constructor(
+    httpRequestHandler?: (
+      method: string,
+      url: string,
+      headers?: Record<string, unknown>,
+      body?: unknown
+    ) => Promise<AxiosResponse | null>
+  ) {
     this.requestHandler = httpRequestHandler || defaultHttpRequestHandler
   }
 
@@ -30,24 +42,25 @@ export class PubkeysHelper {
     return pubKeys
   }
 
-  private formatPublicKeys(response: any, url: string, defaultAlgorithms: string[], options: Options = {}): Record<string, string> {
-    let pubkeysResponse = JSON.parse(
-      Buffer.from(response.data).toString('utf8')
-    )
+  private formatPublicKeys(
+    response: any,
+    url: string,
+    defaultAlgorithms: string[],
+    options: Options = {}
+  ): Record<string, string> {
+    const pubkeysResponse = JSON.parse(Buffer.from(response.data).toString('utf8'))
     if (!Array.isArray(pubkeysResponse.keys)) {
-      throw new Error(
-        `Response from ${url} not in expected format: Missing array property keys`
-      )
+      throw new Error(`Response from ${url} not in expected format: Missing array property keys`)
     }
     if (Object.keys(pubkeysResponse.keys).length === 0) {
       throw new Error(`No keys found in response from ${url}`)
     }
 
-    let pubKeys = {}
+    const pubKeys = {}
     for (const key of pubkeysResponse.keys) {
-      let publicKeyPem = jwkUtils.jwkToPem(key)
-      let algorithms = key.alg ? [key.alg] : defaultAlgorithms
-      for (let algorithm of algorithms) {
+      const publicKeyPem = jwkUtils.jwkToPem(key)
+      const algorithms = key.alg ? [key.alg] : defaultAlgorithms
+      for (const algorithm of algorithms) {
         pubKeys[`${key.kid}@${algorithm}`] = Object.assign(
           {
             publicKey: publicKeyPem

@@ -1,14 +1,12 @@
-'use strict'
-
-const path = require('path')
-const express = require('express')
+import path from 'path'
+import express from 'express'
 const { default: axios } = require('axios')
 
-const {
+import {
   JwtAuthMiddleware,
   JwtVerifyError,
   PubkeysHelper
-} = require('../../src/.')
+} from '../../src/.'
 
 if (process.argv.length < 4) {
   console.error('node index.js "application id" "tenant"')
@@ -28,7 +26,7 @@ const audiences = [applicationId]
 let openIdConnectConfigCache = {}
 
 // Fetch all OpenIdConnect configs
-for (let tenant of tenants) {
+for (const tenant of tenants) {
   const issuer = `https://login.microsoftonline.com/${tenant}/v2.0`
   const openidConfigEndpoint = `https://login.microsoftonline.com/${tenant}/v2.0/.well-known/openid-configuration`
 
@@ -45,15 +43,15 @@ for (let tenant of tenants) {
       }
       // Do initial fetch of pubkeys
       updatePubkeys(
-        config.jwks_uri,
-        config.id_token_signing_alg_values_supported
+        config.jwksUri,
+        config.idTokenSigningAlgValuesSupported
       )
 
       // Schedule pubkey update
       setInterval(() => {
         updatePubkeys(
-          config.jwks_uri,
-          config.id_token_signing_alg_values_supported
+          config.jwksUri,
+          config.idTokenSigningAlgValuesSupported
         ).catch(e => {
           console.error(`Failed to fetch pubkeys: ${e}`)
         })
@@ -64,21 +62,16 @@ for (let tenant of tenants) {
     })
 }
 
-/**
- * @typedef OpenIdConnectConfig
- * @property {string} authorization_endpoint
- * @property {string} jwks_uri
- * @property {string} issuer
- * @property {Array<string>} id_token_signing_alg_values_supported
- */
 
-/**
- * Fetch Open ID Connect configuration
- * @param {string} openidConfigEndpoint
- * @returns {Promise<OpenIdConnectConfig>}
- */
+interface OpenIdConnectConfig {
+  authorizationEndpoint: string
+  jwksUri: string
+  issuer: string
+  idTokenSigningAlgValuesSupported: string[]
+}
+
 // TODO: Do cache timeout/invalidation
-function fetchOpenIdConnectConfig(openidConfigEndpoint) {
+async function fetchOpenIdConnectConfig(openidConfigEndpoint: string): Promise<OpenIdConnectConfig> {
   // Use cached version of config if we have it
   let config = openIdConnectConfigCache[openidConfigEndpoint]
   if (config) {
@@ -87,7 +80,7 @@ function fetchOpenIdConnectConfig(openidConfigEndpoint) {
   // Fetch config
   return axios.get(openidConfigEndpoint).then(res => {
     if (res.status === 200 && res.data) {
-      if (!res.data.jwks_uri) {
+      if (!res.data.jwksUri) {
         throw new Error('JWK uri not set')
       }
       openIdConnectConfigCache[openidConfigEndpoint] = res.data
@@ -116,7 +109,7 @@ app.get('/config', (req, res) => {
           }
           res.json({
             loginUrl:
-              `${config.authorization_endpoint}?` +
+              `${config.authorizationEndpoint}?` +
               `client_id=${applicationId}` +
               `&redirect_uri=${encodeURI(redirectUri)}` +
               '&response_type=id_token' +
@@ -146,8 +139,8 @@ app.use(
 // Register an error handler to return 401 errors
 app.use((err, req, res, next) => {
   if (err instanceof JwtVerifyError) {
-    if (err.innerError) {
-      console.error(`Failed with: ${err.innerError.message}`)
+    if (err.context) {
+      console.error(`Failed with: ${err.context.message}`)
     }
     res.status(401).send(err.message)
   } else {

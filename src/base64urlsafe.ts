@@ -18,4 +18,3 @@ export function decode(base64StringUrlSafe: string): Buffer {
   }
   return Buffer.from(base64String, 'base64')
 }
-

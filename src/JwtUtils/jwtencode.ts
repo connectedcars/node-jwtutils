@@ -1,8 +1,14 @@
 import crypto from 'crypto'
 
-import * as base64UrlSafe from './base64urlsafe'
+import * as base64UrlSafe from '../base64urlsafe'
+import { JwtBody } from './jwtdecode'
 
-export function jwtEncode(privateKey: string, header: Record<string, unknown>, body: Record<string, unknown>, privateKeyPassword = null):  string {
+export function encode(
+  privateKey: string,
+  header: Record<string, unknown>,
+  body: JwtBody,
+  privateKeyPassword = null
+): string {
   let signAlgo = null
   let hmacAlgo = null
   switch (header.alg) {
@@ -34,9 +40,7 @@ export function jwtEncode(privateKey: string, header: Record<string, unknown>, b
       hmacAlgo = 'sha512'
       break
     default:
-      throw new Error(
-        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
-      )
+      throw new Error('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
   }
 
   // Base64 encode header and body
