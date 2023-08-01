@@ -1,38 +1,38 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
-'use strict'
+import fs from 'fs'
 
-const fs = require('fs')
-const { JwtUtils } = require('../src')
+import { JwtUtils } from '../src'
 
 if (process.argv.length < 3) {
   console.log('jwtencode privatekey')
   process.exit(255)
 }
-let privateKeyPath = process.argv[2]
+const privateKeyPath = process.argv[2]
 
 process.stdin.resume()
 process.stdin.setEncoding('utf8')
 
 let buffer = ''
-process.stdin.on('data', function(chunk) {
+process.stdin.on('data', function (chunk) {
   buffer += chunk
   buffer = processJwts(buffer)
 })
 
-process.stdin.on('end', function() {
+process.stdin.on('end', function () {
   buffer = processJwts(buffer)
 })
 
-var privateKey = null
-var privateKeyPassword = null
+let privateKey: Buffer
+let privateKeyPassword: string
 
-function processJwts(buffer) {
+function processJwts(buffer: string): string {
   return buffer.replace(
     /(?:^|\n)(?:password\s([^\n]+)\n)?\s*({[^}]+})\n\s*({[^}]+})(?:$|\n)/g,
     (match, password, headerString, bodyString) => {
-      let header = JSON.parse(headerString)
-      let body = JSON.parse(bodyString)
+      const header = JSON.parse(headerString)
+      const body = JSON.parse(bodyString)
       if (password !== undefined) {
         privateKeyPassword = password
       }

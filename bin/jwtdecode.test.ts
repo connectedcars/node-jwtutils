@@ -1,20 +1,18 @@
-'use strict'
-const { spawn } = require('child_process')
-const { readFileSync } = require('fs')
+import { spawn } from 'child_process'
+import { readFileSync } from 'fs'
+import sinon from 'sinon'
 
-const expect = require('unexpected')
+import { JwtUtils } from '../src/index'
 
-const { JwtUtils } = require('../src/index')
+const rsaPrivateKey = readFileSync(`${__dirname}/jwtencode.test.key`).toString()
 
-const rsaPrivateKey = readFileSync(`${__dirname}/jwtencode.test.key`)
-
-let jwtHeader = {
+const jwtHeader = {
   alg: 'RS256',
   typ: 'JWT',
   kid: '1'
 }
 
-let jwtBody = {
+const jwtBody = {
   iss: 'https://jwt.io',
   aud: 'localhost',
   sub: 'subject@domain.tld',
@@ -24,10 +22,22 @@ let jwtBody = {
 }
 
 describe('jwtencode', () => {
-  it('should return ok', function(done) {
-    this.timeout(10000)
-    this.slow(3000)
-    let jwtEncode = spawn(`${__dirname}/jwtdecode.js`, [
+  let clock: sinon.SinonFakeTimers
+
+  beforeAll(async () => {
+    clock = sinon.useFakeTimers()
+  })
+
+  afterEach(async () => {
+    clock.restore()
+  })
+
+  afterAll(async () => {
+    sinon.restore()
+  })
+  it('should return ok', function (done) {
+    clock.tick(3000)
+    const jwtEncode = spawn(`${__dirname}/jwtdecode.js`, [
       `${__dirname}/jwtencode.test.pub`,
       '1',
       'RS256',
@@ -35,7 +45,7 @@ describe('jwtencode', () => {
       'localhost'
     ])
 
-    let jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, jwtBody)
+    const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, jwtBody)
 
     // Write JSON
     jwtEncode.stdin.write(jwt)
@@ -43,7 +53,7 @@ describe('jwtencode', () => {
 
     // Read stderr
     let stderrStr = ''
-    let errorData = []
+    const errorData: any[] = []
     jwtEncode.stderr.on('data', data => {
       errorData.push(data)
     })
@@ -53,18 +63,16 @@ describe('jwtencode', () => {
 
     // Read token
     let stdoutStr = ''
-    let decodedData = []
-    let error
+    const decodedData: any[] = []
+    let error: any
     jwtEncode.stdout.on('data', data => {
       decodedData.push(data)
     })
     jwtEncode.stdout.on('end', () => {
       try {
-        stdoutStr = Buffer.concat(decodedData)
-          .toString('utf8')
-          .trim()
-        let decodedBody = JSON.parse(stdoutStr)
-        expect(decodedBody, 'to equal', jwtBody)
+        stdoutStr = Buffer.concat(decodedData).toString('utf8').trim()
+        const decodedBody = JSON.parse(stdoutStr)
+        expect(decodedBody).toEqual(jwtBody)
       } catch (e) {
         error = e
       }
@@ -72,6 +80,7 @@ describe('jwtencode', () => {
 
     jwtEncode.on('exit', (code, signal) => {
       if (error) {
+        // eslint-disable-next-line no-console
         console.log(`stdout:${stdoutStr}\nstderr:${stderrStr}\nexit:${code}`)
         done(error)
       } else {

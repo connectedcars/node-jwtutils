@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import * as base64UrlSafe from '../base64urlsafe'
 
 export function encode(
-  privateKey: string,
+  privateKey: string | Buffer,
   header: Record<string, unknown>,
   body: Record<string, unknown>,
   privateKeyPassword: string | null = null
@@ -69,6 +69,7 @@ export function encode(
       signatureBuffer = sign.sign(privateKey)
     }
   } else if (hmacAlgo) {
+    //todo: find another thing to use here
     const hmac = crypto.createHmac(hmacAlgo, privateKeyPassword)
     hmac.update(headerBodyBase64)
     signatureBuffer = hmac.digest()
