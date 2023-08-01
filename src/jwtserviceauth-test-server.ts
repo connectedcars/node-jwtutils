@@ -1,9 +1,8 @@
 import { HttpServer } from '@connectedcars/test'
-import { IncomingMessage, ServerResponse } from 'http'
 import querystring from 'querystring'
 
 import { JwtUtils } from './index'
-import { rsaPrivateKey, rsaPublicKey } from './testresources'
+import { rsaPublicKey } from './testresources'
 
 const pubKeys = {
   'buildstatus@nversion-168820.iam.gserviceaccount.com': {

@@ -24,7 +24,7 @@ export class JwtServiceAuth {
     url: string,
     headers?: Record<string, string | number>,
     body?: unknown
-  ) => Promise<AxiosResponse | null>
+  ) => Promise<AxiosResponse>
   private authEndpoint: string | null
   private command: string
 

@@ -12,22 +12,25 @@ export class PubkeysHelper {
   private requestHandler: (
     method: string,
     url: string,
-    headers?: Record<string, unknown>,
+    headers?: Record<string, string | number>,
     body?: unknown
-  ) => Promise<AxiosResponse | null>
+  ) => Promise<AxiosResponse>
 
-  constructor(
+  public constructor(
     httpRequestHandler?: (
       method: string,
       url: string,
-      headers?: Record<string, unknown>,
+      headers?: Record<string, string | number>,
       body?: unknown
-    ) => Promise<AxiosResponse | null>
+    ) => Promise<AxiosResponse>
   ) {
     this.requestHandler = httpRequestHandler || defaultHttpRequestHandler
   }
 
-  public async fetchJwkKeys(url: string, options: Options = {}): Promise<Record<string, string> | null> {
+  public async fetchJwkKeys(
+    url: string,
+    options: Options = {}
+  ): Promise<Record<string, Record<string, string> | Options> | null> {
     const defaultAlgorithms = options.defaultAlgorithms || []
     delete options.defaultAlgorithms
 
@@ -43,11 +46,12 @@ export class PubkeysHelper {
   }
 
   private formatPublicKeys(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     response: any,
     url: string,
     defaultAlgorithms: string[],
     options: Options = {}
-  ): Record<string, string> {
+  ): Record<string, Record<string, string> | Options> {
     const pubkeysResponse = JSON.parse(Buffer.from(response.data).toString('utf8'))
     if (!Array.isArray(pubkeysResponse.keys)) {
       throw new Error(`Response from ${url} not in expected format: Missing array property keys`)
@@ -56,7 +60,7 @@ export class PubkeysHelper {
       throw new Error(`No keys found in response from ${url}`)
     }
 
-    const pubKeys = {}
+    const pubKeys: Record<string, Record<string, string> | Options> = {}
     for (const key of pubkeysResponse.keys) {
       const publicKeyPem = jwkUtils.jwkToPem(key)
       const algorithms = key.alg ? [key.alg] : defaultAlgorithms
