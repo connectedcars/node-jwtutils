@@ -1,5 +1,4 @@
-import { JwtUtils, JwtVerifyError } from './index'
-import { PublicKey } from './pubkeyshelper'
+import { JwtUtils, JwtVerifyError, PublicKey } from './index'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './testresources'
 // const oldJwtUtils = require('./index')
 

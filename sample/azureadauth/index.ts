@@ -3,8 +3,7 @@ import axios from 'axios'
 import express, { Request, Response } from 'express'
 import path from 'path'
 
-import { JwtAuthMiddleware, JwtVerifyError, PubkeysHelper } from '../../src/.'
-import { PublicKey } from '../../src/pubkeyshelper'
+import { JwtAuthMiddleware, JwtVerifyError, PubkeysHelper, PublicKey } from '../../src/.'
 
 if (process.argv.length < 4) {
   console.error('node index.js "application id" "tenant"')

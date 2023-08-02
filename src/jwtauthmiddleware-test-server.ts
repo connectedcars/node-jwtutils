@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express'
 import http from 'http'
 
+import { PublicKey } from './index'
 import { JwtAuthMiddleware } from './jwtauthmiddleware'
 import { JwtVerifyError } from './jwtverifyerror'
-import { PublicKey } from './pubkeyshelper'
 import { ecPublicKey } from './testresources'
 
 const pubKeys: Record<string, Record<string, string | PublicKey>> = {

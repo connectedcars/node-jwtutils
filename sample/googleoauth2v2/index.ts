@@ -3,9 +3,8 @@ import axios from 'axios'
 import express, { Request, Response } from 'express'
 import path from 'path'
 
-import { JwtAuthMiddleware, JwtVerifyError } from '../../src/.'
+import { JwtAuthMiddleware, JwtVerifyError, PublicKey } from '../../src/.'
 import { jwkToPem } from '../../src/jwkutils'
-import { PublicKey } from '../../src/pubkeyshelper'
 
 if (process.argv.length <= 2) {
   console.error('node index.js "google-oauth-cclientid"')

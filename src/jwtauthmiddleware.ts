@@ -1,15 +1,8 @@
 import { Request, Response } from 'express'
 import http from 'http'
 
-import { JwtUtils } from './index'
+import { JwtUtils, PublicKey, RevokedToken } from './index'
 import { JwtVerifyError } from './jwtverifyerror'
-import { PublicKey } from './pubkeyshelper'
-
-export interface RevokedToken {
-  id?: number | string
-  jti: string
-  revokedAt: Date
-}
 
 export function JwtAuthMiddleware(
   pubKeys: Record<string, Record<string, string | PublicKey>>,

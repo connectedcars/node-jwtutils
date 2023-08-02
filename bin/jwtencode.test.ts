@@ -2,8 +2,7 @@ import { spawn } from 'child_process'
 import { readFileSync } from 'fs'
 import sinon from 'sinon'
 
-import { JwtUtils } from '../src/index'
-import { PublicKey } from '../src/pubkeyshelper'
+import { JwtUtils, PublicKey } from '../src/index'
 
 const rsaPublicKey = readFileSync(`${__dirname}/jwtencode.test.pub`)
 

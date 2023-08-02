@@ -1,8 +1,8 @@
 import crypto from 'crypto'
 
+import { PublicKey } from '..'
 import * as base64UrlSafe from '../base64urlsafe'
 import { JwtVerifyError } from '../jwtverifyerror'
-import { PublicKey } from '../pubkeyshelper'
 
 const defaultOptions = {
   expiresSkew: 0,
