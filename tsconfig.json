@@ -3,8 +3,6 @@
   // All paths need to reset or they would be pointing to ./node_modules/@connectedcars/setup
   "compilerOptions": {
     "module": "esnext",
-    "module": "esnext",
-    "module": "esnext",
     "outDir": "build/dist",
     "rootDir": "./"
   },

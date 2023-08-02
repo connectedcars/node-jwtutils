@@ -135,18 +135,6 @@ export function formatPemPublicKey(bytes: Uint8Array): string {
   return `-----BEGIN PUBLIC KEY-----\n${pemBase64}\n-----END PUBLIC KEY-----`
 }
 
-// export function hexDump(bytes) {
-//   console.log(
-//     Buffer.from(bytes)
-//       .toString('hex')
-//       .toUpperCase()
-//       .match(/.{1,32}/g)
-//       .join('\n')
-//       .replace(/(\w\w)/g, '$1 ')
-//       .replace(/\s$/, '')
-//   )
-// }
-
 // Links
 // * https://github.com/jrnker/CSharp-easy-RSA-PEM/blob/48349cfc010d6c6acf9feb12282431d9d03fd28c/CSharp-easy-RSA-PEM/CSharp-easy-RSA-PEM/AsnKeyBuilder.cs
 // * https://lapo.it/asn1js/

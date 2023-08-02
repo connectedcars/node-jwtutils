@@ -31,24 +31,25 @@ describe('ProcessUtils', () => {
     tmpdir.removeCallback()
     sinon.restore()
   })
-
-  // it.only('should timeout', async function () {
-  //   clock.tick(3000)
-  //   await expect(
-  //     ProcessUtils.runProcessAsync(`${tmpdir.name}/sleep`, ['10'], {
-  //       timeout: 10
-  //     })
-  //   ).rejects.toThrow(new Error('Timeout'))
-  // })
   it('should generate stderr', async function () {
     clock.tick(3000)
     const resultPromise = await ProcessUtils.runProcessAsync(`${tmpdir.name}/sleep`, [])
     expect(resultPromise.stderr).toEqual(Buffer.from('Done sleeping\n'))
   })
-  // it.only('should overflow', function() {
-  //   clock.tick(5000)
-  //   expect(() => ProcessUtils.runProcessAsync(`${tmpdir.name}/sleep`, [], {
-  //     stdErrMaxSize: 5
-  //   })).rejects.toThrow(new Error('Data size larger than maxsize: 75 > 5'))
-  // })
+  it('should overflow', async function () {
+    clock.tick(3000)
+    await expect(
+      ProcessUtils.runProcessAsync(`${tmpdir.name}/sleep`, [], {
+        stdErrMaxSize: 5
+      })
+    ).rejects.toThrow(new Error('Data size larger than maxsize: 14 > 5'))
+  })
+  it('should timeout', async function () {
+    clock.tick(3000)
+    await expect(
+      ProcessUtils.runProcessAsync(`${tmpdir.name}/sleep`, ['10'], {
+        timeout: 1
+      })
+    ).rejects.toThrow(new Error('Timeout'))
+  })
 })
