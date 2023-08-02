@@ -124,10 +124,14 @@ export function asn1PositiveInteger(bytes: Uint8Array | number[]): Uint8Array | 
 }
 
 export function formatPemPublicKey(bytes: Uint8Array): string {
-  const pemBase64 = Buffer.from(bytes.buffer)
+  const pemBase64Match = Buffer.from(bytes.buffer)
     .toString('base64')
     .match(/.{1,64}/g)
-    .join('\n')
+
+  let pemBase64 = ''
+  if (pemBase64Match) {
+    pemBase64 = pemBase64Match.join('\n')
+  }
   return `-----BEGIN PUBLIC KEY-----\n${pemBase64}\n-----END PUBLIC KEY-----`
 }
 

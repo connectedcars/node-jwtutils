@@ -1,7 +1,6 @@
 import { JwtUtils } from '../index'
 import { JwtVerifyError } from '../jwtverifyerror'
 import { rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../testresources'
-import { JwtBody } from './jwtdecode'
 
 const pubKeys = {
   'test@test.com': {
@@ -39,12 +38,12 @@ describe('jwtUtils', () => {
       }
     })
     it('should fail with empty header and body', () => {
-      expect(() => JwtUtils.encode('', {}, {} as JwtBody)).toThrow(
+      expect(() => JwtUtils.encode('', {}, {})).toThrow(
         new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
       )
     })
     it('should fail with missing key', () => {
-      expect(() => JwtUtils.encode(null, { alg: 'RS256' }, {} as JwtBody, 'key')).toThrow(
+      expect(() => JwtUtils.encode('', { alg: 'RS256' }, {}, 'key')).toThrow(
         new JwtVerifyError('privateKey can not be null for RS256')
       )
     })

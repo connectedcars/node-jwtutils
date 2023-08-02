@@ -50,7 +50,8 @@ export async function runProcessAsync(command: string, args: string[], options: 
     })
 
     Promise.all([exitPromise, stdoutPromise, stderrPromise])
-      .then(results => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((results: any[]) => {
         resolve({
           code: results[0]['code'],
           signal: results[0]['signal'],
@@ -61,7 +62,8 @@ export async function runProcessAsync(command: string, args: string[], options: 
       .catch(reject)
   })
 
-  return promise.then(result => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return promise.then((result: any) => {
     return {
       code: result['code'],
       signal: result['signal'],
@@ -71,11 +73,13 @@ export async function runProcessAsync(command: string, args: string[], options: 
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function readAllAsync(fd: any, maxSize: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const data = []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any[] = []
     let dataLength = 0
-    fd.on('data', chunk => {
+    fd.on('data', (chunk: string) => {
       dataLength += chunk.length
       if (dataLength > maxSize) {
         reject(new Error(`Data size larger than maxsize: ${dataLength} > ${maxSize}`))

@@ -1,20 +1,18 @@
+/* eslint-disable no-console */
+import axios from 'axios'
+import express, { Request, Response } from 'express'
 import path from 'path'
-import express from 'express'
-const { default: axios } = require('axios')
 
-import {
-  JwtAuthMiddleware,
-  JwtVerifyError,
-  PubkeysHelper
-} from '../../src/.'
+import { JwtAuthMiddleware, JwtVerifyError, PubkeysHelper } from '../../src/.'
+import { PublicKey } from '../../src/pubkeyshelper'
 
 if (process.argv.length < 4) {
   console.error('node index.js "application id" "tenant"')
   process.exit(255)
 }
 
-let pubkeysHelper = new PubkeysHelper()
-const pubKeys = {}
+const pubkeysHelper = new PubkeysHelper()
+const pubKeys: Record<string, Record<string, string | PublicKey>> = {}
 const revokedTokens = {}
 
 const applicationId = process.argv[2]
@@ -23,7 +21,7 @@ const redirectUri = 'http://localhost:3000/'
 
 const audiences = [applicationId]
 
-let openIdConnectConfigCache = {}
+const openIdConnectConfigCache: Record<string, OpenIdConnectConfig> = {}
 
 // Fetch all OpenIdConnect configs
 for (const tenant of tenants) {
@@ -31,28 +29,24 @@ for (const tenant of tenants) {
   const openidConfigEndpoint = `https://login.microsoftonline.com/${tenant}/v2.0/.well-known/openid-configuration`
 
   fetchOpenIdConnectConfig(openidConfigEndpoint)
-    .then(config => {
-      let updatePubkeys = (jwksUri, defaultAlgorithms) => {
+    .then(async config => {
+      const updatePubkeys = (jwksUri: string, defaultAlgorithms: string[]): Promise<void> => {
         return pubkeysHelper
           .fetchJwkKeys(jwksUri, {
             defaultAlgorithms: defaultAlgorithms || []
           })
           .then(keys => {
-            pubKeys[issuer] = keys
+            if (keys) {
+              pubKeys[issuer] = keys
+            }
           })
       }
       // Do initial fetch of pubkeys
-      updatePubkeys(
-        config.jwksUri,
-        config.idTokenSigningAlgValuesSupported
-      )
+      await updatePubkeys(config.jwksUri, config.idTokenSigningAlgValuesSupported)
 
       // Schedule pubkey update
       setInterval(() => {
-        updatePubkeys(
-          config.jwksUri,
-          config.idTokenSigningAlgValuesSupported
-        ).catch(e => {
+        updatePubkeys(config.jwksUri, config.idTokenSigningAlgValuesSupported).catch(e => {
           console.error(`Failed to fetch pubkeys: ${e}`)
         })
       }, 3600 * 1000)
@@ -61,7 +55,6 @@ for (const tenant of tenants) {
       console.error(`Failed to fetch open id connect config: ${e}`)
     })
 }
-
 
 interface OpenIdConnectConfig {
   authorizationEndpoint: string
@@ -73,7 +66,7 @@ interface OpenIdConnectConfig {
 // TODO: Do cache timeout/invalidation
 async function fetchOpenIdConnectConfig(openidConfigEndpoint: string): Promise<OpenIdConnectConfig> {
   // Use cached version of config if we have it
-  let config = openIdConnectConfigCache[openidConfigEndpoint]
+  const config = openIdConnectConfigCache[openidConfigEndpoint]
   if (config) {
     return Promise.resolve(config)
   }
@@ -95,19 +88,17 @@ const app = express()
 app.use('/', express.static(path.join(__dirname, 'public')))
 
 app.get('/config', (req, res) => {
-  let username = req.query['username']
-  if (username) {
-    let match = username.match(/^[^@]+@(.+)$/)
+  const username = req.query['username']
+  if (username && typeof username === 'string') {
+    const match = username.match(/^[^@]+@(.+)$/)
     if (match) {
-      let domain = match[1]
-      fetchOpenIdConnectConfig(
-        `https://login.microsoftonline.com/${domain}/v2.0/.well-known/openid-configuration`
-      )
+      const domain = match[1]
+      fetchOpenIdConnectConfig(`https://login.microsoftonline.com/${domain}/v2.0/.well-known/openid-configuration`)
         .then(config => {
           if (!pubKeys[config.issuer]) {
             return res.status(401).send({ error: 'No config for your' })
           }
-          res.json({
+          return res.json({
             loginUrl:
               `${config.authorizationEndpoint}?` +
               `client_id=${applicationId}` +
@@ -129,15 +120,21 @@ app.get('/config', (req, res) => {
 
 app.use(
   '/api',
-  JwtAuthMiddleware(pubKeys, revokedTokens, audiences, user => {
-    // Use e-mail as subject from the token
-    // TODO: Validate that the issues has a email in the token
-    user.subject = user.body.preferred_username
-  })
+  JwtAuthMiddleware(
+    pubKeys,
+    revokedTokens,
+    audiences,
+    (user: Record<string, string> & { body: Record<string, string> }) => {
+      // Use e-mail as subject from the token
+      // TODO: Validate that the issues has a email in the token
+      user.subject = user.body.preferred_username
+    }
+  )
 )
 
 // Register an error handler to return 401 errors
-app.use((err, req, res, next) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, req: Request, res: Response, _next: (err?: Error | null) => void) => {
   if (err instanceof JwtVerifyError) {
     if (err.context) {
       console.error(`Failed with: ${err.context.message}`)
@@ -148,8 +145,10 @@ app.use((err, req, res, next) => {
   }
 })
 
-app.use('/api/hello', (req, res) => {
-  res.json({ message: `Hello World: ${req.user.subject}` })
+app.use('/api/hello', (req: Request & { user?: Record<string, unknown> }, res: Response) => {
+  if (req.user) {
+    res.json({ message: `Hello World: ${req.user.subject}` })
+  }
 })
 
 app.listen(3000, () => {

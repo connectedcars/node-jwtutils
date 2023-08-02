@@ -1,4 +1,5 @@
 import { JwtUtils, JwtVerifyError } from './index'
+import { PublicKey } from './pubkeyshelper'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './testresources'
 // const oldJwtUtils = require('./index')
 
@@ -18,7 +19,7 @@ const jwtBody = {
   scope: ['http://stuff', 'http://stuff2']
 }
 
-const pubKeys = {
+const pubKeys: Record<string, Record<string, string | PublicKey>> = {
   'test@test.com': {
     'default@RS256': rsaPublicKey,
     '1@RS256': rsaPublicKey,
@@ -28,7 +29,6 @@ const pubKeys = {
     '1@ES384': ecPublicKey,
     '1@ES512': ecPublicKey,
     '2@RS256': rsaOtherPublicKey,
-    '3@RS256': null,
     '4@RS256': rsaOtherPublicKey.substr(2),
     '2@HS256': 'sharedkey',
     '2@HS384': 'sharedkey',

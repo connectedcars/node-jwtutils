@@ -3,9 +3,10 @@ import http from 'http'
 
 import { JwtAuthMiddleware } from './jwtauthmiddleware'
 import { JwtVerifyError } from './jwtverifyerror'
+import { PublicKey } from './pubkeyshelper'
 import { ecPublicKey } from './testresources'
 
-const pubKeys: Record<string, Record<string, unknown>> = {
+const pubKeys: Record<string, Record<string, string | PublicKey>> = {
   'http://localhost/oauth/token': {
     '1@ES256': ecPublicKey
   },

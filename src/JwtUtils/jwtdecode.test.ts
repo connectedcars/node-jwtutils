@@ -1,7 +1,7 @@
 import { JwtUtils } from '../index'
 import { JwtVerifyError } from '../jwtverifyerror'
 
-const audiences = []
+const audiences: string[] = []
 
 const publicKey =
   '-----BEGIN PUBLIC KEY-----\n' +

@@ -1,11 +1,11 @@
+/* eslint-disable no-console */
+import axios from 'axios'
+import express, { Request, Response } from 'express'
 import path from 'path'
 
-import express from 'express'
-
 import { JwtAuthMiddleware, JwtVerifyError } from '../../src/.'
-
-import request from 'request'
-import jwkToPem from 'jwk-to-pem'
+import { jwkToPem } from '../../src/jwkutils'
+import { PublicKey } from '../../src/pubkeyshelper'
 
 if (process.argv.length <= 2) {
   console.error('node index.js "google-oauth-cclientid"')
@@ -13,7 +13,7 @@ if (process.argv.length <= 2) {
 }
 
 const audiences = [process.argv[2]]
-const pubKeys = {}
+const pubKeys: Record<string, Record<string, PublicKey>> = {}
 const revokedTokens = {}
 
 const app = express()
@@ -21,19 +21,25 @@ app.use('/', express.static(path.join(__dirname, 'public')))
 
 app.use(
   '/api',
-  JwtAuthMiddleware(pubKeys, revokedTokens, audiences, user => {
-    // Use e-mail as subject for google tokens
-    if (user.issuer === 'https://accounts.google.com') {
-      user.subject = user.body.email
+  JwtAuthMiddleware(
+    pubKeys,
+    revokedTokens,
+    audiences,
+    (user: Record<string, string> & { body: Record<string, string> }) => {
+      // Use e-mail as subject for google tokens
+      if (user.issuer === 'https://accounts.google.com') {
+        user.subject = user.body.email
+      }
     }
-  })
+  )
 )
 
 // Register an error handler to return 401 errors
-app.use((err, req, res, next) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, req: Request, res: Response, _next: (err?: Error | null) => void) => {
   if (err instanceof JwtVerifyError) {
-    if (err.innerError) {
-      console.error(`Failed with: ${err.innerError.message}`)
+    if (err.context) {
+      console.error(`Failed with: ${err.context.message}`)
     }
     res.status(401).send(err.message)
   } else {
@@ -41,8 +47,10 @@ app.use((err, req, res, next) => {
   }
 })
 
-app.use('/api/hello', (req, res) => {
-  res.json({ message: `Hello World: ${req.user.subject}` })
+app.use('/api/hello', (req: Request & { user?: Record<string, unknown> }, res: Response) => {
+  if (req.user) {
+    res.json({ message: `Hello World: ${req.user.subject}` })
+  }
 })
 
 app.listen(3000, () => {
@@ -50,13 +58,13 @@ app.listen(3000, () => {
 })
 
 // Fetch googles public keys every hour
-fetchGoogleJWK()
-setInterval(() => {
-  fetchGoogleJWK()
+await fetchGoogleJWK()
+setInterval(async () => {
+  await fetchGoogleJWK()
 }, 60 * 60 * 1000)
 
-function fetchGoogleJWK() {
-  return fetchJWK('https://www.googleapis.com/oauth2/v3/certs')
+async function fetchGoogleJWK(): Promise<void> {
+  return await fetchJWK('https://www.googleapis.com/oauth2/v3/certs')
     .then(keys => {
       pubKeys['https://accounts.google.com'] = keys
     })
@@ -65,26 +73,20 @@ function fetchGoogleJWK() {
     })
 }
 
-function fetchJWK(url) {
-  return new Promise((resolve, reject) => {
-    request(url, (error, response, body) => {
-      if (error) {
-        return reject(error)
-      }
-      try {
-        let data = JSON.parse(body)
-        if (!data.keys) {
-          return reject(new Error(`Unexpected data structure:\n${body}`))
-        }
-        let pubKeys = {}
-        for (let key of data.keys) {
-          let rsaPublicKeyPem = jwkToPem(key)
-          pubKeys[`${key.kid}@${key.alg}`] = rsaPublicKeyPem
-        }
-        resolve(pubKeys)
-      } catch (e) {
-        reject(e)
-      }
-    })
-  })
+async function fetchJWK(url: string): Promise<Record<string, PublicKey>> {
+  try {
+    const res = await axios.get(url)
+    const data = JSON.parse(res.data)
+    if (!data.keys) {
+      throw new Error(`Unexpected data structure:\n${res.data}`)
+    }
+    const pubKeys: Record<string, PublicKey> = {}
+    for (const key of data.keys) {
+      const rsaPublicKeyPem = jwkToPem(key)
+      pubKeys[`${key.kid}@${key.alg}`] = { publicKey: rsaPublicKeyPem }
+    }
+    return pubKeys
+  } catch (e) {
+    throw new Error(e)
+  }
 }

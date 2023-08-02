@@ -68,8 +68,7 @@ export function encode(
     } else {
       signatureBuffer = sign.sign(privateKey)
     }
-  } else if (hmacAlgo) {
-    //todo: find another thing to use here
+  } else if (hmacAlgo && privateKeyPassword) {
     const hmac = crypto.createHmac(hmacAlgo, privateKeyPassword)
     hmac.update(headerBodyBase64)
     signatureBuffer = hmac.digest()

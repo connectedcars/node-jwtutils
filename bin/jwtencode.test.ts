@@ -3,12 +3,13 @@ import { readFileSync } from 'fs'
 import sinon from 'sinon'
 
 import { JwtUtils } from '../src/index'
+import { PublicKey } from '../src/pubkeyshelper'
 
 const rsaPublicKey = readFileSync(`${__dirname}/jwtencode.test.pub`)
 
-const pubKeys = {
+const pubKeys: Record<string, Record<string, string | PublicKey>> = {
   'https://jwt.io': {
-    '1@RS256': rsaPublicKey
+    '1@RS256': rsaPublicKey.toString()
   }
 }
 

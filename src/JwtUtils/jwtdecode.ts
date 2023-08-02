@@ -2,6 +2,7 @@ import crypto from 'crypto'
 
 import * as base64UrlSafe from '../base64urlsafe'
 import { JwtVerifyError } from '../jwtverifyerror'
+import { PublicKey } from '../pubkeyshelper'
 
 const defaultOptions = {
   expiresSkew: 0,
@@ -30,7 +31,7 @@ const defaultOptions = {
 
 export function decode(
   jwt: string,
-  publicKeys: Record<string, Record<string, unknown>>,
+  publicKeys: Record<string, Record<string, string | PublicKey>>,
   audiences: string[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: Record<any, unknown> = defaultOptions
@@ -104,7 +105,6 @@ export function decode(
   }
 
   // Find public key
-  //todo: grace find better way to handle this
   let pubkeyOrSharedKey =
     typeof header.kid === 'string'
       ? (issuer[`${header.kid}@${header.alg}`] as string)
