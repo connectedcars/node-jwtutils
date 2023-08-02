@@ -1,8 +1,8 @@
 import * as JwkUtils from './jwkutils'
+import * as JwtUtils from './jwt-utils'
 import { JwtAuthMiddleware } from './jwtauthmiddleware'
 import { JwtServiceAuth } from './jwtserviceauth'
 import { JwtServiceAuthError } from './jwtserviceautherror'
-import * as JwtUtils from './JwtUtils'
 import { JwtVerifyError } from './jwtverifyerror'
 import { PubkeysHelper } from './pubkeyshelper'
 
