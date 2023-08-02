@@ -1,10 +1,14 @@
-'use strict'
+import bodyParser from 'body-parser'
+import crypto from 'crypto'
+import express from 'express'
+import path from 'path'
 
-const path = require('path')
-const express = require('express')
-const bodyParser = require('body-parser')
-const { JwtUtils } = require('../../src/.')
-const crypto = require('crypto')
+import { JwtUtils } from '../../src/.'
+
+interface Admin {
+  hash: string
+  salt: string
+}
 
 // Don't use this key, generate your own and load it from a safe place
 const pemEncodedPrivateKey =
@@ -24,10 +28,9 @@ const pemEncodedPrivateKey =
   'FaFp+DyAe+b4nDwuJaW2LURbr8AEZga7oQj0uYxcYw==\n' +
   '-----END RSA PRIVATE KEY-----'
 
-const users = {
+const users: Record<string, Admin> = {
   admin: {
-    hash:
-      '377feab95ad6e891272d45ad717723d75acf2efd92cbf931d72d1052636635c831d8693c64c42790e877d0a7e3a83b452c960145175025fc853bec2145984885',
+    hash: '377feab95ad6e891272d45ad717723d75acf2efd92cbf931d72d1052636635c831d8693c64c42790e877d0a7e3a83b452c960145175025fc853bec2145984885',
     salt: 'd75acf2efd9'
   }
 }
@@ -38,57 +41,52 @@ app.use('/', express.static(path.join(__dirname, 'public')))
 app.use(bodyParser.json())
 app.use('/api/login', (req, res) => {
   // Do your authentication login here, you could user modules like passport to do it for you also
-  let password = req.body.password
-  let username = req.body.username
+  const password = req.body.password
+  const username = req.body.username
 
-  let user = users[username]
+  const user = users[username]
   if (!user) {
     return res.sendStatus(403)
   }
 
   // Here we do a simple hashed password check
-  crypto.pbkdf2(
-    password,
-    user.salt,
-    100000,
-    64,
-    'sha512',
-    (err, derivedKey) => {
-      if (err) {
-        return res.sendStatus(403)
-      }
-
-      let hashedPasswordBytes = Buffer.from(user.hash, 'hex')
-      if (!crypto.timingSafeEqual(hashedPasswordBytes, derivedKey)) {
-        return res.sendStatus(403)
-      }
-
-      // Generate token
-      const unixNow = Math.floor(Date.now() / 1000)
-      let jwtHeader = {
-        typ: 'JWT',
-        alg: 'RS256',
-        kid: '1'
-      }
-      let jwtBody = {
-        iss: 'simpleidp',
-        sub: req.body.user,
-        aud: 'simpleservice',
-        exp: unixNow + 3600, // One hour expiry
-        iat: unixNow,
-        nbf: unixNow - 300, // Allow consumers a 5 mins backwards timeskew
-        clt: 0
-      }
-
-      let signedJwt = JwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody)
-      res.json({
-        token: signedJwt,
-        expires: 3600
-      })
+  crypto.pbkdf2(password, user.salt, 100000, 64, 'sha512', (err, derivedKey) => {
+    if (err) {
+      return res.sendStatus(403)
     }
-  )
+
+    const hashedPasswordBytes = Buffer.from(user.hash, 'hex')
+    if (!crypto.timingSafeEqual(hashedPasswordBytes, derivedKey)) {
+      return res.sendStatus(403)
+    }
+
+    // Generate token
+    const unixNow = Math.floor(Date.now() / 1000)
+    const jwtHeader = {
+      typ: 'JWT',
+      alg: 'RS256',
+      kid: '1'
+    }
+    const jwtBody = {
+      iss: 'simpleidp',
+      sub: req.body.user,
+      aud: 'simpleservice',
+      exp: unixNow + 3600, // One hour expiry
+      iat: unixNow,
+      nbf: unixNow - 300, // Allow consumers a 5 mins backwards timeskew
+      clt: 0
+    }
+
+    const signedJwt = JwtUtils.encode(pemEncodedPrivateKey, jwtHeader, jwtBody)
+    return res.json({
+      token: signedJwt,
+      expires: 3600
+    })
+  })
+  return
 })
 
 app.listen(3000, () => {
+  // eslint-disable-next-line no-console
   console.log('Example app listening on port 3000!')
 })
