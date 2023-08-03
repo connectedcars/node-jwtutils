@@ -11,14 +11,13 @@ describe('JwtServiceAuth', () => {
   const server = new JwtServiceAuthTestServer()
   let clock: sinon.SinonFakeTimers
 
-  let httpRequestHandlerR2:
-    | ((
-        method: string,
-        url: string,
-        headers?: Record<string, string | number>,
-        body?: unknown
-      ) => Promise<AxiosResponse<any, any>>)
-    | undefined
+  let httpRequestHandlerR2: (
+    method: string,
+    url: string,
+    headers?: Record<string, string | number>,
+    body?: unknown
+  ) => Promise<AxiosResponse<any, any>>
+
   let baseUrl: string
   beforeAll(async () => {
     await server.start()

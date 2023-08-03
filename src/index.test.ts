@@ -1,6 +1,5 @@
 import { JwtUtils, JwtVerifyError, PublicKey } from './index'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './testresources'
-// const oldJwtUtils = require('./index')
 
 const unixNow = Math.floor(Date.now() / 1000)
 
@@ -55,16 +54,6 @@ const pubKeys: Record<string, Record<string, string | PublicKey>> = {
 
 describe('jwtUtils', () => {
   describe('encode/decode', () => {
-    // it('success old inteface', () => {
-    //   let jwt = oldJwtUtils.encode(rsaPrivateKey, jwtHeader, jwtBody)
-    //   let decodedJwtBody = oldJwtUtils.decode(
-    //     jwt,
-    //     pubKeys,
-    //     ['https://host/oauth/token'],
-    //     300
-    //   )
-    //   expect(jwtBody).toEqual(decodedJwtBody)
-    // })
     it('success with RSA at RS256, RS384 and RS512', () => {
       for (const algo of ['RS256', 'RS384', 'RS512']) {
         const customJwtHeader = Object.assign({}, jwtHeader)

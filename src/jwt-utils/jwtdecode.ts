@@ -15,8 +15,7 @@ export function decode(
   jwt: string,
   publicKeys: Record<string, Record<string, string | PublicKey>>,
   audiences: string[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options: Record<any, unknown> = defaultOptions
+  options: Record<string, unknown> | number = defaultOptions
 ): Record<string, string | number> {
   if (typeof options === 'number') {
     // Backwards compatibility with old api

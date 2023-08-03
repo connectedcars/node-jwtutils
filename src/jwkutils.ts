@@ -98,7 +98,7 @@ export function ecPublicKeyJwkToPem(ecPublicKeyJwk: Record<string, string>): str
   return formatPemPublicKey(pemBytes)
 }
 
-export function encodeAsn1Bytes(type: number, bytes: Uint8Array | number[]): Uint8Array | number[] {
+export function encodeAsn1Bytes(type: number, bytes: number[] | Uint8Array): number[] {
   let lengthBytes: number[]
   if (bytes.length === 0) {
     lengthBytes = [0]
@@ -116,7 +116,7 @@ export function encodeAsn1Bytes(type: number, bytes: Uint8Array | number[]): Uin
   return [type, ...lengthBytes, ...bytes]
 }
 
-export function asn1PositiveInteger(bytes: Uint8Array | number[]): Uint8Array | number[] {
+export function asn1PositiveInteger(bytes: Uint8Array): number[] {
   if (bytes[0] > 0x7f) {
     return encodeAsn1Bytes(0x02, [0x00, ...bytes])
   }
