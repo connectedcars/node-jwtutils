@@ -7,8 +7,8 @@
     "node": ">=16.0.0"
   },
   "bin": {
-    "jwtencode": "./bin/jwtencode.js",
-    "jwtdecode": "./bin/jwtdecode.js"
+    "jwtencode": "./build/dist/bin/jwtencode.js",
+    "jwtdecode": "./build/dist/bin/jwtdecode.js"
   },
   "scripts": {
     "test": "TZ=UTC jest",
