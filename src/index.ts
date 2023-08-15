@@ -18,6 +18,5 @@ export interface PublicKey {
   publicKey: string
   expiresSkew?: number
   expiresMax?: number
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  validators?: Record<string, Function>
+  validators?: Record<string,() => boolean>
 }
