@@ -63,7 +63,7 @@ describe('jwtencode', () => {
 
     // Read token
     let stdoutStr = ''
-    const decodedData: any[] = []
+    const decodedData: Buffer[] = []
     let error: any
     jwtEncode.stdout.on('data', data => {
       decodedData.push(data)
