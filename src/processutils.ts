@@ -27,7 +27,7 @@ export async function runProcessAsync(command: string, args: string[], options: 
   const stdOutMaxSize = options.stdOutMaxSize || maxSize
   const stdErrMaxSize = options.stdErrMaxSize || maxSize
 
-  const promise = new Promise((resolve, reject) => {
+  const promise = new Promise<ProcessResult>((resolve, reject) => {
     if (options.timeout) {
       setTimeout(() => {
         reject(new Error('Timeout'))
