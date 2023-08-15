@@ -13,7 +13,7 @@
   "scripts": {
     "test": "TZ=UTC jest",
     "cov": "TZ=UTC jest --coverage=true",
-    "build": "build src",
+    "build": "npm run build:types && npm run build:js",
     "lint": "eslint './src/**/*.{ts,tsx}'",
     "lint:fix": "eslint --fix './src/**/*.{ts,tsx}'",
     "ci-tsc": "checks tsc",
