@@ -34,8 +34,7 @@ app.use(
 )
 
 // Register an error handler to return 401 errors
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, req: Request, res: Response, _next: (err?: Error | null) => void) => {
+app.use((err: Error, req: Request, res: Response) => {
   if (err instanceof JwtVerifyError) {
     if (err.context) {
       console.error(`Failed with: ${err.context.message}`)
