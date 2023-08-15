@@ -66,7 +66,7 @@ describe('jwtencode', () => {
     })
 
     // Read token
-    const tokenData: any[] = []
+    const tokenData: Buffer[] = []
     jwtEncode.stdout.on('data', data => {
       tokenData.push(data)
     })
