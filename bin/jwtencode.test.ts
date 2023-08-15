@@ -54,7 +54,7 @@ describe('jwtencode', () => {
     jwtEncode.stdin.write(tokenStr)
     jwtEncode.stdin.end()
 
-    const errorData: any[] = []
+    const errorData: Buffer[] = []
     jwtEncode.stderr.on('data', data => {
       errorData.push(data)
     })
