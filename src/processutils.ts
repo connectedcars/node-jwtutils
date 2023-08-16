@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream'
+
 import { spawn } from 'child_process'
 
 interface ProcessResult {
@@ -73,13 +75,11 @@ export async function runProcessAsync(command: string, args: string[], options: 
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function readAllAsync(fd: any, maxSize: number): Promise<Buffer> {
+async function readAllAsync(fd: Readable, maxSize: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any[] = []
+    const data: Buffer[] = []
     let dataLength = 0
-    fd.on('data', (chunk: string) => {
+    fd.on('data', (chunk: Buffer) => {
       dataLength += chunk.length
       if (dataLength > maxSize) {
         reject(new Error(`Data size larger than maxsize: ${dataLength} > ${maxSize}`))

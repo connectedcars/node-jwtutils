@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios'
 
-import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
+import * as RequestHandler from './defaulthttprequesthandler'
 import { PublicKey } from './index'
 import * as jwkUtils from './jwkutils'
 
@@ -9,23 +9,23 @@ interface Options {
   defaultAlgorithms?: string[]
 }
 
-export class PubkeysHelper {
-  private requestHandler: (
-    method: string,
-    url: string,
-    headers?: Record<string, string | number>,
-    body?: unknown
-  ) => Promise<AxiosResponse>
+export interface JwkBody {
+  kid: string
+  kty: string
+  use: string
+  alg: string
+  e: string
+  n: string
+  crv?: string
+  x?: string
+  y?: string
+}
 
-  public constructor(
-    httpRequestHandler?: (
-      method: string,
-      url: string,
-      headers?: Record<string, string | number>,
-      body?: unknown
-    ) => Promise<AxiosResponse>
-  ) {
-    this.requestHandler = httpRequestHandler || defaultHttpRequestHandler
+export class PubkeysHelper {
+  private requestHandler: RequestHandler.HttpRequestHandler
+
+  public constructor(httpRequestHandler?: RequestHandler.HttpRequestHandler) {
+    this.requestHandler = httpRequestHandler || RequestHandler.DefaultHttpRequestHandler
   }
 
   public async fetchJwkKeys(url: string, options: Options = {}): Promise<Record<string, PublicKey> | null> {
@@ -42,7 +42,7 @@ export class PubkeysHelper {
       return null
     }
 
-    const pubKeys = this.formatPublicKeys(result.data, url, defaultAlgorithms, updatedOptions)
+    const pubKeys = this.formatPublicKeys(result, url, defaultAlgorithms, updatedOptions)
     if (!pubKeys) {
       return null
     }
@@ -50,8 +50,7 @@ export class PubkeysHelper {
   }
 
   private formatPublicKeys(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    response: any,
+    response: AxiosResponse,
     url: string,
     defaultAlgorithms: string[],
     options: Record<string, number> = {}

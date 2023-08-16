@@ -2,7 +2,14 @@ import axios, { AxiosResponse } from 'axios'
 
 import { JwtServiceAuthError } from './jwtserviceautherror'
 
-export async function defaultHttpRequestHandler(
+export type HttpRequestHandler = (
+  method: string,
+  url: string,
+  headers?: Record<string, string | number>,
+  body?: unknown
+) => Promise<AxiosResponse>
+
+export async function DefaultHttpRequestHandler(
   method: string,
   url: string,
   headers?: Record<string, string | number>,

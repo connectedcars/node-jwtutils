@@ -1,4 +1,4 @@
-import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
+import * as RequestHandler from './defaulthttprequesthandler'
 import { JwtUtils } from './index'
 import { JwtAuthMiddlewareServer } from './jwtauthmiddleware-test-server'
 import { JwtServiceAuthError } from './jwtserviceautherror'
@@ -46,7 +46,7 @@ describe('jwtMiddleware', () => {
   describe('authentication', () => {
     it('should return ok', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
-      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
+      const responsePromise = await RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
         'User-Agent': 'test'
@@ -56,7 +56,7 @@ describe('jwtMiddleware', () => {
     })
 
     it('should return ok for anonymous', async () => {
-      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/anonymous`, {
+      const responsePromise = await RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/anonymous`, {
         Accept: 'application/json',
         'User-Agent': 'test'
       })
@@ -76,7 +76,7 @@ describe('jwtMiddleware', () => {
       }
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        defaultHttpRequestHandler('GET', `${getServerAddress()}/anonymous`, {
+        RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/anonymous`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -85,7 +85,7 @@ describe('jwtMiddleware', () => {
     })
     it('should return ok with a new e-mail', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
-      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/mapped`, {
+      const responsePromise = await RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/mapped`, {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
         'User-Agent': 'test'
@@ -105,7 +105,7 @@ describe('jwtMiddleware', () => {
       }
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
+        RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -117,7 +117,7 @@ describe('jwtMiddleware', () => {
       customJwtBody.jti = 'jtiRevoked'
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
+        RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -127,7 +127,7 @@ describe('jwtMiddleware', () => {
     it('should fail because of malform JSON', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
       await expect(
-        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
+        RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt.substr(2),
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -139,7 +139,7 @@ describe('jwtMiddleware', () => {
       customJwtHeader.kid = '2'
       const jwt = JwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
       await expect(
-        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
+        RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test'
@@ -148,7 +148,7 @@ describe('jwtMiddleware', () => {
     })
     it('should fail with not allowed because it has no token', async () => {
       await expect(
-        defaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
+        RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
           Accept: 'application/json',
           'User-Agent': 'test'
         })
@@ -159,7 +159,7 @@ describe('jwtMiddleware', () => {
       customJwtBody.sub = 'error'
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
       await expect(
-        defaultHttpRequestHandler('GET', `${getServerAddress()}/async`, {
+        RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/async`, {
           Authorization: 'Bearer ' + jwt,
           Accept: 'application/json',
           'User-Agent': 'test',
@@ -169,7 +169,7 @@ describe('jwtMiddleware', () => {
     })
     it('should success with async', async () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
-      const responsePromise = await defaultHttpRequestHandler('GET', `${getServerAddress()}/async`, {
+      const responsePromise = await RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/async`, {
         Authorization: 'Bearer ' + jwt,
         Accept: 'application/json',
         'User-Agent': 'test'

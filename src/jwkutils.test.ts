@@ -1,4 +1,5 @@
 import * as jwkUtils from './jwkutils'
+import { JwkBody } from './pubkeyshelper'
 import {
   ecPublicKey,
   ecPublicKeyJwk,
@@ -33,7 +34,7 @@ describe('jwkutils', () => {
       kty: 'EC',
       x: 'gh9MmXjtmcHFesofqWZ6iuxSdAYgoPVvfJqpv1818lo',
       y: '3BDZHsNvKUb5VbyGPqcAFf4FGuPhJ2Xy215oWDw_1jc'
-    }
+    } as JwkBody
     const expected =
       '-----BEGIN PUBLIC KEY-----\n' +
       'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEgh9MmXjtmcHFesofqWZ6iuxSdAYg\n' +
@@ -48,7 +49,7 @@ describe('jwkutils', () => {
       kty: 'EC',
       x: 'QIRvRhN2MpnTQ4teO4Y_RYFaK2Qlvc2lbhC0vALwrFOy33kUihkNUvHiTaUsp2W3',
       y: 'vSA1sCKKzT4UOavStUL2WpwcCflEyDshzy3dc1IZtACUngU2xMDDMsi0gDL9jLiU'
-    }
+    } as JwkBody
     const expected =
       '-----BEGIN PUBLIC KEY-----\n' +
       'MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEQIRvRhN2MpnTQ4teO4Y/RYFaK2Qlvc2l\n' +
@@ -64,7 +65,7 @@ describe('jwkutils', () => {
       kty: 'EC',
       x: 'AFqLf9vO672gS-Lv_BabqzKoedNLQgZkCemRZuzYu4KJjHgPBZ5fs3S05MoRXl4e7lR026XDDNPXawySVDXta9KF',
       y: 'APbUNzQ7IP_Mi0XwLN_RWZcIyHI43MJIAEn7O-KS0r8lvxjnVXeoopWAdqfTX_fCHXpYN1Ux1soOWujXb1uCEb7G'
-    }
+    } as JwkBody
     const expected =
       '-----BEGIN PUBLIC KEY-----\n' +
       'MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAWot/287rvaBL4u/8FpurMqh500tC\n' +

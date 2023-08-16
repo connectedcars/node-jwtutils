@@ -2,8 +2,8 @@ import crypto from 'crypto'
 
 import * as base64UrlSafe from '../base64urlsafe'
 
-export function encode(
-  privateKey: string | Buffer,
+function jwtEncode(
+  privateKey: crypto.KeyObject | string | null,
   header: Record<string, unknown>,
   body: Record<string, unknown>,
   privateKeyPassword: string | null = null
@@ -62,7 +62,7 @@ export function encode(
     // Sign with privatekey
     if (privateKeyPassword !== null) {
       signatureBuffer = sign.sign({
-        key: privateKey,
+        key: typeof privateKey === 'string' ? privateKey : privateKey.export(),
         passphrase: privateKeyPassword
       })
     } else {
@@ -80,3 +80,5 @@ export function encode(
   const signatureBase64 = base64UrlSafe.encode(signatureBuffer)
   return headerBodyBase64 + '.' + signatureBase64
 }
+
+export { jwtEncode as encode }

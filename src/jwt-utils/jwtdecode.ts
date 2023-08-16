@@ -1,22 +1,34 @@
 import crypto from 'crypto'
 
-import { PublicKey } from '..'
+import { JwtBody, PublicKey } from '..'
 import * as base64UrlSafe from '../base64urlsafe'
 import { JwtVerifyError } from '../jwtverifyerror'
+
+export type Fixup = (header: unknown, body: unknown) => void
+
+export interface Options {
+  expiresSkew: number
+  expiresMax: number
+  nbfIatSkew: number
+  fixup?: Fixup
+  validators?: Record<string, () => boolean>
+}
 
 const defaultOptions = {
   expiresSkew: 0,
   expiresMax: 0,
-  nbfIatSkew: 300,
-  fixup: null
+  nbfIatSkew: 300
 }
 
-export function decode(
+function jwtDecode(
   jwt: string,
   publicKeys: Record<string, Record<string, string | PublicKey>>,
   audiences: string[],
-  options: Record<string, unknown> | number = defaultOptions
+  options?: Options | number
 ): Record<string, string | number> {
+  if (!options) {
+    options = { ...defaultOptions }
+  }
   if (typeof options === 'number') {
     // Backwards compatibility with old api
     options = {
@@ -36,7 +48,7 @@ export function decode(
 
   const header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8'))
   const body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8'))
-  if (typeof options.fixup === 'function') {
+  if (options.fixup) {
     options.fixup(header, body)
   }
 
@@ -132,7 +144,7 @@ export function decode(
   Object.assign(validators, options.validators || {})
   Object.assign(validators, issuerOptions.validators || {})
 
-  const validationOptions = {}
+  const validationOptions: Options = defaultOptions
   Object.assign(validationOptions, options)
   Object.assign(validationOptions, issuerOptions)
 
@@ -144,49 +156,34 @@ export function decode(
   return body
 }
 
-function validateNotBefore(body: Record<string, unknown>, unixNow: number, options: Record<string, unknown>): void {
-  if (typeof options.nbfIatSkew === 'number') {
-    if (body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
-      throw new JwtVerifyError(`Not before in the future by more than ${options.nbfIatSkew} seconds`)
-    }
+function validateNotBefore(body: JwtBody, unixNow: number, options: Options): void {
+  if (body.nbf > unixNow + options.nbfIatSkew) {
+    throw new JwtVerifyError(`Not before in the future by more than ${options.nbfIatSkew} seconds`)
   }
 }
 
-function validateIssuedAt(body: Record<string, unknown>, unixNow: number, options: Record<string, unknown>): void {
-  if (typeof options.nbfIatSkew === 'number') {
-    if (body.iat && body.iat > unixNow + options.nbfIatSkew) {
-      throw new JwtVerifyError(`Issued at in the future by more than ${options.nbfIatSkew} seconds`)
-    }
+function validateIssuedAt(body: JwtBody, unixNow: number, options: Options): void {
+  if (body.iat > unixNow + options.nbfIatSkew) {
+    throw new JwtVerifyError(`Issued at in the future by more than ${options.nbfIatSkew} seconds`)
   }
 }
 
-function validateAudience(body: Record<string, unknown>, audiences: string[]): void {
+function validateAudience(body: JwtBody, audiences: string[]): void {
   const auds = Array.isArray(body.aud) ? body.aud : [body.aud]
   if (!auds.some(aud => audiences.includes(aud))) {
     throw new JwtVerifyError(`Unknown audience '${auds.join(',')}'`)
   }
 }
 
-function validateExpires(body: Record<string, unknown>, unixNow: number, options: Record<string, unknown>): void {
-  if (!body.exp) {
-    throw new JwtVerifyError(`No expires set on token`)
-  }
+function validateExpires(body: JwtBody, unixNow: number, options: Options): void {
   const notBefore = body.iat || body.nbf || unixNow
-  if (options.expiresMax) {
-    if (typeof notBefore === 'number' && typeof options.expiresMax === 'number') {
-      if (options.expiresMax && body.exp > notBefore + options.expiresMax) {
-        throw new JwtVerifyError(`Expires in the future by more than ${options.expiresMax} seconds`)
-      }
-    } else {
-      throw new JwtVerifyError('body.iat || body.nbf || options.expiresMax is unknown type')
-    }
+  if (options.expiresMax && body.exp > notBefore + options.expiresMax) {
+    throw new JwtVerifyError(`Expires in the future by more than ${options.expiresMax} seconds`)
   }
 
-  if (typeof body.exp === 'number' && typeof options.expiresSkew === 'number') {
-    if (body.exp + (options.expiresSkew || 0) <= unixNow) {
-      throw new JwtVerifyError('Token has expired')
-    }
-  } else {
-    throw new JwtVerifyError('body.exp is unknown type')
+  if (body.exp + (options.expiresSkew || 0) <= unixNow) {
+    throw new JwtVerifyError('Token has expired')
   }
 }
+
+export { jwtDecode as decode }

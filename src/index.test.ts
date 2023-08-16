@@ -1,4 +1,5 @@
 import { JwtUtils, JwtVerifyError, PublicKey } from './index'
+import { Options } from './jwt-utils/jwtdecode'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './testresources'
 
 const unixNow = Math.floor(Date.now() / 1000)
@@ -38,16 +39,6 @@ const pubKeys: Record<string, Record<string, string | PublicKey>> = {
       publicKey: rsaPublicKey,
       expiresSkew: 600,
       expiresMax: 86400
-    }
-  },
-  'test@expired.com': {
-    '1@RS256': {
-      publicKey: rsaPublicKey,
-      validators: {
-        exp: () => {
-          throw new JwtVerifyError('Always expired')
-        }
-      }
     }
   }
 }
@@ -111,14 +102,6 @@ describe('jwtUtils', () => {
         new JwtVerifyError('Expires in the future by more than 86400 seconds')
       )
     })
-    it('always fail with expired', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.iss = 'test@expired.com'
-      const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
-      expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
-        new JwtVerifyError('Always expired')
-      )
-    })
     it('token outside maximum expires using decode options', () => {
       const customJwtBody = Object.assign({}, jwtBody)
       customJwtBody.exp += 172800
@@ -126,7 +109,7 @@ describe('jwtUtils', () => {
       expect(() =>
         JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
           expiresMax: 600
-        })
+        } as Options)
       ).toThrow(new JwtVerifyError('Expires in the future by more than 600 seconds'))
     })
     it('token outside maximum expires using nbf', () => {
@@ -135,7 +118,7 @@ describe('jwtUtils', () => {
       expect(() =>
         JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
           expiresMax: 600
-        })
+        } as Options)
       ).toThrow(new JwtVerifyError('Expires in the future by more than 600 seconds'))
     })
     it('token outside maximum expires using unixNow', () => {
@@ -144,7 +127,7 @@ describe('jwtUtils', () => {
       expect(() =>
         JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
           expiresMax: 600
-        })
+        } as Options)
       ).toThrow(new JwtVerifyError('Expires in the future by more than 600 seconds'))
     })
     it('unknown aud', () => {
@@ -154,24 +137,31 @@ describe('jwtUtils', () => {
       )
     })
     it('expired', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
-      customJwtBody.iat -= 1200
-      customJwtBody.exp -= 800
+      const customJwtBody = { ...jwtBody, iat: jwtBody.iat - 1200, exp: jwtBody.exp - 5000 }
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('Token has expired')
       )
     })
-    it('missing exp', () => {
-      const customJwtBody = {
-        aud: 'https://host/oauth/token',
-        iss: 'test@test.com',
-        iat: unixNow,
-        scope: ['http://stuff', 'http://stuff2']
+    it('always fail with expired', () => {
+      const expiredPubKeys = {
+        ...pubKeys,
+        'test@expired.com': {
+          '1@RS256': {
+            publicKey: rsaPublicKey,
+            validators: {
+              exp: () => {
+                throw new JwtVerifyError('Always expired')
+              }
+            }
+          }
+        }
       }
+      const customJwtBody = Object.assign({}, jwtBody)
+      customJwtBody.iss = 'test@expired.com'
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
-      expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
-        new JwtVerifyError('No expires set on token')
+      expect(() => JwtUtils.decode(jwt, expiredPubKeys, ['https://host/oauth/token'])).toThrow(
+        new JwtVerifyError('Always expired')
       )
     })
     it('missing iss', () => {
@@ -270,19 +260,20 @@ describe('jwtUtils', () => {
         iss: 'test@test.com',
         aud: 'https://host/oauth/token'
       }
+
       const decodedJwtBody = JwtUtils.decode(
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNTE5ODAyNjkxfQ.p6t378Ri2JpOCm9WtC36ttyH8ILzG9-OWT_kgMrrRfo',
         pubKeys,
         ['https://host/oauth/token'],
         {
-          fixup: (header: { kid: string }, body: { iss: string; aud: string; exp: any; iat: number }) => {
+          fixup: (header: { kid: string }, body: { iss: string; aud: string; exp: number; iat: number }) => {
             header.kid = '2'
             body.iss = 'test@test.com'
             body.aud = 'https://host/oauth/token'
             body.exp = body.iat + 300
           },
           expiresSkew: 307584000
-        }
+        } as Options
       )
       expect(decodedJwtBody).toEqual(expectedJwtBody)
     })

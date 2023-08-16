@@ -78,6 +78,7 @@ describe('jwtencode', () => {
       }
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     jwtEncode.on('exit', (code, signal) => {
       if (error) {
         // eslint-disable-next-line no-console

@@ -56,7 +56,7 @@ for (const tenant of tenants) {
 }
 
 interface OpenIdConnectConfig {
-  authorizationEndpoint: string
+  authorization_endpoint: string
   jwksUri: string
   issuer: string
   idTokenSigningAlgValuesSupported: string[]
@@ -99,7 +99,7 @@ app.get('/config', (req, res) => {
           }
           return res.json({
             loginUrl:
-              `${config.authorizationEndpoint}?` +
+              `${config.authorization_endpoint}?` +
               `client_id=${applicationId}` +
               `&redirect_uri=${encodeURI(redirectUri)}` +
               '&response_type=id_token' +

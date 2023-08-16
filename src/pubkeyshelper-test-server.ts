@@ -36,34 +36,16 @@ export class PubkeysHelperTestServer extends HttpServer {
         case 'GET': {
           switch (req.url) {
             case '/publickeys': {
-              return res.end(
-                JSON.stringify({
-                  statusCode: 200,
-                  statusMessage: 'OK',
-                  data: Buffer.from(JSON.stringify(jwkResponse, null, 2)),
-                  headers: {}
-                })
-              )
+              res.statusCode = 200
+              return res.end(JSON.stringify(JSON.stringify(jwkResponse, null, 2)))
             }
             case '/emptykeys': {
-              return res.end(
-                JSON.stringify({
-                  statusCode: 200,
-                  statusMessage: 'OK',
-                  data: Buffer.from(JSON.stringify({ keys: [] }, null, 2)),
-                  headers: {}
-                })
-              )
+              res.statusCode = 200
+              return res.end(JSON.stringify(JSON.stringify({ keys: [] }, null, 2)))
             }
             case '/emptyjson': {
-              return res.end(
-                JSON.stringify({
-                  statusCode: 200,
-                  statusMessage: 'OK',
-                  data: Buffer.from(JSON.stringify({}, null, 2)),
-                  headers: {}
-                })
-              )
+              res.statusCode = 200
+              return res.end(JSON.stringify(JSON.stringify({}, null, 2)))
             }
             default: {
               return res.end({

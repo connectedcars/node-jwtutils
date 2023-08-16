@@ -1,10 +1,9 @@
-import { AxiosResponse } from 'axios'
 import fs from 'fs'
 import path from 'path'
 import sinon from 'sinon'
 import * as tmp from 'tmp'
 
-import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
+import * as RequestHandler from './defaulthttprequesthandler'
 import { JwtServiceAuth } from './jwtserviceauth'
 import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
 import { JwtServiceAuthError } from './jwtserviceautherror'
@@ -28,18 +27,13 @@ describe('JwtServiceAuth', () => {
   const server = new JwtServiceAuthTestServer()
   let clock: sinon.SinonFakeTimers
 
-  let httpRequestHandlerR2: (
-    method: string,
-    url: string,
-    headers?: Record<string, string | number>,
-    body?: unknown
-  ) => Promise<AxiosResponse<any, any>>
+  let httpRequestHandlerR2: RequestHandler.HttpRequestHandler
 
   let baseUrl: string
   beforeAll(async () => {
     await server.start()
     baseUrl = `http://localhost:${server.listenPort}`
-    httpRequestHandlerR2 = defaultHttpRequestHandler
+    httpRequestHandlerR2 = RequestHandler.DefaultHttpRequestHandler
 
     clock = sinon.useFakeTimers()
   })

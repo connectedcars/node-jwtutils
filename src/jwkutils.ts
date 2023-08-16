@@ -1,3 +1,6 @@
+import { JwtServiceAuthError } from './jwtserviceautherror'
+import { JwkBody } from './pubkeyshelper'
+
 // SEQUENCE(OBJECT IDENTIFIER = 1.2.840.113549.1.1.1, NULL) - rsaEncryption
 const rsaPublicKeyOid = [0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00]
 
@@ -11,7 +14,7 @@ const prime256v1Oid = [
 const secp384r1Oid = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22] // OBJECT IDENTIFIER=1.3.132.0.34 - secp384r1
 const secp521r1Oid = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23] // OBJECT IDENTIFIER=1.3.132.0.35 - secp521r1
 
-export function jwkToPem(jwk: Record<string, string>): string {
+export function jwkToPem(jwk: JwkBody): string {
   switch (jwk.kty) {
     case 'RSA': {
       return rsaPublicJwkToPem(jwk)
@@ -25,7 +28,7 @@ export function jwkToPem(jwk: Record<string, string>): string {
   }
 }
 
-export function rsaPublicJwkToPem(rsaPublicKeyJwk: Record<string, string>): string {
+export function rsaPublicJwkToPem(rsaPublicKeyJwk: JwkBody): string {
   const modulusBytes = asn1PositiveInteger(new Uint8Array(Buffer.from(rsaPublicKeyJwk.n, 'base64')))
   const exponentBytes = asn1PositiveInteger(new Uint8Array(Buffer.from(rsaPublicKeyJwk.e, 'base64')))
 
@@ -52,7 +55,7 @@ export function rsaPublicJwkToPem(rsaPublicKeyJwk: Record<string, string>): stri
   return formatPemPublicKey(pemBytes)
 }
 
-export function ecPublicKeyJwkToPem(ecPublicKeyJwk: Record<string, string>): string {
+export function ecPublicKeyJwkToPem(ecPublicKeyJwk: JwkBody): string {
   let keyOid
   switch (ecPublicKeyJwk.crv) {
     case 'K-256': {
@@ -77,8 +80,14 @@ export function ecPublicKeyJwkToPem(ecPublicKeyJwk: Record<string, string>): str
     }
   }
 
-  const xBytes = new Uint8Array(Buffer.from(ecPublicKeyJwk.x, 'base64'))
-  const yBytes = new Uint8Array(Buffer.from(ecPublicKeyJwk.y, 'base64'))
+  let xBytes
+  let yBytes
+  if (ecPublicKeyJwk.x && ecPublicKeyJwk.y) {
+    xBytes = new Uint8Array(Buffer.from(ecPublicKeyJwk.x, 'base64'))
+    yBytes = new Uint8Array(Buffer.from(ecPublicKeyJwk.y, 'base64'))
+  } else {
+    throw new JwtServiceAuthError('ecPublicKey x or y is not defined', { xBytes, yBytes })
+  }
 
   const bitStringBytes = encodeAsn1Bytes(
     0x03,

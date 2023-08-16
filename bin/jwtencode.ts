@@ -24,7 +24,7 @@ process.stdin.on('end', function () {
   buffer = processJwts(buffer)
 })
 
-let privateKey: Buffer
+let privateKey: string
 let privateKeyPassword: string
 
 function processJwts(buffer: string): string {
@@ -37,7 +37,7 @@ function processJwts(buffer: string): string {
         privateKeyPassword = password
       }
       if (privateKey === null) {
-        privateKey = fs.readFileSync(privateKeyPath)
+        privateKey = fs.readFileSync(privateKeyPath).toString()
       }
       console.log(JwtUtils.encode(privateKey, header, body, privateKeyPassword))
       return ''

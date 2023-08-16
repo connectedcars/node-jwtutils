@@ -80,14 +80,7 @@ export class JwtAuthMiddlewareServer {
       })
     )
     this.app.use('/', JwtAuthMiddleware(pubKeys, revokedTokens, audiences))
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    this.app.use((err: Error, req: Request, res: Response, _next: (err?: Error | null) => void) => {
-      if (err instanceof JwtVerifyError) {
-        res.status(401).send(err.message)
-      } else {
-        res.status(500).send('Unknown error')
-      }
-    })
+
     this.app.get('/anonymous', function (req: Request, res: Response) {
       res.send(`Hello anonymous`)
     })
@@ -103,6 +96,16 @@ export class JwtAuthMiddlewareServer {
     })
     this.app.get('/async', function (req: Request, res: Response) {
       res.send(`Async response`)
+    })
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    this.app.use((err: Error, req: Request, res: Response, next: (err?: Error | null) => void) => {
+      if (err instanceof JwtVerifyError) {
+        res.status(401).send(err.message)
+      } else {
+        // eslint-disable-next-line no-console
+        console.log('i am here')
+        res.status(500).send('Unknown error')
+      }
     })
   }
 

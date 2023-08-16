@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios'
 import querystring from 'querystring'
 
-import { defaultHttpRequestHandler } from './defaulthttprequesthandler'
+import * as RequestHandler from './defaulthttprequesthandler'
 import { JwtServiceAuthError, JwtUtils } from './index'
 import * as ProcessUtils from './processutils'
 
@@ -19,25 +19,12 @@ interface AccessToken {
 }
 
 export class JwtServiceAuth {
-  private requestHandler: (
-    method: string,
-    url: string,
-    headers?: Record<string, string | number>,
-    body?: unknown
-  ) => Promise<AxiosResponse>
+  private requestHandler: RequestHandler.HttpRequestHandler
   private authEndpoint: string | null
   private command: string
 
-  public constructor(
-    httpRequestHandler?: (
-      method: string,
-      url: string,
-      headers?: Record<string, string | number>,
-      body?: unknown
-    ) => Promise<AxiosResponse>,
-    options: Options = {}
-  ) {
-    this.requestHandler = httpRequestHandler || defaultHttpRequestHandler
+  public constructor(httpRequestHandler?: RequestHandler.HttpRequestHandler, options: Options = {}) {
+    this.requestHandler = httpRequestHandler || RequestHandler.DefaultHttpRequestHandler
     this.authEndpoint = options.endpoint || null
     this.command = options.command || 'gcloud'
   }

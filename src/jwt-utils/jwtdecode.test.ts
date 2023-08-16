@@ -1,5 +1,6 @@
 import { JwtUtils } from '../index'
 import { JwtVerifyError } from '../jwtverifyerror'
+import { Options } from './jwtdecode'
 
 const audiences: string[] = []
 
@@ -18,11 +19,10 @@ const pubKeys = {
   }
 }
 
-const defaultOptions = {
+const defaultOptions: Options = {
   expiresSkew: 0,
   expiresMax: 0,
   nbfIatSkew: 300,
-  fixup: null,
   validators: {
     aud: () => {
       return true
