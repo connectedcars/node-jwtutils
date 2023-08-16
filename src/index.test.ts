@@ -47,7 +47,7 @@ describe('jwtUtils', () => {
   describe('encode/decode', () => {
     it('success with RSA at RS256, RS384 and RS512', () => {
       for (const algo of ['RS256', 'RS384', 'RS512']) {
-        const customJwtHeader = Object.assign({}, jwtHeader)
+        const customJwtHeader = { ...jwtHeader }
         customJwtHeader.alg = algo
         const jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
         const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
@@ -56,7 +56,7 @@ describe('jwtUtils', () => {
     })
     it('success with ECDSA at ES256, ES384 and ES512', () => {
       for (const algo of ['ES256', 'ES384', 'ES512']) {
-        const customJwtHeader = Object.assign({}, jwtHeader)
+        const customJwtHeader = { ...jwtHeader }
         customJwtHeader.alg = algo
         const jwt = JwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
         const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
@@ -65,7 +65,7 @@ describe('jwtUtils', () => {
     })
     it('success with HS256, HS384 and HS512', () => {
       for (const algo of ['HS256', 'HS384', 'HS512']) {
-        const customJwtHeader = Object.assign({}, jwtHeader)
+        const customJwtHeader = { ...jwtHeader }
         customJwtHeader.kid = '2'
         customJwtHeader.alg = algo
         const jwt = JwtUtils.encode('', customJwtHeader, jwtBody, 'sharedkey')
@@ -86,7 +86,7 @@ describe('jwtUtils', () => {
       expect(customJwtBody).toEqual(decodedJwtBody)
     })
     it('success with expired token', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
+      const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'test@custom.com'
       customJwtBody.exp -= 600
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
@@ -94,7 +94,7 @@ describe('jwtUtils', () => {
       expect(customJwtBody).toEqual(decodedJwtBody)
     })
     it('token outside maximum expires', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
+      const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'test@custom.com'
       customJwtBody.exp += 172800
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
@@ -103,7 +103,7 @@ describe('jwtUtils', () => {
       )
     })
     it('token outside maximum expires using decode options', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
+      const customJwtBody = { ...jwtBody }
       customJwtBody.exp += 172800
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() =>
@@ -157,7 +157,7 @@ describe('jwtUtils', () => {
           }
         }
       }
-      const customJwtBody = Object.assign({}, jwtBody)
+      const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'test@expired.com'
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() => JwtUtils.decode(jwt, expiredPubKeys, ['https://host/oauth/token'])).toThrow(
@@ -177,7 +177,7 @@ describe('jwtUtils', () => {
       )
     })
     it('iat invalid', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
+      const customJwtBody = { ...jwtBody }
       customJwtBody.iat += 1200
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
@@ -195,7 +195,7 @@ describe('jwtUtils', () => {
       )
     })
     it('unknown issuer', () => {
-      const customJwtBody = Object.assign({}, jwtBody)
+      const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'unknown@test.com'
       const jwt = JwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
@@ -203,14 +203,14 @@ describe('jwtUtils', () => {
       )
     })
     it('wrong alg', () => {
-      const customJwtHeader = Object.assign({}, jwtHeader)
+      const customJwtHeader = { ...jwtHeader }
       customJwtHeader.alg = 'HS128'
       expect(() => JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)).toThrow(
         new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
       )
     })
     it('unknown kid', () => {
-      const customJwtHeader = Object.assign({}, jwtHeader)
+      const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '3'
       const jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
@@ -218,7 +218,7 @@ describe('jwtUtils', () => {
       )
     })
     it('invalid signature', () => {
-      const customJwtHeader = Object.assign({}, jwtHeader)
+      const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '2'
       const jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
@@ -226,7 +226,7 @@ describe('jwtUtils', () => {
       )
     })
     it('invalid shared key', () => {
-      const customJwtHeader = Object.assign({}, jwtHeader)
+      const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '5'
       customJwtHeader.alg = 'HS256'
       const jwt = JwtUtils.encode('', customJwtHeader, jwtBody, 'sharedkey')
@@ -235,7 +235,7 @@ describe('jwtUtils', () => {
       )
     })
     it('handle exception if its a JwtVerifyError', () => {
-      const customJwtHeader = Object.assign({}, jwtHeader)
+      const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '2'
       const jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       try {
@@ -247,7 +247,7 @@ describe('jwtUtils', () => {
       }
     })
     it('invalid pubkey', () => {
-      const customJwtHeader = Object.assign({}, jwtHeader)
+      const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '4'
       const jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow()

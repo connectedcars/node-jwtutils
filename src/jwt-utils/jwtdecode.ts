@@ -24,21 +24,14 @@ function jwtDecode(
   jwt: string,
   publicKeys: Record<string, Record<string, string | PublicKey>>,
   audiences: string[],
-  options?: Options | number
+  options: Options | number = defaultOptions
 ): Record<string, string | number> {
-  if (!options) {
-    options = { ...defaultOptions }
-  }
   if (typeof options === 'number') {
     // Backwards compatibility with old api
     options = {
       ...defaultOptions,
       nbfIatSkew: options
     }
-  }
-
-  if (typeof options !== 'object' || Array.isArray(publicKeys)) {
-    throw new Error('options needs to a map of { nbfIatSkew: 300, ... }')
   }
 
   const parts = jwt.split(/\./)
@@ -103,7 +96,7 @@ function jwtDecode(
       ? (issuer[`${header.kid}@${header.alg}`] as string)
       : (issuer[`default@${header.alg}`] as string)
 
-  let issuerOptions: Record<string, unknown> = {}
+  let issuerOptions = {} as Options
   if (typeof pubkeyOrSharedKey === 'object' && pubkeyOrSharedKey !== null && pubkeyOrSharedKey['publicKey']) {
     issuerOptions = pubkeyOrSharedKey
     pubkeyOrSharedKey = pubkeyOrSharedKey['publicKey']
@@ -135,18 +128,15 @@ function jwtDecode(
   }
 
   const unixNow = Math.floor(Date.now() / 1000)
-  const validators = {
+  const defaultValidators = {
     aud: validateAudience,
     exp: validateExpires,
     iat: validateIssuedAt,
     nbf: validateNotBefore
   }
-  Object.assign(validators, options.validators || {})
-  Object.assign(validators, issuerOptions.validators || {})
 
-  const validationOptions: Options = defaultOptions
-  Object.assign(validationOptions, options)
-  Object.assign(validationOptions, issuerOptions)
+  const validators = { ...defaultValidators, ...issuerOptions.validators, ...options.validators }
+  const validationOptions = { ...options, ...issuerOptions }
 
   validators.aud(body, audiences)
   validators.iat(body, unixNow, validationOptions)
