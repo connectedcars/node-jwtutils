@@ -1,6 +1,6 @@
 steps:
-  - name: 'gcr.io/connectedcars-staging/github-connectedcars-cloudbuilder-wrapper.master:latest'
-    args: ['--secret-build-vars=NPM_TOKEN']
+  - name: 'gcr.io/connectedcars-staging/cloudbuilder-wrapper.master'
+    args: ['--secret-build-vars=NPM_TOKEN', '--update-url=https://build-api.connectedcars.io/cloudbuilder']
     secretEnv:
       - 'NPM_TOKEN'
     env:
@@ -13,5 +13,5 @@ steps:
 secrets:
 - kmsKeyName: projects/connectedcars-staging/locations/global/keyRings/cloudbuilder/cryptoKeys/connectedcars-builder
   secretEnv:
-    NPM_TOKEN: CiQAg7wCPewIVIbfIFEcQIzhDPtFwwkVhuKsZz27ikGInbEjyrcSTABefMgezLQ+uMbN3cBIleg8ogOwhKOWV/99N9Ra9HNnfwCA6n7aL443W6eiEQavWArDqlS57K0FbW0BRd+JfShkXBCojePXbCto3X8=
+    NPM_TOKEN: CiQAg7wCPRLVNzCKg+NMXRanl3WmpnMKu2t+ufAPuPXLEDgheDISUQBefMgeLbcPimMQUK7wQyKw0A+DYrzXBA2vdBHvs/9EcChdsQXsVeC3DMBgufqUP73TWL6aH3a94zyC1zuo1JzyBL+dsZIEl47l3eYW6nFK3A==
 timeout: 3600s
