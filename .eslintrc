@@ -1,26 +1,5 @@
 {
-    "parser": "babel-eslint",
-    "extends": [
-      "prettier"
-    ],
-    "plugins": [
-      "prettier",
-      "node"
-    ],
-    "parserOptions": {
-      "ecmaVersion": 2016,
-      "sourceType": "module"
-    },
-    "rules": {
-      "node/no-unsupported-features": "error",
-      "no-unused-vars": "warn",
-      "prettier/prettier": ["error", {
-        "singleQuote": true,
-        "semi": false
-      }]
-    },
-    "env": {
-      "es6": true,
-      "node": true
-    }
+  "extends": "./node_modules/@connectedcars/setup/.eslintrc",
+  // Force eslint to use local installed parser not the one from ./node_modules/@connectedcars/setup
+  "parser": "@typescript-eslint/parser"
 }
