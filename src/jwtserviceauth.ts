@@ -70,7 +70,7 @@ export class JwtServiceAuth {
       return {
         accessToken: authResponse.token,
         expiresIn: Math.ceil((expiresAt - now) / 1000),
-        expiresAt: expiresAt
+        expiresAt
       }
     } else {
       throw new JwtServiceAuthError(`Fetching github access token returned no response`)
@@ -89,7 +89,7 @@ export class JwtServiceAuth {
       return {
         accessToken: config.credential.access_token,
         expiresIn: Math.ceil((expiresAt - now) / 1000),
-        expiresAt: expiresAt
+        expiresAt
       }
     })
   }

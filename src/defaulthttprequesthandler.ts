@@ -16,7 +16,7 @@ export async function DefaultHttpRequestHandler(
   body?: unknown
 ): Promise<AxiosResponse> {
   try {
-    const res = await axios({ method, url: url, headers: headers, data: body })
+    const res = await axios({ method, url, headers, data: body })
     return res
   } catch (e) {
     throw new JwtServiceAuthError(e.message, {
