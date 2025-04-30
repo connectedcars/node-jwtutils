@@ -1,32 +1,26 @@
-// @ts-check
-'use strict'
+import { Request, Response } from 'express'
+import http from 'http'
 
-const jwtDecode = require('./jwtdecode')
-const JwtVerifyError = require('./jwtverifyerror')
+import { JwtUtils, PublicKey, RevokedToken } from './index'
+import { JwtVerifyError } from './jwtverifyerror'
 
-/**
- *
- * @param {Object} pubKeys
- * @param {Object} revokedTokens
- * @param {Array<string>} audiences
- * @param {Function} [mapper]
- * @param {Object} [options]
- * @param {boolean} [options.allowAnonymous]
- */
-function jwtAuthMiddleware(
-  pubKeys,
-  revokedTokens,
-  audiences,
-  mapper = null,
-  options = {}
-) {
+export function JwtAuthMiddleware(
+  pubKeys: Record<string, Record<string, string | PublicKey>>,
+  revokedTokens: Record<string, RevokedToken>,
+  audiences: string[],
+  mapper: unknown | null = null,
+  options: Record<string, string | number | string[] | boolean> = {}
+): (
+  request: Request & { user?: Record<string, unknown> } & { jwtAuthMiddlewareProcessed?: boolean } & {
+    headers: http.IncomingHttpHeaders
+  },
+  response: Response,
+  next: (err?: Error | null) => void
+) => void {
   mapper = mapper || null
   options = options || {}
-  return function(request, response, next) {
-    if (
-      request.jwtAuthMiddlewareProcessed ||
-      (request.user || {}).authenticated === true
-    ) {
+  return function (request, response, next) {
+    if (request.jwtAuthMiddlewareProcessed || (request.user || {}).authenticated === true) {
       return next() // Skip authentication if we already authenticated
     }
     if (!(request.headers.authorization || '').startsWith('Bearer ')) {
@@ -36,9 +30,12 @@ function jwtAuthMiddleware(
       }
       return next(new JwtVerifyError('Not allowed'))
     }
+    if (!request.headers.authorization) {
+      return next(new JwtVerifyError('Missing authorization'))
+    }
     try {
-      let jwt = request.headers.authorization.substring(7)
-      let decodedJwtBody = jwtDecode(jwt, pubKeys, audiences)
+      const jwt = request.headers.authorization.substring(7)
+      const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, audiences)
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
@@ -65,7 +62,7 @@ function jwtAuthMiddleware(
             request.jwtAuthMiddlewareProcessed = true
             next()
           })
-          .catch(e => next(e))
+          .catch((e: Error) => next(e))
       } else {
         request.jwtAuthMiddlewareProcessed = true
         return next()
@@ -80,12 +77,6 @@ function jwtAuthMiddleware(
   }
 }
 
-function isPromise(value) {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof value.then === 'function'
-  )
+function isPromise(value: Promise<unknown>): boolean {
+  return typeof value === 'object' && value !== null && typeof value.then === 'function'
 }
-
-module.exports = jwtAuthMiddleware

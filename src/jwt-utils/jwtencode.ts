@@ -1,20 +1,13 @@
-// @ts-check
-'use strict'
+import crypto from 'crypto'
 
-const crypto = require('crypto')
+import * as base64UrlSafe from '../base64urlsafe'
 
-const base64UrlSafe = require('./base64urlsafe')
-
-function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
-  if (
-    typeof header !== 'object' ||
-    Array.isArray(header) ||
-    typeof body !== 'object' ||
-    Array.isArray(body)
-  ) {
-    throw new Error('both header and body should be of type object')
-  }
-
+function jwtEncode(
+  privateKey: crypto.KeyObject | string | null,
+  header: Record<string, unknown>,
+  body: Record<string, unknown>,
+  privateKeyPassword: string | null = null
+): string {
   let signAlgo = null
   let hmacAlgo = null
   switch (header.alg) {
@@ -46,15 +39,13 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
       hmacAlgo = 'sha512'
       break
     default:
-      throw new Error(
-        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
-      )
+      throw new Error('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
   }
 
   // Base64 encode header and body
-  let headerBase64 = base64UrlSafe.encode(Buffer.from(JSON.stringify(header)))
-  let bodyBase64 = base64UrlSafe.encode(Buffer.from(JSON.stringify(body)))
-  let headerBodyBase64 = headerBase64 + '.' + bodyBase64
+  const headerBase64 = base64UrlSafe.encode(Buffer.from(JSON.stringify(header)))
+  const bodyBase64 = base64UrlSafe.encode(Buffer.from(JSON.stringify(body)))
+  const headerBodyBase64 = headerBase64 + '.' + bodyBase64
 
   let signatureBuffer
   /* istanbul ignore else */
@@ -71,13 +62,13 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
     // Sign with privatekey
     if (privateKeyPassword !== null) {
       signatureBuffer = sign.sign({
-        key: privateKey,
+        key: typeof privateKey === 'string' ? privateKey : privateKey.export(),
         passphrase: privateKeyPassword
       })
     } else {
       signatureBuffer = sign.sign(privateKey)
     }
-  } else if (hmacAlgo) {
+  } else if (hmacAlgo && privateKeyPassword) {
     const hmac = crypto.createHmac(hmacAlgo, privateKeyPassword)
     hmac.update(headerBodyBase64)
     signatureBuffer = hmac.digest()
@@ -86,8 +77,8 @@ function jwtEncode(privateKey, header, body, privateKeyPassword = null) {
   }
 
   // Construct final JWT
-  let signatureBase64 = base64UrlSafe.encode(signatureBuffer)
+  const signatureBase64 = base64UrlSafe.encode(signatureBuffer)
   return headerBodyBase64 + '.' + signatureBase64
 }
 
-module.exports = jwtEncode
+export { jwtEncode as encode }

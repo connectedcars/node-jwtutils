@@ -1,7 +1,4 @@
-// @ts-check
-'use strict'
-
-function base64EncodeUrlSafe(buffer) {
+export function encode(buffer: Buffer): string {
   return buffer
     .toString('base64')
     .replace(/\+/g, '-') // Convert '+' to '-'
@@ -9,7 +6,7 @@ function base64EncodeUrlSafe(buffer) {
     .replace(/=+$/, '') // Remove ending '='
 }
 
-function base64DecodeUrlSafe(base64StringUrlSafe) {
+export function decode(base64StringUrlSafe: string): Buffer {
   let base64String = base64StringUrlSafe.replace(/-/g, '+').replace(/_/g, '/')
   switch (base64String.length % 4) {
     case 2:
@@ -20,9 +17,4 @@ function base64DecodeUrlSafe(base64StringUrlSafe) {
       break
   }
   return Buffer.from(base64String, 'base64')
-}
-
-module.exports = {
-  encode: base64EncodeUrlSafe,
-  decode: base64DecodeUrlSafe
 }
