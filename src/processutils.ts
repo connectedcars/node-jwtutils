@@ -1,6 +1,5 @@
-import { Readable } from 'node:stream'
-
 import { spawn } from 'child_process'
+import { Readable } from 'stream'
 
 interface ProcessResult {
   code: number
