@@ -23,7 +23,7 @@
         }
         function getLocationHashParams() {
             let params = {}
-            let parts = document.location.hash.substr(1).split('&')
+            let parts = document.location.hash.substring(1).split('&')
             for(let part of parts) {
                 let keyValue = part.split('=')
                 params[keyValue[0]] = keyValue.length > 1 ? keyValue[1] : null

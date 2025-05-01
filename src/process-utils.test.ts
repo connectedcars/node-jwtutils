@@ -34,7 +34,7 @@ describe('ProcessUtils', () => {
   it('should generate stderr', async function () {
     clock.tick(3000)
     const resultPromise = await ProcessUtils.runProcessAsync(`${tmpdir.name}/sleep`, [])
-    expect(resultPromise.stderr).toEqual(Buffer.from('Done sleeping\n'))
+    expect(resultPromise.stderr).toEqual('Done sleeping\n')
   })
   it('should overflow', async function () {
     clock.tick(3000)

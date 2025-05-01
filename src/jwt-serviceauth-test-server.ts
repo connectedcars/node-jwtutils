@@ -25,48 +25,56 @@ export class JwtServiceAuthTestServer extends HttpServer {
     super({}, async (req, res) => {
       switch (req.url) {
         case '/oauth2/v4/token': {
-          const chunks: Buffer[] = []
-          req.on('data', (chunk: Buffer) => {
-            chunks.push(chunk)
-          })
-          return req.on('end', () => {
-            const requestData = Buffer.concat(chunks).toString('utf8')
-            if (requestData) {
-              const token = querystring.unescape(requestData.replace(/^.+assertion=([^&]+).*?$/, '$1'))
-              const body = JwtUtils.decode(token, pubKeys, ['https://www.googleapis.com/oauth2/v4/token'])
-              if (body.scope !== '') {
-                res.statusCode = 200
-                res.end(JSON.stringify({ access_token: 'ok', expires_in: 3600 }))
-              } else {
-                res.statusCode = 400
-                res.end(JSON.stringify({ error: 'scopes not set' }))
-              }
+          const body = this.getLastTextRequest()?.body
+
+          if (!body) {
+            res.statusCode = 400
+            res.end(JSON.stringify('Expected valid string body'))
+
+            return
+          }
+
+          if (body) {
+            const token = querystring.unescape(body.replace(/^.+assertion=([^&]+).*?$/, '$1'))
+            const decodedBody = JwtUtils.decode(token, pubKeys, ['https://www.googleapis.com/oauth2/v4/token'])
+            if (decodedBody.scope !== '') {
+              res.statusCode = 200
+              res.end(JSON.stringify({ access_token: 'ok', expires_in: 3600 }))
             } else {
               res.statusCode = 400
-              res.end(JSON.stringify({ error: 'not valid' }))
+              res.end(JSON.stringify({ error: 'scopes not set' }))
             }
-          })
+          } else {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: 'not valid' }))
+          }
+
+          return res
         }
+
         case '/app/installations/1/access_tokens': {
           if (!req.headers['authorization']) {
             res.statusCode = 400
             return res.end(JSON.stringify('Auth error'))
           }
+
           const token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
-          const body = JwtUtils.decode(token, pubKeys, [])
-          if (!body) {
+          const decodedBody = JwtUtils.decode(token, pubKeys, [])
+
+          if (!decodedBody) {
             res.statusCode = 400
             return res.end(JSON.stringify('Decoding failure'))
           }
+
           res.statusCode = 201
-          return req.on('end', () => {
-            res.end(
-              JSON.stringify({
-                token: 'v1.1f699f1069f60xxx',
-                expires_at: new Date(new Date().getTime() + 3600 * 1000).toISOString()
-              })
-            )
-          })
+          res.end(
+            JSON.stringify({
+              token: 'v1.1f699f1069f60xxx',
+              expires_at: new Date(new Date().getTime() + 3600 * 1000).toISOString()
+            })
+          )
+
+          return res
         }
         default: {
           res.statusCode = 400

@@ -128,7 +128,7 @@ describe('jwtMiddleware', () => {
       const jwt = JwtUtils.encode(ecPrivateKey, jwtHeader, jwtBody)
       await expect(
         RequestHandler.DefaultHttpRequestHandler('GET', `${getServerAddress()}/`, {
-          Authorization: 'Bearer ' + jwt.substr(2),
+          Authorization: 'Bearer ' + jwt.substring(2),
           Accept: 'application/json',
           'User-Agent': 'test'
         })

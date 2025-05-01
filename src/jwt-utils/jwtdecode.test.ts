@@ -56,9 +56,7 @@ describe('jwtUtils', () => {
       )
     })
     it('invalid json', () => {
-      expect(() => JwtUtils.decode(testJwt.substr(10), pubKeys, audiences)).toThrow(
-        new JwtVerifyError('Unexpected token $ in JSON at position 0')
-      )
+      expect(() => JwtUtils.decode(testJwt.substring(10), pubKeys, audiences)).toThrow(/^Unexpected token '\$'/)
     })
     it('wrong alg', () => {
       expect(() => JwtUtils.decode(testJwtWrongAlg, pubKeys, audiences)).toThrow(
