@@ -1,8 +1,10 @@
-import { JwtServiceAuthError } from './index'
+import { JwtVerifyError } from './index'
 
-describe('JwtServiceAuthError', () => {
-  it('innerError should be null', () => {
-    const error = new JwtServiceAuthError('')
+describe('JwtVerifyError', () => {
+  it('constructs a JwtVerifyError', () => {
+    const error = new JwtVerifyError('')
+
+    expect(error.name).toBe('JwtVerifyError')
     expect(error.context).toEqual({})
   })
 })

@@ -1,6 +1,7 @@
 export class JwtVerifyError extends Error {
-  public name: string
-  public context: { [key: string]: unknown }
+  public readonly name: string
+  public readonly context: Record<string, unknown>
+
   public constructor(message: string, context: Record<string, unknown> = {}) {
     super(message)
 

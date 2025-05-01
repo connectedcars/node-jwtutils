@@ -1,11 +1,12 @@
-import { AxiosResponse } from 'axios'
+import type { AxiosResponse } from 'axios'
 import querystring from 'querystring'
 
 import * as RequestHandler from './default-http-request-handler'
-import { JwtServiceAuthError, JwtUtils } from './index'
-import * as ProcessUtils from './process-utils'
+import { JwtServiceAuthError, jwtUtils } from './index'
+import type { JwtBody, JwtHeader } from './types'
+import { runProcessAsync } from './utils/process'
 
-interface Options {
+interface JwtServiceAuthOptions {
   endpoint?: string
   expires?: number
   impersonate?: string
@@ -18,13 +19,37 @@ interface AccessToken {
   expiresAt: number
 }
 
+interface GithubAccessTokenResponse {
+  expires_at: string
+  token: string
+}
+
+interface GoogleAccessTokenOutput {
+  credential: {
+    token_expiry: string
+    access_token: string
+  }
+}
+
+interface GoogleAccessTokenResponse {
+  access_token: string
+  expires_in: number
+}
+
+interface KeyData {
+  type: string
+  private_key: string
+  private_key_id: string
+  client_email: string
+}
+
 export class JwtServiceAuth {
   private requestHandler: RequestHandler.HttpRequestHandler
   private authEndpoint: string | null
   private command: string
 
-  public constructor(httpRequestHandler?: RequestHandler.HttpRequestHandler, options: Options = {}) {
-    this.requestHandler = httpRequestHandler || RequestHandler.DefaultHttpRequestHandler
+  public constructor(httpRequestHandler?: RequestHandler.HttpRequestHandler, options: JwtServiceAuthOptions = {}) {
+    this.requestHandler = httpRequestHandler ?? RequestHandler.defaultHttpRequestHandler
     this.authEndpoint = options.endpoint || null
     this.command = options.command || 'gcloud'
   }
@@ -34,39 +59,38 @@ export class JwtServiceAuth {
     appId: number,
     installationId: number,
     appName?: string,
-    options: Options = {}
+    options: JwtServiceAuthOptions = {}
   ): Promise<AccessToken> {
     const expires = options.expires ? options.expires : 600
 
     // Create JWT auth token
     const unixNow = Math.floor(new Date().getTime() / 1000)
-    const jwtHeader = {
+    const jwtHeader: JwtHeader = {
       typ: 'JWT',
       alg: 'RS256'
     }
     const jwtBody = {
       iat: unixNow,
       exp: unixNow + expires,
-      iss: appId
+      iss: String(appId)
     }
 
-    const jwt = JwtUtils.encode(privateKey, jwtHeader, jwtBody)
+    const jwt = jwtUtils.encode(privateKey, jwtHeader, jwtBody)
+    const endpoint = this.authEndpoint || `https://api.github.com/app/installations/${installationId}/access_tokens`
+    const headers = {
+      Authorization: 'Bearer ' + jwt,
+      'User-Agent': appName ? appName : 'jwtutils',
+      Accept: 'application/vnd.github.machine-man-preview+json'
+    }
 
     // Fetch access token for installation
-    const res = await this.requestHandler(
-      'POST',
-      this.authEndpoint || `https://api.github.com/app/installations/${installationId}/access_tokens`,
-      {
-        Authorization: 'Bearer ' + jwt,
-        'User-Agent': appName ? appName : 'jwtutils',
-        Accept: 'application/vnd.github.machine-man-preview+json'
-      },
-      undefined
-    )
-    if (res && res.status === 201) {
-      const authResponse = res.data as { expires_at: string; token: string }
+    const response = await this.requestHandler('POST', endpoint, headers, undefined)
+
+    if (response && response.status === 201) {
+      const authResponse = response.data as GithubAccessTokenResponse
       const now = new Date().getTime()
       const expiresAt = new Date(authResponse.expires_at).getTime()
+
       return {
         accessToken: authResponse.token,
         expiresIn: Math.ceil((expiresAt - now) / 1000),
@@ -78,43 +102,39 @@ export class JwtServiceAuth {
   }
 
   public async getGoogleAccessTokenFromGCloudHelper(): Promise<AccessToken> {
-    const resultPromise = ProcessUtils.runProcessAsync(this.command, ['config', 'config-helper', '--format=json'], {
+    const result = await runProcessAsync(this.command, ['config', 'config-helper', '--format=json'], {
       closeStdin: true
     })
 
-    return await resultPromise.then(result => {
-      const config = JSON.parse(result.stdout) as { credential: { token_expiry: string; access_token: string } }
-      const now = new Date().getTime()
-      const expiresAt = new Date(config.credential.token_expiry).getTime()
-      return {
-        accessToken: config.credential.access_token,
-        expiresIn: Math.ceil((expiresAt - now) / 1000),
-        expiresAt
-      }
-    })
+    const config = JSON.parse(result.stdout) as GoogleAccessTokenOutput
+    const now = new Date().getTime()
+    const expiresAt = new Date(config.credential.token_expiry).getTime()
+
+    return {
+      accessToken: config.credential.access_token,
+      expiresIn: Math.ceil((expiresAt - now) / 1000),
+      expiresAt
+    }
   }
 
   public async getGoogleAccessToken(
     keyFileData: string,
     scopes: string[] | number | null = null,
-    options: Options = {}
+    options: JwtServiceAuthOptions = {}
   ): Promise<AccessToken> {
-    const mergedConfig = Object.assign({}, options, {
+    const mergedConfig = {
+      ...options,
       endpoint: this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token'
-    })
-    return await this._getGoogleAccessToken(this.requestHandler, keyFileData, scopes, mergedConfig)
+    }
+
+    return this._getGoogleAccessToken(this.requestHandler, keyFileData, scopes, mergedConfig)
   }
 
   private async _getGoogleAccessToken(
-    httpRequestHandler: (
-      method: string,
-      url: string,
-      headers?: Record<string, string | number>,
-      body?: unknown
-    ) => Promise<AxiosResponse | undefined>,
+    httpRequestHandler: RequestHandler.HttpRequestHandler,
     keyFileData: string,
     scopes: string[] | number | null,
-    options: Options = {}
+    options: JwtServiceAuthOptions = {}
   ): Promise<AccessToken> {
     // TODO: Remove in V2.0
     // Support old interface for expires
@@ -126,17 +146,13 @@ export class JwtServiceAuth {
           expires: scopes
         }
       }
+
       scopes = null
     }
 
     scopes = scopes ? scopes : ['https://www.googleapis.com/auth/userinfo.email']
 
-    const keyData = JSON.parse(keyFileData) as {
-      type: string
-      private_key: string
-      private_key_id: string
-      client_email: string
-    }
+    const keyData = JSON.parse(keyFileData) as KeyData
 
     if (keyData.type !== 'service_account') {
       throw new Error('Only supports service account keyFiles')
@@ -144,12 +160,12 @@ export class JwtServiceAuth {
 
     // Create JWT auth token
     const unixNow = Math.floor(new Date().getTime() / 1000)
-    const jwtHeader = {
+    const jwtHeader: JwtHeader = {
       typ: 'JWT',
       alg: 'RS256',
       kid: keyData.private_key_id
     }
-    const jwtBody: Record<string, string | number> = {
+    const jwtBody: JwtBody = {
       aud: 'https://www.googleapis.com/oauth2/v4/token',
       iss: keyData.client_email,
       iat: unixNow,
@@ -161,32 +177,37 @@ export class JwtServiceAuth {
       jwtBody.sub = options.impersonate
     }
 
-    const jwt = JwtUtils.encode(keyData.private_key, jwtHeader, jwtBody)
+    const jwt = jwtUtils.encode(keyData.private_key, jwtHeader, jwtBody)
 
     const formParams: Record<string, string> = {
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: jwt
     }
+
     const formData = Object.keys(formParams)
       .map(key => `${key}=${querystring.escape(formParams[key])}`)
       .join('&')
+    const endpoint = this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token'
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
 
     // Be pessimistic with expiry time so start time before doing the request
     // Fetch access token
-    const res = (await httpRequestHandler(
+    const response = (await httpRequestHandler(
       'POST',
-      this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token',
-      {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
+      endpoint,
+      headers,
       formData
-    )) as { status: number; data: { access_token: string; expires_in: number } }
-    if (res && res.status === 200) {
+    )) as AxiosResponse<GoogleAccessTokenResponse>
+
+    if (response && response.status === 200) {
       const now = new Date().getTime()
+
       return {
-        accessToken: res.data.access_token,
-        expiresIn: res.data.expires_in,
-        expiresAt: now + res.data.expires_in * 1000
+        accessToken: response.data.access_token,
+        expiresIn: response.data.expires_in,
+        expiresAt: now + response.data.expires_in * 1000
       }
     } else {
       throw new JwtServiceAuthError(`Fetching google access token returned no response`)

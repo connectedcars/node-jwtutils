@@ -1,4 +1,2 @@
-import { decode } from './jwtdecode'
-import { encode } from './jwtencode'
-
-export { decode, encode }
+export { decode } from './jwt-decode'
+export { encode } from './jwt-encode'

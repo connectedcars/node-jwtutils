@@ -8,6 +8,7 @@ export function encode(buffer: Buffer): string {
 
 export function decode(base64StringUrlSafe: string): Buffer {
   let base64String = base64StringUrlSafe.replace(/-/g, '+').replace(/_/g, '/')
+
   switch (base64String.length % 4) {
     case 2:
       base64String += '=='
@@ -16,5 +17,6 @@ export function decode(base64StringUrlSafe: string): Buffer {
       base64String += '='
       break
   }
+
   return Buffer.from(base64String, 'base64')
 }

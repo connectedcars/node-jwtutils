@@ -1,6 +1,8 @@
-import { JwtUtils } from '../index'
 import { JwtVerifyError } from '../jwt-verify-error'
-import { rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../test-resources'
+import { rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../test/test-resources'
+import type { JwtBody, JwtHeader } from '../types'
+import { decode } from './jwt-decode'
+import { encode } from './jwt-encode'
 
 const pubKeys = {
   'test@test.com': {
@@ -12,13 +14,13 @@ const pubKeys = {
 
 const unixNow = Math.floor(Date.now() / 1000)
 
-const jwtHeader = {
+const jwtHeader: JwtHeader = {
   typ: 'JWT',
   alg: 'RS256',
   kid: '1'
 }
 
-const jwtBody = {
+const jwtBody: JwtBody = {
   aud: 'https://host/oauth/token',
   iss: 'test@test.com',
   iat: unixNow,
@@ -26,24 +28,27 @@ const jwtBody = {
   scope: ['http://stuff', 'http://stuff2']
 }
 
-describe('jwtUtils', () => {
+describe('jwt-encode', () => {
   describe('encode', () => {
     it('should succeed with encrypted RSA private key', () => {
       for (const algo of ['RS256', 'RS384', 'RS512']) {
         const customJwtHeader = Object.assign({}, jwtHeader)
         customJwtHeader.alg = algo
-        const jwt = JwtUtils.encode(rsaPrivateKeyEncrypted, customJwtHeader, jwtBody, 'Qwerty1234')
-        const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+        const jwt = encode(rsaPrivateKeyEncrypted, customJwtHeader, jwtBody, 'Qwerty1234')
+        const decodedJwtBody = decode(jwt, pubKeys, ['https://host/oauth/token'])
+
         expect(jwtBody).toEqual(decodedJwtBody)
       }
     })
+
     it('should fail with empty header and body', () => {
-      expect(() => JwtUtils.encode('', {}, {})).toThrow(
+      expect(() => encode('', {}, {})).toThrow(
         new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
       )
     })
+
     it('should fail with missing key', () => {
-      expect(() => JwtUtils.encode('', { alg: 'RS256' }, {}, 'key')).toThrow(
+      expect(() => encode('', { alg: 'RS256' }, {}, 'key')).toThrow(
         new JwtVerifyError('privateKey can not be null for RS256')
       )
     })

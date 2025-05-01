@@ -1,5 +1,10 @@
-import { JwtServiceAuthError } from './jwt-serviceauth-error'
-import { JwkBody } from './pubkeys-helper'
+// Links
+// * https://github.com/jrnker/CSharp-easy-RSA-PEM/blob/48349cfc010d6c6acf9feb12282431d9d03fd28c/CSharp-easy-RSA-PEM/CSharp-easy-RSA-PEM/AsnKeyBuilder.cs
+// * https://lapo.it/asn1js/
+// * https://github.com/EternalDeiwos/keyto/tree/d8480710393bc9ed93be3758a30246cddedec771
+
+import { JwtServiceAuthError } from './jwt-service-auth-error'
+import type { JwkBody } from './types'
 
 // SEQUENCE(OBJECT IDENTIFIER = 1.2.840.113549.1.1.1, NULL) - rsaEncryption
 const rsaPublicKeyOid = [0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00]
@@ -29,6 +34,10 @@ export function jwkToPem(jwk: JwkBody): string {
 }
 
 export function rsaPublicJwkToPem(rsaPublicKeyJwk: JwkBody): string {
+  if (!rsaPublicKeyJwk.n || !rsaPublicKeyJwk.e) {
+    throw new Error("Must provide 'n' and 'e' fields in jwk body for conversion to PEM")
+  }
+
   const modulusBytes = asn1PositiveInteger(new Uint8Array(Buffer.from(rsaPublicKeyJwk.n, 'base64')))
   const exponentBytes = asn1PositiveInteger(new Uint8Array(Buffer.from(rsaPublicKeyJwk.e, 'base64')))
 
@@ -57,31 +66,36 @@ export function rsaPublicJwkToPem(rsaPublicKeyJwk: JwkBody): string {
 
 export function ecPublicKeyJwkToPem(ecPublicKeyJwk: JwkBody): string {
   let keyOid
+
   switch (ecPublicKeyJwk.crv) {
     case 'K-256': {
       // Not part of the JWK standard
       keyOid = encodeAsn1Bytes(0x30, [...ecPublicKeyOid, ...secp256k1Oid])
       break
     }
+
     case 'P-256': {
       keyOid = encodeAsn1Bytes(0x30, [...ecPublicKeyOid, ...prime256v1Oid])
       break
     }
+
     case 'P-384': {
       keyOid = encodeAsn1Bytes(0x30, [...ecPublicKeyOid, ...secp384r1Oid])
       break
     }
+
     case 'P-521': {
       keyOid = encodeAsn1Bytes(0x30, [...ecPublicKeyOid, ...secp521r1Oid])
       break
     }
+
     default: {
       throw new Error(`Unknown curve ${ecPublicKeyJwk.crv}`)
     }
   }
 
-  let xBytes
-  let yBytes
+  let xBytes, yBytes
+
   if (ecPublicKeyJwk.x && ecPublicKeyJwk.y) {
     xBytes = new Uint8Array(Buffer.from(ecPublicKeyJwk.x, 'base64'))
     yBytes = new Uint8Array(Buffer.from(ecPublicKeyJwk.y, 'base64'))
@@ -109,6 +123,7 @@ export function ecPublicKeyJwkToPem(ecPublicKeyJwk: JwkBody): string {
 
 export function encodeAsn1Bytes(type: number, bytes: number[] | Uint8Array): number[] {
   let lengthBytes: number[]
+
   if (bytes.length === 0) {
     lengthBytes = [0]
   } else if (bytes.length < 0x80) {
@@ -122,6 +137,7 @@ export function encodeAsn1Bytes(type: number, bytes: number[] | Uint8Array): num
   } else {
     lengthBytes = [0x84, 0xff000000 >> 24, 0xff0000 >> 16, bytes.length >> 8, bytes.length & 0xff]
   }
+
   return [type, ...lengthBytes, ...bytes]
 }
 
@@ -129,6 +145,7 @@ export function asn1PositiveInteger(bytes: Uint8Array): number[] {
   if (bytes[0] > 0x7f) {
     return encodeAsn1Bytes(0x02, [0x00, ...bytes])
   }
+
   return encodeAsn1Bytes(0x02, bytes)
 }
 
@@ -138,13 +155,10 @@ export function formatPemPublicKey(bytes: Uint8Array): string {
     .match(/.{1,64}/g)
 
   let pemBase64 = ''
+
   if (pemBase64Match) {
     pemBase64 = pemBase64Match.join('\n')
   }
+
   return `-----BEGIN PUBLIC KEY-----\n${pemBase64}\n-----END PUBLIC KEY-----`
 }
-
-// Links
-// * https://github.com/jrnker/CSharp-easy-RSA-PEM/blob/48349cfc010d6c6acf9feb12282431d9d03fd28c/CSharp-easy-RSA-PEM/CSharp-easy-RSA-PEM/AsnKeyBuilder.cs
-// * https://lapo.it/asn1js/
-// * https://github.com/EternalDeiwos/keyto/tree/d8480710393bc9ed93be3758a30246cddedec771

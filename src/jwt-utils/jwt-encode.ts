@@ -1,15 +1,17 @@
 import crypto from 'crypto'
 
-import * as base64UrlSafe from '../base64-urlsafe'
+import type { JwtBody, JwtHeader } from '../types'
+import * as base64UrlSafe from '../utils/base64-urlsafe'
 
-function jwtEncode(
+export function encode(
   privateKey: crypto.KeyObject | string | null,
-  header: Record<string, unknown>,
-  body: Record<string, unknown>,
+  header: JwtHeader,
+  body: JwtBody,
   privateKeyPassword: string | null = null
 ): string {
   let signAlgo = null
   let hmacAlgo = null
+
   switch (header.alg) {
     case 'RS256':
       signAlgo = 'RSA-SHA256'
@@ -80,5 +82,3 @@ function jwtEncode(
   const signatureBase64 = base64UrlSafe.encode(signatureBuffer)
   return headerBodyBase64 + '.' + signatureBase64
 }
-
-export { jwtEncode as encode }

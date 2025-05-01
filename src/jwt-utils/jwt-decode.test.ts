@@ -1,6 +1,6 @@
-import { JwtUtils } from '../index'
 import { JwtVerifyError } from '../jwt-verify-error'
-import { Options } from './jwtdecode'
+import { decode } from './jwt-decode'
+import { DecodingOptions } from './jwt-decode'
 
 const audiences: string[] = []
 
@@ -19,7 +19,7 @@ const pubKeys = {
   }
 }
 
-const defaultOptions: Options = {
+const defaultOptions: DecodingOptions = {
   expiresSkew: 0,
   expiresMax: 0,
   nbfIatSkew: 300,
@@ -39,10 +39,10 @@ const testJwt =
 const testJwtWrongAlg =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzEyOCJ9.eyJhdWQiOiJodHRwczovL2hvc3Qvb2F1dGgvdG9rZW4iLCJpc3MiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNTAzMzM2NzU5LCJleHAiOjE1MDMzMzczNTksInNjb3BlIjpbImh0dHA6Ly9zdHVmZiIsImh0dHA6Ly9zdHVmZjIiXX0.12co2gXwBxmZ2uLJecd26bfteCLBx7jgu_9rp2hhKAHWA4qFKm1HcQOZXqDvHkjflQDtNAQ1ZUUf3U8kntUUAmMOjhHx0BspC-xuaTFylZWqj--A2_w9e7JSk46TF_x3e_hZLB3rtyuSEAPMh_nOCsmM-4A2fnQx0Y5p-Bwbt0I'
 
-describe('jwtUtils', () => {
-  describe('jwtDecode', () => {
+describe('jwt-decode', () => {
+  describe('decode', () => {
     it('decodes', () => {
-      expect(JwtUtils.decode(testJwt, pubKeys, audiences, defaultOptions)).toEqual({
+      expect(decode(testJwt, pubKeys, audiences, defaultOptions)).toEqual({
         aud: 'https://host/oauth/token',
         exp: 1503335769,
         iat: 1503335169,
@@ -50,16 +50,17 @@ describe('jwtUtils', () => {
         scope: ['http://stuff', 'http://stuff2']
       })
     })
+
     it('too few spaces', () => {
-      expect(() => JwtUtils.decode('hello.test', pubKeys, audiences)).toThrow(
-        new JwtVerifyError('JWT does not contain 3 dots')
-      )
+      expect(() => decode('hello.test', pubKeys, audiences)).toThrow(new JwtVerifyError('JWT does not contain 3 dots'))
     })
+
     it('invalid json', () => {
-      expect(() => JwtUtils.decode(testJwt.substring(10), pubKeys, audiences)).toThrow(/^Unexpected token '\$'/)
+      expect(() => decode(testJwt.substring(10), pubKeys, audiences)).toThrow(/^Unexpected token '\$'/)
     })
+
     it('wrong alg', () => {
-      expect(() => JwtUtils.decode(testJwtWrongAlg, pubKeys, audiences)).toThrow(
+      expect(() => decode(testJwtWrongAlg, pubKeys, audiences)).toThrow(
         new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
       )
     })

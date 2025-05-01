@@ -1,10 +1,10 @@
 import express, { Request, Response } from 'express'
 import http from 'http'
 
-import { PublicKey } from './index'
-import { JwtAuthMiddleware } from './jwt-authmiddleware'
-import { JwtVerifyError } from './jwt-verify-error'
-import { ecPublicKey } from './test-resources'
+import { PublicKey } from '../../index'
+import { JwtAuthMiddleware } from '../../jwt-auth-middleware'
+import { JwtVerifyError } from '../../jwt-verify-error'
+import { ecPublicKey } from '../test-resources'
 
 const pubKeys: Record<string, Record<string, string | PublicKey>> = {
   'http://localhost/oauth/token': {
@@ -27,17 +27,17 @@ const revokedTokens = {
 
 const audiences = ['http://localhost/']
 
-interface ServerConfig {
+interface JwtAuthMiddlewareTestServerOptions {
   port: number
   requestTimeout?: number
 }
 
-export class JwtAuthMiddlewareServer {
+export class JwtAuthMiddlewareTestServer {
   private port: number
   private app: express.Express
   private server?: http.Server
 
-  public constructor(options: ServerConfig) {
+  public constructor(options: JwtAuthMiddlewareTestServerOptions) {
     this.port = options.port
     this.app = express()
     this.app.use(express.json())
@@ -69,26 +69,31 @@ export class JwtAuthMiddlewareServer {
         allowAnonymous: true
       })
     )
+
     this.app.use('/', JwtAuthMiddleware(pubKeys, revokedTokens, audiences))
 
-    this.app.get('/anonymous', function (req: Request, res: Response) {
+    this.app.get('/anonymous', function (_req: Request, res: Response) {
       res.send(`Hello anonymous`)
     })
+
     this.app.get('/', function (req: Request & { user?: Record<string, unknown> }, res: Response) {
       if (req.user) {
         res.send(`Hello ${req.user.subject as string}`)
       }
     })
+
     this.app.get('/mapped', function (req: Request & { user?: Record<string, unknown> }, res: Response) {
       if (req.user) {
         res.send(`Hello ${req.user.eMail as string}`)
       }
     })
-    this.app.get('/async', function (req: Request, res: Response) {
+
+    this.app.get('/async', function (_req: Request, res: Response) {
       res.send(`Async response`)
     })
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    this.app.use((err: Error, req: Request, res: Response, next: (err?: Error | null) => void) => {
+    this.app.use((err: Error, _req: Request, res: Response, _next: (err?: Error | null) => void) => {
       if (err instanceof JwtVerifyError) {
         res.status(401).send(err.message)
       } else {
@@ -108,10 +113,12 @@ export class JwtAuthMiddlewareServer {
       if (!this.server) {
         return resolve()
       }
+
       this.server.close((err?: Error): void => {
         if (err) {
           return reject(err)
         }
+
         resolve()
       })
     })
@@ -121,6 +128,7 @@ export class JwtAuthMiddlewareServer {
     if (this.server) {
       return this.server
     }
+
     throw new Error('Server does not exist')
   }
 }

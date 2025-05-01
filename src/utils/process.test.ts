@@ -3,7 +3,7 @@ import path from 'path'
 import sinon from 'sinon'
 import tmp from 'tmp'
 
-import * as ProcessUtils from './process-utils'
+import * as ProcessUtils from './process'
 
 describe('ProcessUtils', () => {
   let clock: sinon.SinonFakeTimers

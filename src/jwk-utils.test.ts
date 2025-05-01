@@ -1,5 +1,4 @@
 import * as jwkUtils from './jwk-utils'
-import { JwkBody } from './pubkeys-helper'
 import {
   ecPublicKey,
   ecPublicKeyJwk,
@@ -9,25 +8,30 @@ import {
   rsaPublicKeyEncrypted,
   rsaPublicKeyEncryptedJwk,
   rsaPublicKeyJwk
-} from './test-resources'
+} from './test/test-resources'
+import type { JwkBody } from './types'
 
-describe('jwkutils', () => {
+describe('jwk-utils', () => {
   it('rsaPublicJwkToPem 1024bit', () => {
     const generatedPem = jwkUtils.rsaPublicJwkToPem(rsaPublicKeyJwk)
     expect(generatedPem).toEqual(rsaPublicKey)
   })
+
   it('rsaPublicJwkToPem 2048bit', () => {
     const generatedPem = jwkUtils.rsaPublicJwkToPem(rsaPublicKeyEncryptedJwk)
     expect(generatedPem).toEqual(rsaPublicKeyEncrypted)
   })
+
   it('rsaPublicJwkToPem 4096bit', () => {
     const generatedPem = jwkUtils.rsaPublicJwkToPem(rsaPublicKey4096Jwk)
     expect(generatedPem).toEqual(rsaPublicKey4096)
   })
+
   it('ecPublicJwkToPem K-256', () => {
     const generatedPem = jwkUtils.ecPublicKeyJwkToPem(ecPublicKeyJwk)
     expect(generatedPem).toEqual(ecPublicKey)
   })
+
   it('ecPublicJwkToPem P-256', () => {
     const jwk = {
       crv: 'P-256',
@@ -41,8 +45,10 @@ describe('jwkutils', () => {
       'oPVvfJqpv1818lrcENkew28pRvlVvIY+pwAV/gUa4+EnZfLbXmhYPD/WNw==\n' +
       '-----END PUBLIC KEY-----'
     const generatedPem = jwkUtils.ecPublicKeyJwkToPem(jwk)
+
     expect(generatedPem).toEqual(expected)
   })
+
   it('ecPublicJwkToPem P-384', () => {
     const jwk = {
       crv: 'P-384',
@@ -57,8 +63,10 @@ describe('jwkutils', () => {
       'zy3dc1IZtACUngU2xMDDMsi0gDL9jLiU\n' +
       '-----END PUBLIC KEY-----'
     const generatedPem = jwkUtils.ecPublicKeyJwkToPem(jwk)
+
     expect(generatedPem).toEqual(expected)
   })
+
   it('ecPublicJwkToPem P-521', () => {
     const jwk = {
       crv: 'P-521',
@@ -74,11 +82,14 @@ describe('jwkutils', () => {
       'VTHWyg5a6NdvW4IRvsY=\n' +
       '-----END PUBLIC KEY-----'
     const generatedPem = jwkUtils.ecPublicKeyJwkToPem(jwk)
+
     expect(generatedPem).toEqual(expected)
   })
+
   it('jwkToPem K-256, RSA', () => {
     const generatedEcPem = jwkUtils.jwkToPem(ecPublicKeyJwk)
     expect(generatedEcPem).toEqual(ecPublicKey)
+
     const generatedRsaPem = jwkUtils.jwkToPem(rsaPublicKeyJwk)
     expect(generatedRsaPem).toEqual(rsaPublicKey)
   })

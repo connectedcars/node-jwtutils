@@ -1,17 +1,13 @@
 import crypto from 'crypto'
 
-import { JwtBody, PublicKey } from '..'
-import * as base64UrlSafe from '../base64-urlsafe'
 import { JwtVerifyError } from '../jwt-verify-error'
+import { PublicKeys } from '../pubkeys-helper'
+import { isJwtBody, isJwtHeader, type JwtBody, type JwtHeader } from '../types'
+import * as base64UrlSafe from '../utils/base64-urlsafe'
 
-interface JwtHeader {
-  alg: string
-  kid: string
-}
+export type Fixup = (header: JwtHeader, body: JwtBody) => void
 
-export type Fixup = (header: unknown, body: unknown) => void
-
-export interface Options {
+export interface DecodingOptions {
   expiresSkew: number
   expiresMax: number
   nbfIatSkew: number
@@ -19,73 +15,96 @@ export interface Options {
   validators?: Record<string, () => boolean>
 }
 
-const defaultOptions = {
+const defaultDecodingOptions: DecodingOptions = {
   expiresSkew: 0,
   expiresMax: 0,
   nbfIatSkew: 300
 }
 
-function jwtDecode(
+export function decode(
   jwt: string,
-  publicKeys: Record<string, Record<string, string | PublicKey>>,
+  publicKeys: PublicKeys,
   audiences: string[],
-  options: Options | number = defaultOptions
+  options: DecodingOptions | number = defaultDecodingOptions
 ): JwtBody {
   if (typeof options === 'number') {
     // Backwards compatibility with old api
     options = {
-      ...defaultOptions,
+      ...defaultDecodingOptions,
       nbfIatSkew: options
     }
   }
 
   const parts = jwt.split(/\./)
+
   if (parts.length !== 3) {
     throw new JwtVerifyError('JWT does not contain 3 dots')
   }
 
-  // TODO: Use typeguards here instead
-  const header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8')) as JwtHeader
-  const body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8')) as JwtBody
+  const header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8')) as unknown
 
+  // TODO: Check correct type of header
+  if (!isJwtHeader(header)) {
+    throw new JwtVerifyError('Invalid header')
+  }
+
+  const body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8')) as unknown
+
+  if (!isJwtBody(body)) {
+    throw new JwtVerifyError('Invalid body')
+  }
+
+  // TODO: Should type guards come after this?
   if (options.fixup) {
     options.fixup(header, body)
   }
 
   let signAlgo = null
   let hmacAlgo = null
+
+  // TODO: Same switch as for decoding?
   switch (header.alg) {
-    case 'RS256':
+    case 'RS256': {
       signAlgo = 'RSA-SHA256'
       break
-    case 'RS384':
+    }
+    case 'RS384': {
       signAlgo = 'RSA-SHA384'
       break
-    case 'RS512':
+    }
+    case 'RS512': {
       signAlgo = 'RSA-SHA512'
       break
-    case 'ES256':
+    }
+    case 'ES256': {
       signAlgo = 'sha256'
       break
-    case 'ES384':
+    }
+    case 'ES384': {
       signAlgo = 'sha384'
       break
-    case 'ES512':
+    }
+    case 'ES512': {
       signAlgo = 'sha512'
       break
-    case 'HS256':
+    }
+    case 'HS256': {
       hmacAlgo = 'sha256'
       break
-    case 'HS384':
+    }
+    case 'HS384': {
       hmacAlgo = 'sha384'
       break
-    case 'HS512':
+    }
+    case 'HS512': {
       hmacAlgo = 'sha512'
       break
-    default:
+    }
+    default: {
       throw new JwtVerifyError(
         'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
       )
+    }
   }
 
   if (!body.iss) {
@@ -93,6 +112,7 @@ function jwtDecode(
   }
 
   const issuer = publicKeys[body.iss]
+
   if (!issuer) {
     throw new JwtVerifyError(`Unknown issuer '${body.iss}'`)
   }
@@ -103,8 +123,10 @@ function jwtDecode(
       ? (issuer[`${header.kid}@${header.alg}`] as string)
       : (issuer[`default@${header.alg}`] as string)
 
-  let issuerOptions = {} as Options
+  let issuerOptions = {} as DecodingOptions
+
   if (typeof pubkeyOrSharedKey === 'object' && pubkeyOrSharedKey !== null && pubkeyOrSharedKey['publicKey']) {
+    // FIX: Type is never
     issuerOptions = pubkeyOrSharedKey
     pubkeyOrSharedKey = pubkeyOrSharedKey['publicKey']
   }
@@ -114,24 +136,29 @@ function jwtDecode(
   }
 
   const signatureOrHash = base64UrlSafe.decode(parts[2])
+
   /* istanbul ignore else */
   if (signAlgo) {
     // Validate signature
     const verifier = crypto.createVerify(signAlgo)
+
     verifier.write(`${parts[0]}.${parts[1]}`, 'utf8')
     verifier.end()
+
     if (!verifier.verify(pubkeyOrSharedKey, signatureOrHash)) {
-      throw new JwtVerifyError(`Signature verification failed with alg '${header.alg}'`)
+      throw new JwtVerifyError(`Signature verification failed with algorithm '${header.alg}'`)
     }
   } else if (hmacAlgo) {
     const hmac = crypto.createHmac(hmacAlgo, pubkeyOrSharedKey)
     hmac.update(`${parts[0]}.${parts[1]}`, 'utf8')
+
     const signatureBuffer = hmac.digest()
+
     if (!crypto.timingSafeEqual(signatureOrHash, signatureBuffer)) {
-      throw new JwtVerifyError(`Verification failed with alg '${header.alg}'`)
+      throw new JwtVerifyError(`Verification failed with algorithm '${header.alg}'`)
     }
   } else {
-    throw Error(`Should never happen`)
+    throw Error('Should never happen')
   }
 
   const unixNow = Math.floor(Date.now() / 1000)
@@ -153,14 +180,14 @@ function jwtDecode(
   return body
 }
 
-function validateNotBefore(body: JwtBody, unixNow: number, options: Options): void {
-  if (body.nbf > unixNow + options.nbfIatSkew) {
+function validateNotBefore(body: JwtBody, unixNow: number, options: DecodingOptions): void {
+  if (body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
     throw new JwtVerifyError(`Not before in the future by more than ${options.nbfIatSkew} seconds`)
   }
 }
 
-function validateIssuedAt(body: JwtBody, unixNow: number, options: Options): void {
-  if (body.iat > unixNow + options.nbfIatSkew) {
+function validateIssuedAt(body: JwtBody, unixNow: number, options: DecodingOptions): void {
+  if (body.iat && body.iat > unixNow + options.nbfIatSkew) {
     throw new JwtVerifyError(`Issued at in the future by more than ${options.nbfIatSkew} seconds`)
   }
 }
@@ -173,15 +200,13 @@ function validateAudience(body: JwtBody, audiences: string[]): void {
   }
 }
 
-function validateExpires(body: JwtBody, unixNow: number, options: Options): void {
+function validateExpires(body: JwtBody, unixNow: number, options: DecodingOptions): void {
   const notBefore = body.iat || body.nbf || unixNow
-  if (options.expiresMax && body.exp > notBefore + options.expiresMax) {
+  if (options.expiresMax && body.exp && body.exp > notBefore + options.expiresMax) {
     throw new JwtVerifyError(`Expires in the future by more than ${options.expiresMax} seconds`)
   }
 
-  if (body.exp + (options.expiresSkew || 0) <= unixNow) {
+  if (body.exp && body.exp + (options.expiresSkew || 0) <= unixNow) {
     throw new JwtVerifyError('Token has expired')
   }
 }
-
-export { jwtDecode as decode }

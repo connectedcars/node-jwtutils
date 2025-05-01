@@ -1,8 +1,15 @@
 import { Request, Response } from 'express'
 import http from 'http'
 
-import { JwtUtils, PublicKey, RevokedToken } from './index'
+import { jwtUtils } from './index'
 import { JwtVerifyError } from './jwt-verify-error'
+import type { PublicKeys } from './pubkeys-helper'
+
+export interface RevokedToken {
+  id?: number | string
+  jti: string
+  revokedAt: Date
+}
 
 export type Mapper = (
   user: Record<string, unknown>,
@@ -10,42 +17,60 @@ export type Mapper = (
   response: Response
 ) => void | Record<string, unknown> | Promise<string | Record<string, unknown>>
 
+export type JwtAuthMiddlewareOptions = {
+  allowAnonymous?: boolean
+}
+
+interface JwtAuthMiddlewareHandlerRequest extends Request {
+  user?: Record<string, unknown>
+  jwtAuthMiddlewareProcessed?: boolean
+  headers: http.IncomingHttpHeaders
+}
+
+type JwtAuthMiddlewareHandler = (
+  request: JwtAuthMiddlewareHandlerRequest,
+  response: Response,
+  next: (err?: Error | null) => void
+) => void
+
+function isPromise<T>(value: T): boolean {
+  return typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function'
+}
+
 export function JwtAuthMiddleware(
-  pubKeys: Record<string, Record<string, string | PublicKey>>,
+  pubKeys: PublicKeys,
   revokedTokens: Record<string, RevokedToken>,
   audiences: string[],
   mapper: Mapper | null = null,
-  options: Record<string, string | number | string[] | boolean> = {}
-): (
-  request: Request & { user?: Record<string, unknown> } & { jwtAuthMiddlewareProcessed?: boolean } & {
-    headers: http.IncomingHttpHeaders
-  },
-  response: Response,
-  next: (err?: Error | null) => void
-) => void {
-  mapper = mapper || null
-  options = options || {}
+  options: JwtAuthMiddlewareOptions = {}
+): JwtAuthMiddlewareHandler {
   return function (request, response, next) {
-    if (request.jwtAuthMiddlewareProcessed || (request.user || {}).authenticated === true) {
-      return next() // Skip authentication if we already authenticated
+    if (request.jwtAuthMiddlewareProcessed || request?.user?.authenticated === true) {
+      return next() // Skip authentication if we are already authenticated
     }
+
     if (!(request.headers.authorization || '').startsWith('Bearer ')) {
       if (options.allowAnonymous) {
         request.jwtAuthMiddlewareProcessed = true
         return next()
       }
+
       return next(new JwtVerifyError('Not allowed'))
     }
+
     if (!request.headers.authorization) {
       return next(new JwtVerifyError('Missing authorization'))
     }
+
     try {
       const jwt = request.headers.authorization.substring(7)
-      const decodedJwtBody = JwtUtils.decode(jwt, pubKeys, audiences)
+      const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, audiences)
+
       if (!decodedJwtBody.sub) {
         return next(new JwtVerifyError(`Missing 'sub' in body`))
       }
-      if (revokedTokens[decodedJwtBody.jti]) {
+
+      if (decodedJwtBody.jti && revokedTokens[decodedJwtBody.jti]) {
         return next(new JwtVerifyError(`RevokedToken`))
       }
 
@@ -59,10 +84,12 @@ export function JwtAuthMiddleware(
 
       // Handle async
       let result: ReturnType<Mapper> | null = null
+
       if (typeof mapper === 'function') {
         result = mapper(request.user, request, response)
       }
-      if (result && isPromise(result)) {
+
+      if (isPromise(result)) {
         const promiseResult = result as Promise<Record<string, unknown>>
 
         promiseResult
@@ -70,7 +97,7 @@ export function JwtAuthMiddleware(
             request.jwtAuthMiddlewareProcessed = true
             next()
           })
-          .catch((e: Error) => next(e))
+          .catch(next)
       } else {
         request.jwtAuthMiddlewareProcessed = true
         return next()
@@ -83,8 +110,4 @@ export function JwtAuthMiddleware(
       }
     }
   }
-}
-
-function isPromise<T>(value: T): boolean {
-  return typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function'
 }

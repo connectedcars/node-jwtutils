@@ -1,8 +1,8 @@
 import { HttpServer } from '@connectedcars/test'
 import querystring from 'querystring'
 
-import { JwtUtils } from './index'
-import { rsaPublicKey } from './test-resources'
+import { jwtUtils } from '../../index'
+import { rsaPublicKey } from '../test-resources'
 
 const pubKeys = {
   'buildstatus@nversion-168820.iam.gserviceaccount.com': {
@@ -36,7 +36,7 @@ export class JwtServiceAuthTestServer extends HttpServer {
 
           if (body) {
             const token = querystring.unescape(body.replace(/^.+assertion=([^&]+).*?$/, '$1'))
-            const decodedBody = JwtUtils.decode(token, pubKeys, ['https://www.googleapis.com/oauth2/v4/token'])
+            const decodedBody = jwtUtils.decode(token, pubKeys, ['https://www.googleapis.com/oauth2/v4/token'])
             if (decodedBody.scope !== '') {
               res.statusCode = 200
               res.end(JSON.stringify({ access_token: 'ok', expires_in: 3600 }))
@@ -59,7 +59,7 @@ export class JwtServiceAuthTestServer extends HttpServer {
           }
 
           const token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
-          const decodedBody = JwtUtils.decode(token, pubKeys, [])
+          const decodedBody = jwtUtils.decode(token, pubKeys, [])
 
           if (!decodedBody) {
             res.statusCode = 400
@@ -76,6 +76,7 @@ export class JwtServiceAuthTestServer extends HttpServer {
 
           return res
         }
+
         default: {
           res.statusCode = 400
           return res.end(JSON.stringify({ description: 'response.statusCode not 200' }))

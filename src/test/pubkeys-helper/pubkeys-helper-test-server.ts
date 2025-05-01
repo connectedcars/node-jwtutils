@@ -39,14 +39,17 @@ export class PubkeysHelperTestServer extends HttpServer {
               res.statusCode = 200
               return res.end(JSON.stringify(JSON.stringify(jwkResponse, null, 2)))
             }
+
             case '/emptykeys': {
               res.statusCode = 200
               return res.end(JSON.stringify(JSON.stringify({ keys: [] }, null, 2)))
             }
+
             case '/emptyjson': {
               res.statusCode = 200
               return res.end(JSON.stringify(JSON.stringify({}, null, 2)))
             }
+
             default: {
               return res.end({
                 statusCode: 404,
@@ -58,8 +61,10 @@ export class PubkeysHelperTestServer extends HttpServer {
           }
         }
       }
+
       res.statusCode = 404
       res.end()
+
       return
     })
   }
