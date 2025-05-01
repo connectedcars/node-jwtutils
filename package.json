@@ -12,9 +12,11 @@
   },
   "scripts": {
     "build": "build src",
-    "test": "TZ=UTC USE_INTEGRATION_TEST_CHECKOUTS=true jest",
+    "test": "USE_INTEGRATION_TEST_CHECKOUTS=true jest",
     "lint": "eslint './src/**/*.ts'",
     "lint:fix": "eslint './src/**/*.ts' --fix",
+    "cov": "jest --coverage",
+    "coveralls": "jest --coverage --coverageReporters=lcov",
     "ci-tsc": "checks tsc",
     "ci-jest": "USE_INTEGRATION_TEST_CHECKOUTS=true checks jest",
     "ci-audit": "checks audit",
