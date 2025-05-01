@@ -1,6 +1,6 @@
 import { JwtUtils } from '../index'
-import { JwtVerifyError } from '../jwtverifyerror'
-import { rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../testresources'
+import { JwtVerifyError } from '../jwt-verify-error'
+import { rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../test-resources'
 
 const pubKeys = {
   'test@test.com': {

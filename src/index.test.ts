@@ -1,6 +1,6 @@
 import { JwtUtils, JwtVerifyError, PublicKey } from './index'
 import { Options } from './jwt-utils/jwtdecode'
-import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './testresources'
+import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './test-resources'
 
 const unixNow = Math.floor(Date.now() / 1000)
 

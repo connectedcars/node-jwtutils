@@ -1,5 +1,5 @@
-import * as jwkUtils from './jwkutils'
-import { JwkBody } from './pubkeyshelper'
+import * as jwkUtils from './jwk-utils'
+import { JwkBody } from './pubkeys-helper'
 import {
   ecPublicKey,
   ecPublicKeyJwk,
@@ -9,7 +9,7 @@ import {
   rsaPublicKeyEncrypted,
   rsaPublicKeyEncryptedJwk,
   rsaPublicKeyJwk
-} from './testresources'
+} from './test-resources'
 
 describe('jwkutils', () => {
   it('rsaPublicJwkToPem 1024bit', () => {

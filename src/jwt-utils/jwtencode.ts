@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 
-import * as base64UrlSafe from '../base64urlsafe'
+import * as base64UrlSafe from '../base64-urlsafe'
 
 function jwtEncode(
   privateKey: crypto.KeyObject | string | null,

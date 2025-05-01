@@ -2,13 +2,13 @@ import { Request, Response } from 'express'
 import http from 'http'
 
 import { JwtUtils, PublicKey, RevokedToken } from './index'
-import { JwtVerifyError } from './jwtverifyerror'
+import { JwtVerifyError } from './jwt-verify-error'
 
-type Mapper = (
+export type Mapper = (
   user: Record<string, unknown>,
   request: Request,
   response: Response
-) => Record<string, unknown> | Promise<Record<string, unknown>>
+) => void | Record<string, unknown> | Promise<string | Record<string, unknown>>
 
 export function JwtAuthMiddleware(
   pubKeys: Record<string, Record<string, string | PublicKey>>,

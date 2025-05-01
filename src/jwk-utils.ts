@@ -1,5 +1,5 @@
-import { JwtServiceAuthError } from './jwtserviceautherror'
-import { JwkBody } from './pubkeyshelper'
+import { JwtServiceAuthError } from './jwt-serviceauth-error'
+import { JwkBody } from './pubkeys-helper'
 
 // SEQUENCE(OBJECT IDENTIFIER = 1.2.840.113549.1.1.1, NULL) - rsaEncryption
 const rsaPublicKeyOid = [0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00]

@@ -1,4 +1,4 @@
-import { JwkBody } from './pubkeyshelper'
+import { JwkBody } from './pubkeys-helper'
 
 export const rsaPublicKey =
   '-----BEGIN PUBLIC KEY-----\n' +

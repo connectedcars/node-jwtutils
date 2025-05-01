@@ -1,9 +1,9 @@
 import { AxiosResponse } from 'axios'
 import querystring from 'querystring'
 
-import * as RequestHandler from './defaulthttprequesthandler'
+import * as RequestHandler from './default-http-request-handler'
 import { JwtServiceAuthError, JwtUtils } from './index'
-import * as ProcessUtils from './processutils'
+import * as ProcessUtils from './process-utils'
 
 interface Options {
   endpoint?: string

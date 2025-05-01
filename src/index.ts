@@ -1,10 +1,10 @@
-import * as JwkUtils from './jwkutils'
+import * as JwkUtils from './jwk-utils'
+import { JwtAuthMiddleware } from './jwt-authmiddleware'
+import { JwtServiceAuth } from './jwt-serviceauth'
+import { JwtServiceAuthError } from './jwt-serviceauth-error'
 import * as JwtUtils from './jwt-utils'
-import { JwtAuthMiddleware } from './jwtauthmiddleware'
-import { JwtServiceAuth } from './jwtserviceauth'
-import { JwtServiceAuthError } from './jwtserviceautherror'
-import { JwtVerifyError } from './jwtverifyerror'
-import { PubkeysHelper } from './pubkeyshelper'
+import { JwtVerifyError } from './jwt-verify-error'
+import { PubkeysHelper } from './pubkeys-helper'
 
 export { JwkUtils, JwtAuthMiddleware, JwtServiceAuth, JwtServiceAuthError, JwtUtils, JwtVerifyError, PubkeysHelper }
 

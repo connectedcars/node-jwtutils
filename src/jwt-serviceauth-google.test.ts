@@ -3,11 +3,11 @@ import path from 'path'
 import sinon from 'sinon'
 import * as tmp from 'tmp'
 
-import * as RequestHandler from './defaulthttprequesthandler'
-import { JwtServiceAuth } from './jwtserviceauth'
-import { JwtServiceAuthTestServer } from './jwtserviceauth-test-server'
-import { JwtServiceAuthError } from './jwtserviceautherror'
-import { rsaPrivateKey } from './testresources'
+import * as RequestHandler from './default-http-request-handler'
+import { JwtServiceAuth } from './jwt-serviceauth'
+import { JwtServiceAuthError } from './jwt-serviceauth-error'
+import { JwtServiceAuthTestServer } from './jwt-serviceauth-test-server'
+import { rsaPrivateKey } from './test-resources'
 
 const googleKeyFileData = {
   type: 'service_account',

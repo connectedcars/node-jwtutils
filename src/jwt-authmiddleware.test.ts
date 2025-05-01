@@ -1,8 +1,8 @@
-import * as RequestHandler from './defaulthttprequesthandler'
+import * as RequestHandler from './default-http-request-handler'
 import { JwtUtils } from './index'
-import { JwtAuthMiddlewareServer } from './jwtauthmiddleware-test-server'
-import { JwtServiceAuthError } from './jwtserviceautherror'
-import { ecPrivateKey } from './testresources'
+import { JwtAuthMiddlewareServer } from './jwt-authmiddleware-test-server'
+import { JwtServiceAuthError } from './jwt-serviceauth-error'
+import { ecPrivateKey } from './test-resources'
 
 const jwtHeader = {
   typ: 'JWT',

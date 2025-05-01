@@ -1,5 +1,5 @@
-import { PubkeysHelper } from './pubkeyshelper'
-import { PubkeysHelperTestServer } from './pubkeyshelper-test-server'
+import { PubkeysHelper } from './pubkeys-helper'
+import { PubkeysHelperTestServer } from './pubkeys-helper-test-server'
 
 const expectedKeysResponse = {
   '26c018b233fe2eef47fedbbdd9398170fc9b29d8@RS256': {

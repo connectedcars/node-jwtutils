@@ -2,9 +2,9 @@ import express, { Request, Response } from 'express'
 import http from 'http'
 
 import { PublicKey } from './index'
-import { JwtAuthMiddleware } from './jwtauthmiddleware'
-import { JwtVerifyError } from './jwtverifyerror'
-import { ecPublicKey } from './testresources'
+import { JwtAuthMiddleware } from './jwt-authmiddleware'
+import { JwtVerifyError } from './jwt-verify-error'
+import { ecPublicKey } from './test-resources'
 
 const pubKeys: Record<string, Record<string, string | PublicKey>> = {
   'http://localhost/oauth/token': {
@@ -44,33 +44,23 @@ export class JwtAuthMiddlewareServer {
 
     this.app.use(
       '/mapped',
-      JwtAuthMiddleware(
-        pubKeys,
-        revokedTokens,
-        audiences,
-        (user: Record<string, string> & { body: Record<string, string> }) => {
-          if (user.issuer === 'http://localhost/oauth/token') {
-            // Map claims
-            user.eMail = user.body.email
-          }
+      JwtAuthMiddleware(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
+        if (user.issuer === 'http://localhost/oauth/token') {
+          // Map claims
+          user.eMail = (user.body as { email: string }).email
         }
-      )
+      })
     )
 
     this.app.use(
       '/async',
-      JwtAuthMiddleware(
-        pubKeys,
-        revokedTokens,
-        audiences,
-        (user: Record<string, string> & { body: Record<string, string> }) => {
-          if (user.subject === 'error') {
-            return Promise.reject(new JwtVerifyError('Async error'))
-          } else {
-            return Promise.resolve('test')
-          }
+      JwtAuthMiddleware(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
+        if (user.subject === 'error') {
+          return Promise.reject(new JwtVerifyError('Async error'))
+        } else {
+          return Promise.resolve('test')
         }
-      )
+      })
     )
 
     this.app.use(

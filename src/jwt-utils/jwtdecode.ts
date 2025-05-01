@@ -1,8 +1,8 @@
 import crypto from 'crypto'
 
 import { JwtBody, PublicKey } from '..'
-import * as base64UrlSafe from '../base64urlsafe'
-import { JwtVerifyError } from '../jwtverifyerror'
+import * as base64UrlSafe from '../base64-urlsafe'
+import { JwtVerifyError } from '../jwt-verify-error'
 
 interface JwtHeader {
   alg: string

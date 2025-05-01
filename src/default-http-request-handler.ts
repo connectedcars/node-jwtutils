@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
 
-import { JwtServiceAuthError } from './jwtserviceautherror'
+import { JwtServiceAuthError } from './jwt-serviceauth-error'
 
 export type HttpRequestHandler = (
   method: string,

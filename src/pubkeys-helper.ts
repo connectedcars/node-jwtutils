@@ -1,8 +1,8 @@
 import { AxiosResponse } from 'axios'
 
-import * as RequestHandler from './defaulthttprequesthandler'
+import * as RequestHandler from './default-http-request-handler'
 import { PublicKey } from './index'
-import * as jwkUtils from './jwkutils'
+import * as jwkUtils from './jwk-utils'
 
 interface Options {
   expiresSkew?: number

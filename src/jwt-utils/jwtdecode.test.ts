@@ -1,5 +1,5 @@
 import { JwtUtils } from '../index'
-import { JwtVerifyError } from '../jwtverifyerror'
+import { JwtVerifyError } from '../jwt-verify-error'
 import { Options } from './jwtdecode'
 
 const audiences: string[] = []
