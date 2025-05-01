@@ -4,6 +4,11 @@ import { JwtBody, PublicKey } from '..'
 import * as base64UrlSafe from '../base64urlsafe'
 import { JwtVerifyError } from '../jwtverifyerror'
 
+interface JwtHeader {
+  alg: string
+  kid: string
+}
+
 export type Fixup = (header: unknown, body: unknown) => void
 
 export interface Options {
@@ -25,7 +30,7 @@ function jwtDecode(
   publicKeys: Record<string, Record<string, string | PublicKey>>,
   audiences: string[],
   options: Options | number = defaultOptions
-): Record<string, string | number> {
+): JwtBody {
   if (typeof options === 'number') {
     // Backwards compatibility with old api
     options = {
@@ -39,8 +44,10 @@ function jwtDecode(
     throw new JwtVerifyError('JWT does not contain 3 dots')
   }
 
-  const header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8'))
-  const body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8'))
+  // TODO: Use typeguards here instead
+  const header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8')) as JwtHeader
+  const body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8')) as JwtBody
+
   if (options.fixup) {
     options.fixup(header, body)
   }
@@ -159,7 +166,8 @@ function validateIssuedAt(body: JwtBody, unixNow: number, options: Options): voi
 }
 
 function validateAudience(body: JwtBody, audiences: string[]): void {
-  const auds = Array.isArray(body.aud) ? body.aud : [body.aud]
+  const auds = (Array.isArray(body.aud) ? body.aud : [body.aud]) as string[]
+
   if (!auds.some(aud => audiences.includes(aud))) {
     throw new JwtVerifyError(`Unknown audience '${auds.join(',')}'`)
   }

@@ -18,6 +18,11 @@ interface Options {
   closeStdin?: boolean
 }
 
+interface ExitResult {
+  code: number | null
+  signal: string | null
+}
+
 export async function runProcessAsync(command: string, args: string[], options: Options = {}): Promise<ProcessResult> {
   const cmd = spawn(command, args, {
     env: options.env,
@@ -44,27 +49,25 @@ export async function runProcessAsync(command: string, args: string[], options: 
       cmd.stdin.end()
     }
 
-    const exitPromise = new Promise(resolve => {
+    const exitPromise: Promise<ExitResult> = new Promise(resolve => {
       cmd.on('exit', (code, signal) => {
         resolve({ code, signal })
       })
     })
 
     Promise.all([exitPromise, stdoutPromise, stderrPromise])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((results: any[]) => {
+      .then((results: [ExitResult, Buffer, Buffer]) => {
         resolve({
-          code: results[0]['code'],
-          signal: results[0]['signal'],
-          stdout: results[1],
-          stderr: results[2]
+          code: results[0]['code'] as number,
+          signal: results[0]['signal'] as unknown as number,
+          stdout: results[1].toString('utf8'),
+          stderr: results[2].toString('utf8')
         })
       })
       .catch(reject)
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return promise.then((result: any) => {
+  return promise.then((result: ProcessResult) => {
     return {
       code: result['code'],
       signal: result['signal'],

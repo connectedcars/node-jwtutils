@@ -4,11 +4,17 @@ import http from 'http'
 import { JwtUtils, PublicKey, RevokedToken } from './index'
 import { JwtVerifyError } from './jwtverifyerror'
 
+type Mapper = (
+  user: Record<string, unknown>,
+  request: Request,
+  response: Response
+) => Record<string, unknown> | Promise<Record<string, unknown>>
+
 export function JwtAuthMiddleware(
   pubKeys: Record<string, Record<string, string | PublicKey>>,
   revokedTokens: Record<string, RevokedToken>,
   audiences: string[],
-  mapper: unknown | null = null,
+  mapper: Mapper | null = null,
   options: Record<string, string | number | string[] | boolean> = {}
 ): (
   request: Request & { user?: Record<string, unknown> } & { jwtAuthMiddlewareProcessed?: boolean } & {
@@ -52,12 +58,14 @@ export function JwtAuthMiddleware(
       }
 
       // Handle async
-      let result
+      let result: ReturnType<Mapper> | null = null
       if (typeof mapper === 'function') {
         result = mapper(request.user, request, response)
       }
-      if (isPromise(result)) {
-        result
+      if (result && isPromise(result)) {
+        const promiseResult = result as Promise<Record<string, unknown>>
+
+        promiseResult
           .then(() => {
             request.jwtAuthMiddlewareProcessed = true
             next()
@@ -67,16 +75,16 @@ export function JwtAuthMiddleware(
         request.jwtAuthMiddlewareProcessed = true
         return next()
       }
-    } catch (e) {
-      if (e instanceof JwtVerifyError) {
-        return next(e)
+    } catch (error) {
+      if (error instanceof JwtVerifyError) {
+        return next(error)
       } else {
-        return next(new JwtVerifyError('Unknown error', e))
+        return next(new JwtVerifyError('Unknown error', error as Record<string, unknown>))
       }
     }
   }
 }
 
-function isPromise(value: Promise<unknown>): boolean {
-  return typeof value === 'object' && value !== null && typeof value.then === 'function'
+function isPromise<T>(value: T): boolean {
+  return typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function'
 }

@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosResponse } from 'axios'
 
 import { JwtServiceAuthError } from './jwtserviceautherror'
 
@@ -7,21 +7,25 @@ export type HttpRequestHandler = (
   url: string,
   headers?: Record<string, string | number>,
   body?: unknown
-) => Promise<AxiosResponse>
+) => Promise<AxiosResponse | undefined>
 
 export async function DefaultHttpRequestHandler(
   method: string,
   url: string,
   headers?: Record<string, string | number>,
   body?: unknown
-): Promise<AxiosResponse> {
+): Promise<AxiosResponse | undefined> {
   try {
     const res = await axios({ method, url, headers, data: body })
     return res
-  } catch (e) {
-    throw new JwtServiceAuthError(e.message, {
-      statusCode: e.response.statusCode || e.response.status,
-      data: e.response.data
-    })
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      throw new JwtServiceAuthError(error.message, {
+        statusCode: error.response?.status || error.response?.status,
+        data: error.response?.data
+      })
+    }
   }
+
+  return undefined
 }

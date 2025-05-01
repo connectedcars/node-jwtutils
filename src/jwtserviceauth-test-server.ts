@@ -25,9 +25,8 @@ export class JwtServiceAuthTestServer extends HttpServer {
     super({}, async (req, res) => {
       switch (req.url) {
         case '/oauth2/v4/token': {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const chunks: any[] = []
-          req.on('data', chunk => {
+          const chunks: Buffer[] = []
+          req.on('data', (chunk: Buffer) => {
             chunks.push(chunk)
           })
           return req.on('end', () => {

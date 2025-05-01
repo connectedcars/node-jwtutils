@@ -24,6 +24,7 @@ export interface JwtBody {
   clt: number // Current life time counting number of refresshes in this session
   email?: string
   email_verified?: boolean
+  scope: string
 }
 
 export interface RevokedToken {

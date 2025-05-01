@@ -64,7 +64,7 @@ export class JwtServiceAuth {
       undefined
     )
     if (res && res.status === 201) {
-      const authResponse = res.data
+      const authResponse = res.data as { expires_at: string; token: string }
       const now = new Date().getTime()
       const expiresAt = new Date(authResponse.expires_at).getTime()
       return {
@@ -83,7 +83,7 @@ export class JwtServiceAuth {
     })
 
     return await resultPromise.then(result => {
-      const config = JSON.parse(result.stdout)
+      const config = JSON.parse(result.stdout) as { credential: { token_expiry: string; access_token: string } }
       const now = new Date().getTime()
       const expiresAt = new Date(config.credential.token_expiry).getTime()
       return {
@@ -111,7 +111,7 @@ export class JwtServiceAuth {
       url: string,
       headers?: Record<string, string | number>,
       body?: unknown
-    ) => Promise<AxiosResponse | null>,
+    ) => Promise<AxiosResponse | undefined>,
     keyFileData: string,
     scopes: string[] | number | null,
     options: Options = {}
@@ -131,7 +131,12 @@ export class JwtServiceAuth {
 
     scopes = scopes ? scopes : ['https://www.googleapis.com/auth/userinfo.email']
 
-    const keyData = JSON.parse(keyFileData)
+    const keyData = JSON.parse(keyFileData) as {
+      type: string
+      private_key: string
+      private_key_id: string
+      client_email: string
+    }
 
     if (keyData.type !== 'service_account') {
       throw new Error('Only supports service account keyFiles')
@@ -168,14 +173,14 @@ export class JwtServiceAuth {
 
     // Be pessimistic with expiry time so start time before doing the request
     // Fetch access token
-    const res = await httpRequestHandler(
+    const res = (await httpRequestHandler(
       'POST',
       this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token',
       {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       formData
-    )
+    )) as { status: number; data: { access_token: string; expires_in: number } }
     if (res && res.status === 200) {
       const now = new Date().getTime()
       return {

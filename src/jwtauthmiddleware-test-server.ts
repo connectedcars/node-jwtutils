@@ -86,12 +86,12 @@ export class JwtAuthMiddlewareServer {
     })
     this.app.get('/', function (req: Request & { user?: Record<string, unknown> }, res: Response) {
       if (req.user) {
-        res.send(`Hello ${req.user.subject}`)
+        res.send(`Hello ${req.user.subject as string}`)
       }
     })
     this.app.get('/mapped', function (req: Request & { user?: Record<string, unknown> }, res: Response) {
       if (req.user) {
-        res.send(`Hello ${req.user.eMail}`)
+        res.send(`Hello ${req.user.eMail as string}`)
       }
     })
     this.app.get('/async', function (req: Request, res: Response) {

@@ -55,7 +55,9 @@ export class PubkeysHelper {
     defaultAlgorithms: string[],
     options: Record<string, number> = {}
   ): Record<string, PublicKey> {
-    const pubkeysResponse = JSON.parse(Buffer.from(response.data).toString('utf8'))
+    const pubkeysResponse = JSON.parse(Buffer.from(response.data as string).toString('utf8')) as {
+      keys: JwkBody[]
+    }
     if (!Array.isArray(pubkeysResponse.keys)) {
       throw new Error(`Response from ${url} not in expected format: Missing array property keys`)
     }

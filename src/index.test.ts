@@ -28,7 +28,7 @@ const pubKeys: Record<string, Record<string, string | PublicKey>> = {
     '1@ES384': ecPublicKey,
     '1@ES512': ecPublicKey,
     '2@RS256': rsaOtherPublicKey,
-    '4@RS256': rsaOtherPublicKey.substr(2),
+    '4@RS256': rsaOtherPublicKey.substring(2),
     '2@HS256': 'sharedkey',
     '2@HS384': 'sharedkey',
     '2@HS512': 'sharedkey',
@@ -238,13 +238,8 @@ describe('jwtUtils', () => {
       const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '2'
       const jwt = JwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
-      try {
-        JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
-      } catch (e) {
-        if (e instanceof JwtVerifyError) {
-          // Handled
-        }
-      }
+
+      expect(() => JwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(JwtVerifyError)
     })
     it('invalid pubkey', () => {
       const customJwtHeader = { ...jwtHeader }
