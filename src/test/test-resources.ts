@@ -24,17 +24,17 @@ export const rsaPublicKey4096 =
   'Mga75gS0l2bSUAW7dewK0QIDAQAB\n' +
   '-----END PUBLIC KEY-----'
 
-export const rsaPublicKey4096Jwk = {
+export const rsaPublicKey4096Jwk: JwkBody = {
   kty: 'RSA',
   n: 'ZWPk4Oyb6fIrKbDpAkW2J7l4KfhKcXEaz0Xt-S8cX96nVN2NvjVmn6H4V5kiEqGHEJOJHnDam9FfbuaSb_7DfR-tcDmkX-LIm9sQ9tMehEGrewdDMvlY_QmF18e4nOPI4d1MYx8eUZMjxuxACeMDnPmf75oSdHfnU1BCe6Q1_Sg6qH82wkQDJF_lNw5-rIqU7lozn9TKZGldQoY_hZyHOoav91K-hrDZMRnSyhL-kh80yBZ2JB2ApSqQYHMBDOq5ErrtE0Hlz5WZm4j-7YmUg6a7HHLsda8m0NlwJKwTtsYpES2Z3rQ6hb96zLv9a_YlReQl-uIN2zI9agKlNZGyCpyyZgxjmbr3RrG6zHqCYgC-_hAZHDZacWk2hnVN1wDv52vd_w03HBOo844EakMEIznSs85A726vb31m0h8PjEp_k8XDzXeJ4DsF4hQEGot-qUrXV_RsuyUlu5XohfdiPDhpPT-uq5jIP8BahAyPgTM4LPQqzrdO5s8VOA3z4ByL9TEx1HcZdIfWMWv6tw_RUT1pGL05DjixJmcsAxdr5rNLZ9HxL_6YD8gP6DHNzf-Yc_yXiSfWJ__oVp1mrAzvcLrPey4cl_g6hKEjmm5VueW83FZZ98OMv4dixYJvMLL7YGz0hSxubwWLpRLDbt5AADIGu-YEtJdm0lAFu3XsCtE',
   e: 'AQAB'
-} as JwkBody
+}
 
-export const rsaPublicKeyJwk = {
+export const rsaPublicKeyJwk: JwkBody = {
   kty: 'RSA',
   n: '3ZWrUY0Y6IKN1qI4BhxR2C7oHVFgGPYkd38uGq1jQNSqEvJFcN93CYm16_G78FAFKWqwsJb3Wx-nbxDn6LtP4AhULB1H0K0g7_jLklDAHvI8yhOKlvoyvsUFPWtNxlJyh5JJXvkNKV_4Oo12e69f8QCuQ6NpEPl-cSvXIqUYBCs',
   e: 'AQAB'
-} as JwkBody
+}
 
 export const rsaPrivateKey =
   '-----BEGIN RSA PRIVATE KEY-----\n' +
@@ -74,12 +74,12 @@ export const ecPublicKey =
   '3JcRUdcwdZm4duMXQZrwVBSr5Kunr1NnK+0VCrcoUh09GFr8UTAq3g==\n' +
   '-----END PUBLIC KEY-----'
 
-export const ecPublicKeyJwk = {
+export const ecPublicKeyJwk: JwkBody = {
   kty: 'EC',
   crv: 'K-256',
   x: 'gYq9-AtlLZMXL2g61gwOG3vPQPeaWQD-3JcRUdcwdZk',
   y: 'uHbjF0Ga8FQUq-Srp69TZyvtFQq3KFIdPRha_FEwKt4'
-} as JwkBody
+}
 
 export const rsaPrivateKeyEncrypted =
   '-----BEGIN RSA PRIVATE KEY-----\n' +
@@ -124,11 +124,11 @@ export const rsaPublicKeyEncrypted =
   'iQIDAQAB\n' +
   '-----END PUBLIC KEY-----'
 
-export const rsaPublicKeyEncryptedJwk = {
+export const rsaPublicKeyEncryptedJwk: JwkBody = {
   kty: 'RSA',
   n: 'qFvlHi5dBWLyDNsspY3cOHdK8UNhuyFJHQJ3qjVQqpc2W7LDNKbsC3YUxShH9j8HyRYz3kbEPvEHT2dV2jqG0jvDRFldqri963FFk-0K8quOAezngbp51_x64w7DQjDp8SIYWkvYFpaAS7AU4AM5AzUsftbsxDo4QpNtadY9Xh1p6vWK4k2dLwQ2Ara8AjuI6C-APkFp3wle_U21YO11FTKgBPGWLLJ_oG7-GrT_UJLgtiPJtNVPciBDDa6XxTeeeVp4op10MZVjDQK8szPAx0tWXhqnAe5EL7ZljQT_BF2-dxT8ZQbp-tMXC0YVMwqjV6DJwt-cDQ7U7cDnknQ0iQ',
   e: 'AQAB'
-} as JwkBody
+}
 
 export const localhostCertificate =
   '-----BEGIN CERTIFICATE-----\n' +

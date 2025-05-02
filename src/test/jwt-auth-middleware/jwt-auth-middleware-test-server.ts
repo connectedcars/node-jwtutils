@@ -1,12 +1,12 @@
 import express, { Request, Response } from 'express'
 import http from 'http'
 
-import { PublicKey } from '../../index'
+import type { PublicKeys } from '../../index'
 import { JwtAuthMiddleware } from '../../jwt-auth-middleware'
 import { JwtVerifyError } from '../../jwt-verify-error'
 import { ecPublicKey } from '../test-resources'
 
-const pubKeys: Record<string, Record<string, string | PublicKey>> = {
+const pubKeys: PublicKeys = {
   'http://localhost/oauth/token': {
     '1@ES256': ecPublicKey
   },

@@ -1,4 +1,4 @@
-import * as Benchmark from 'benchmark'
+import Benchmark from 'benchmark'
 import crypto from 'crypto'
 
 import { jwtUtils } from '../src'
@@ -132,10 +132,8 @@ suite
   .add('Decode encrypted RSA KeyObject at RS256', () => {
     jwtUtils.decode(testToken, pubKeys2, audiences)
   })
-  // add listeners
-  .on('cycle', function (event: { target: unknown }) {
+  .on('cycle', function (event: Benchmark.Event) {
     // eslint-disable-next-line no-console
     console.log(String(event.target))
   })
-  // run async
   .run({ async: true })

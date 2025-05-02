@@ -1,10 +1,11 @@
 import { JwtVerifyError } from '../jwt-verify-error'
+import type { PublicKeys } from '../pubkeys-helper'
 import { rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../test/test-resources'
 import type { JwtBody, JwtHeader } from '../types'
 import { decode } from './jwt-decode'
 import { encode } from './jwt-encode'
 
-const pubKeys = {
+const pubKeys: PublicKeys = {
   'test@test.com': {
     '1@RS256': rsaPublicKeyEncrypted,
     '1@RS384': rsaPublicKeyEncrypted,
@@ -41,15 +42,30 @@ describe('jwt-encode', () => {
       }
     })
 
+    it('checks for wrong alg', () => {
+      const customJwtHeader = { ...jwtHeader }
+      customJwtHeader.alg = 'HS128'
+
+      expect(() => encode('', customJwtHeader, jwtBody)).toThrow(
+        new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
+      )
+    })
+
     it('should fail with empty header and body', () => {
       expect(() => encode('', {}, {})).toThrow(
         new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
       )
     })
 
-    it('should fail with missing key', () => {
+    it('should fail with missing key for signing algorithm', () => {
       expect(() => encode('', { alg: 'RS256' }, {}, 'key')).toThrow(
         new JwtVerifyError('privateKey can not be null for RS256')
+      )
+    })
+
+    it('should fail with missing key for hmac algorithm', () => {
+      expect(() => encode('', { alg: 'HS256' }, {}, null)).toThrow(
+        new JwtVerifyError('privateKeyPassword can not be null for HS256')
       )
     })
   })

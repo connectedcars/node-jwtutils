@@ -1,25 +1,25 @@
-import { jwtUtils, JwtVerifyError, type PublicKey } from './index'
+import { jwtUtils, JwtVerifyError, type PublicKeys } from './index'
 import type { DecodingOptions } from './jwt-utils/jwt-decode'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './test/test-resources'
 import type { JwtBody, JwtHeader } from './types'
 
 const unixNow = Math.floor(Date.now() / 1000)
 
-const jwtHeader = {
+const jwtHeader: JwtHeader = {
   typ: 'JWT',
   alg: 'RS256',
   kid: '1'
-} as unknown as JwtHeader
+}
 
-const jwtBody = {
+const jwtBody: JwtBody = {
   aud: 'https://host/oauth/token',
   iss: 'test@test.com',
   iat: unixNow,
   exp: unixNow + 600,
   scope: ['http://stuff', 'http://stuff2']
-} as unknown as JwtBody
+}
 
-const pubKeys: Record<string, Record<string, string | PublicKey>> = {
+const pubKeys: PublicKeys = {
   'test@test.com': {
     'default@RS256': rsaPublicKey,
     '1@RS256': rsaPublicKey,
@@ -46,11 +46,11 @@ const pubKeys: Record<string, Record<string, string | PublicKey>> = {
 
 describe('index', () => {
   describe('encode/decode', () => {
-    // TODO: Move tests to actual files
     it('success with RSA at RS256, RS384 and RS512', () => {
       for (const algo of ['RS256', 'RS384', 'RS512']) {
         const customJwtHeader = { ...jwtHeader }
         customJwtHeader.alg = algo
+
         const jwt = jwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
         const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
 
@@ -62,8 +62,10 @@ describe('index', () => {
       for (const algo of ['ES256', 'ES384', 'ES512']) {
         const customJwtHeader = { ...jwtHeader }
         customJwtHeader.alg = algo
+
         const jwt = jwtUtils.encode(ecPrivateKey, customJwtHeader, jwtBody)
         const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+
         expect(jwtBody).toEqual(decodedJwtBody)
       }
     })
@@ -73,8 +75,10 @@ describe('index', () => {
         const customJwtHeader = { ...jwtHeader } as JwtHeader
         customJwtHeader.kid = '2'
         customJwtHeader.alg = algo
+
         const jwt = jwtUtils.encode('', customJwtHeader, jwtBody, 'sharedkey')
         const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+
         expect(jwtBody).toEqual(decodedJwtBody)
       }
     })
@@ -83,16 +87,18 @@ describe('index', () => {
       const customJwtHeader = { typ: jwtHeader.typ, alg: jwtHeader.alg } as JwtHeader
       const jwt = jwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
       const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+
       expect(jwtBody).toEqual(decodedJwtBody)
     })
 
     it('success with array aud', () => {
-      const customJwtBody = {
+      const customJwtBody: JwtBody = {
         ...jwtBody,
         aud: ['https://myhost/oauth/token', 'https://host/oauth/token']
-      } as unknown as JwtBody
+      }
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+
       expect(customJwtBody).toEqual(decodedJwtBody)
     })
 
@@ -100,8 +106,10 @@ describe('index', () => {
       const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'test@custom.com'
       customJwtBody.exp! -= 600
+
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
       const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])
+
       expect(customJwtBody).toEqual(decodedJwtBody)
     })
 
@@ -109,7 +117,9 @@ describe('index', () => {
       const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'test@custom.com'
       customJwtBody.exp! += 172800
+
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('Expires in the future by more than 86400 seconds')
       )
@@ -118,7 +128,9 @@ describe('index', () => {
     it('token outside maximum expires using decode options', () => {
       const customJwtBody = { ...jwtBody }
       customJwtBody.exp! += 172800
+
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() =>
         jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
           expiresMax: 600
@@ -129,6 +141,7 @@ describe('index', () => {
     it('token outside maximum expires using nbf', () => {
       const customJwtBody = { ...jwtBody, exp: jwtBody.exp! + 172800, nbf: jwtBody.iat }
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() =>
         jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
           expiresMax: 600
@@ -139,6 +152,7 @@ describe('index', () => {
     it('token outside maximum expires using unixNow', () => {
       const customJwtBody = { ...jwtBody, exp: jwtBody.exp! + 172800 }
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() =>
         jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'], {
           expiresMax: 600
@@ -148,6 +162,7 @@ describe('index', () => {
 
     it('unknown aud', () => {
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, jwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://myhost/oauth/token'])).toThrow(
         new JwtVerifyError(`Unknown audience 'https://host/oauth/token'`)
       )
@@ -156,6 +171,7 @@ describe('index', () => {
     it('expired', () => {
       const customJwtBody = { ...jwtBody, iat: jwtBody.iat! - 1200, exp: jwtBody.exp! - 5000 }
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('Token has expired')
       )
@@ -178,18 +194,19 @@ describe('index', () => {
       const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'test@expired.com'
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() => jwtUtils.decode(jwt, expiredPubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('Always expired')
       )
     })
 
     it('missing iss', () => {
-      const customJwtBody = {
+      const customJwtBody: JwtBody = {
         aud: 'https://host/oauth/token',
         iat: unixNow,
         exp: unixNow + 600,
         scope: ['http://stuff', 'http://stuff2']
-      } as unknown as JwtBody
+      }
 
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
 
@@ -201,7 +218,9 @@ describe('index', () => {
     it('iat invalid', () => {
       const customJwtBody = { ...jwtBody }
       customJwtBody.iat! += 1200
+
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('Issued at in the future by more than 300 seconds')
       )
@@ -213,6 +232,7 @@ describe('index', () => {
         nbf: jwtBody.iat! + 1200
       }
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError('Not before in the future by more than 300 seconds')
       )
@@ -221,24 +241,20 @@ describe('index', () => {
     it('unknown issuer', () => {
       const customJwtBody = { ...jwtBody }
       customJwtBody.iss = 'unknown@test.com'
+
       const jwt = jwtUtils.encode(rsaPrivateKey, jwtHeader, customJwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError(`Unknown issuer 'unknown@test.com'`)
-      )
-    })
-
-    it('wrong alg', () => {
-      const customJwtHeader = { ...jwtHeader }
-      customJwtHeader.alg = 'HS128'
-      expect(() => jwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)).toThrow(
-        new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
       )
     })
 
     it('unknown kid', () => {
       const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '3'
+
       const jwt = jwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError(`Unknown pubkey id '3' for this issuer`)
       )
@@ -247,7 +263,9 @@ describe('index', () => {
     it('invalid signature', () => {
       const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '2'
+
       const jwt = jwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError(`Signature verification failed with algorithm 'RS256'`)
       )
@@ -257,7 +275,9 @@ describe('index', () => {
       const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '5'
       customJwtHeader.alg = 'HS256'
+
       const jwt = jwtUtils.encode('', customJwtHeader, jwtBody, 'sharedkey')
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(
         new JwtVerifyError(`Verification failed with algorithm 'HS256'`)
       )
@@ -266,6 +286,7 @@ describe('index', () => {
     it('handle exception if its a JwtVerifyError', () => {
       const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '2'
+
       const jwt = jwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
 
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow(JwtVerifyError)
@@ -274,7 +295,9 @@ describe('index', () => {
     it('invalid pubkey', () => {
       const customJwtHeader = { ...jwtHeader }
       customJwtHeader.kid = '4'
+
       const jwt = jwtUtils.encode(rsaPrivateKey, customJwtHeader, jwtBody)
+
       expect(() => jwtUtils.decode(jwt, pubKeys, ['https://host/oauth/token'])).toThrow()
     })
 
@@ -299,8 +322,9 @@ describe('index', () => {
             body.exp = body.iat! + 300
           },
           expiresSkew: 307584000
-        } as DecodingOptions
+        }
       )
+
       expect(decodedJwtBody).toEqual(expectedJwtBody)
     })
   })

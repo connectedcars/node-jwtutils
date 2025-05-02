@@ -1,10 +1,10 @@
 import { HttpServer } from '@connectedcars/test'
 import querystring from 'querystring'
 
-import { jwtUtils } from '../../index'
+import { jwtUtils, type PublicKeys } from '../../index'
 import { rsaPublicKey } from '../test-resources'
 
-const pubKeys = {
+const pubKeys: PublicKeys = {
   'buildstatus@nversion-168820.iam.gserviceaccount.com': {
     '76d81ae69ce620a517b140fc73dbae61e88b34bc@RS256': rsaPublicKey
   },

@@ -19,23 +19,23 @@ interface JwkOptions {
   defaultAlgorithms?: string[]
 }
 
-type FormattedPublicKeys = Record<string, PublicKey>
+export type FormattedPublicKeys = Record<string, PublicKey>
 
 export class PubkeysHelper {
   private requestHandler: RequestHandler.HttpRequestHandler
 
   public constructor(httpRequestHandler?: RequestHandler.HttpRequestHandler) {
-    this.requestHandler = httpRequestHandler || RequestHandler.defaultHttpRequestHandler
+    this.requestHandler = httpRequestHandler ?? RequestHandler.defaultHttpRequestHandler
   }
 
   public async fetchJwkKeys(url: string, options: JwkOptions = {}): Promise<FormattedPublicKeys | null> {
     const defaultAlgorithms = options.defaultAlgorithms ?? []
     delete options.defaultAlgorithms
 
-    let updatedOptions: Record<string, number> = {}
+    const updatedOptions: Pick<JwkOptions, 'expiresSkew'> = {}
 
     if (options.expiresSkew != undefined) {
-      updatedOptions = { expiresSkew: options.expiresSkew }
+      updatedOptions.expiresSkew = options.expiresSkew
     }
 
     const result = (await this.requestHandler('GET', url, {}, null)) as AxiosResponse<string>
@@ -57,7 +57,7 @@ export class PubkeysHelper {
     response: AxiosResponse<string>,
     url: string,
     defaultAlgorithms: string[],
-    options: Record<string, number> = {}
+    options: Pick<JwkOptions, 'expiresSkew'> = {}
   ): FormattedPublicKeys {
     const pubkeysResponse = JSON.parse(Buffer.from(response.data).toString('utf8')) as {
       keys: JwkBody[]

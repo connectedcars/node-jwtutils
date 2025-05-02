@@ -137,7 +137,7 @@ export function isJwtBody(obj: unknown): obj is JwtBody {
     return false
   }
 
-  if ('aud' in obj && typeof obj.aud !== 'string' && !isArrayOfType(obj.aud, 'string')) {
+  if ('aud' in obj && typeof obj.aud !== 'string' && !isArrayOfType<string>(obj.aud, 'string')) {
     return false
   }
 
@@ -181,7 +181,51 @@ export function isJwtBody(obj: unknown): obj is JwtBody {
     return false
   }
 
-  if ('scope' in obj && typeof obj.scope !== 'string' && !isArrayOfType(obj.scope, 'string')) {
+  if ('scope' in obj && typeof obj.scope !== 'string' && !isArrayOfType<string>(obj.scope, 'string')) {
+    return false
+  }
+
+  return true
+}
+
+export function isJwkBody(obj: unknown): obj is JwkBody {
+  if (obj === null || typeof obj !== 'object') {
+    return false
+  }
+
+  if ('kid' in obj && typeof obj.kid !== 'string') {
+    return false
+  }
+
+  if ('kty' in obj && typeof obj.kty !== 'string') {
+    return false
+  }
+
+  if ('use' in obj && typeof obj.use !== 'string') {
+    return false
+  }
+
+  if ('alg' in obj && typeof obj.alg !== 'string') {
+    return false
+  }
+
+  if ('e' in obj && typeof obj.e !== 'string') {
+    return false
+  }
+
+  if ('n' in obj && typeof obj.n !== 'string') {
+    return false
+  }
+
+  if ('crv' in obj && typeof obj.crv !== 'string') {
+    return false
+  }
+
+  if ('x' in obj && typeof obj.x !== 'string') {
+    return false
+  }
+
+  if ('y' in obj && typeof obj.y !== 'string') {
     return false
   }
 

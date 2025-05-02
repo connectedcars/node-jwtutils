@@ -2,6 +2,7 @@ import crypto from 'crypto'
 
 import type { JwtBody, JwtHeader } from '../types'
 import * as base64UrlSafe from '../utils/base64-urlsafe'
+import { getAlgorithms } from './get-algorithms'
 
 export function encode(
   privateKey: crypto.KeyObject | Buffer | string | null,
@@ -9,39 +10,10 @@ export function encode(
   body: JwtBody,
   privateKeyPassword: string | null = null
 ): string {
-  let signAlgo = null
-  let hmacAlgo = null
+  const { signAlgo, hmacAlgo } = getAlgorithms(header.alg)
 
-  switch (header.alg) {
-    case 'RS256':
-      signAlgo = 'RSA-SHA256'
-      break
-    case 'RS384':
-      signAlgo = 'RSA-SHA384'
-      break
-    case 'RS512':
-      signAlgo = 'RSA-SHA512'
-      break
-    case 'ES256':
-      signAlgo = 'sha256'
-      break
-    case 'ES384':
-      signAlgo = 'sha384'
-      break
-    case 'ES512':
-      signAlgo = 'sha512'
-      break
-    case 'HS256':
-      hmacAlgo = 'sha256'
-      break
-    case 'HS384':
-      hmacAlgo = 'sha384'
-      break
-    case 'HS512':
-      hmacAlgo = 'sha512'
-      break
-    default:
-      throw new Error('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
+  if (signAlgo === null && hmacAlgo === null) {
+    throw new Error('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
   }
 
   // Base64 encode header and body
@@ -49,7 +21,8 @@ export function encode(
   const bodyBase64 = base64UrlSafe.encode(Buffer.from(JSON.stringify(body)))
   const headerBodyBase64 = headerBase64 + '.' + bodyBase64
 
-  let signatureBuffer
+  let signatureBuffer: Buffer
+
   /* istanbul ignore else */
   if (signAlgo) {
     if (!privateKey) {
@@ -70,7 +43,11 @@ export function encode(
     } else {
       signatureBuffer = sign.sign(privateKey)
     }
-  } else if (hmacAlgo && privateKeyPassword) {
+  } else if (hmacAlgo) {
+    if (!privateKeyPassword) {
+      throw new Error(`privateKeyPassword can not be null for ${header.alg}`)
+    }
+
     const hmac = crypto.createHmac(hmacAlgo, privateKeyPassword)
     hmac.update(headerBodyBase64)
     signatureBuffer = hmac.digest()

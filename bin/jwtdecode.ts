@@ -4,7 +4,7 @@
 
 import fs from 'fs'
 
-import { jwtUtils } from '../src'
+import { jwtUtils, type PublicKeys } from '../src'
 
 if (process.argv.length < 6) {
   console.error('Usage: jwtdecode publickeyfile keyid algo issuer audiences')
@@ -19,7 +19,7 @@ const audiences = process.argv[6].split(',')
 
 const publicKey = fs.readFileSync(publicKeyPath)
 
-const pubKeys = {
+const pubKeys: PublicKeys = {
   [issuer]: {
     [`${keyId}@${algo}`]: publicKey.toString('utf8')
   }

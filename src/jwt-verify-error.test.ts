@@ -1,4 +1,4 @@
-import { JwtVerifyError } from './index'
+import { JwtVerifyError } from '.'
 
 describe('JwtVerifyError', () => {
   it('constructs a JwtVerifyError', () => {

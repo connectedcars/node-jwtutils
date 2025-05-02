@@ -75,8 +75,6 @@ describe('jwtdecode', () => {
         try {
           stdoutStr = Buffer.concat(decodedData).toString('utf8').trim()
           decodedBody = JSON.parse(stdoutStr) as JwtBody
-
-          expect(decodedBody).toEqual(jwtBody)
         } catch (_error) {
           error = _error
         }

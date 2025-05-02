@@ -1,16 +1,17 @@
 import crypto from 'crypto'
 
 import { JwtVerifyError } from '../jwt-verify-error'
-import { PublicKeys } from '../pubkeys-helper'
+import type { PublicKey, PublicKeys } from '../pubkeys-helper'
 import { isJwtBody, isJwtHeader, type JwtBody, type JwtHeader } from '../types'
 import * as base64UrlSafe from '../utils/base64-urlsafe'
+import { getAlgorithms } from './get-algorithms'
 
 export type Fixup = (header: JwtHeader, body: JwtBody) => void
 
 export interface DecodingOptions {
-  expiresSkew: number
-  expiresMax: number
-  nbfIatSkew: number
+  expiresSkew?: number
+  expiresMax?: number
+  nbfIatSkew?: number
   fixup?: Fixup
   validators?: Record<string, () => boolean>
 }
@@ -19,6 +20,16 @@ const defaultDecodingOptions: DecodingOptions = {
   expiresSkew: 0,
   expiresMax: 0,
   nbfIatSkew: 300
+}
+
+function checkJwt(jwt: { header: unknown; body: unknown }): asserts jwt is { header: JwtHeader; body: JwtBody } {
+  if (!isJwtHeader(jwt.header)) {
+    throw new JwtVerifyError('Invalid header')
+  }
+
+  if (!isJwtBody(jwt.body)) {
+    throw new JwtVerifyError('Invalid body')
+  }
 }
 
 export function decode(
@@ -41,69 +52,24 @@ export function decode(
     throw new JwtVerifyError('JWT does not contain 3 dots')
   }
 
-  const header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8')) as unknown
+  const parsedHeader = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8')) as unknown
+  const parsedBody = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8')) as unknown
+  const decodedJwt = { header: parsedHeader, body: parsedBody }
 
-  if (!isJwtHeader(header)) {
-    throw new JwtVerifyError('Invalid header')
-  }
+  checkJwt(decodedJwt)
 
-  const body = JSON.parse(base64UrlSafe.decode(parts[1]).toString('utf8')) as unknown
-
-  if (!isJwtBody(body)) {
-    throw new JwtVerifyError('Invalid body')
-  }
-
-  // TODO: Should type guards come after this?
   if (options.fixup) {
-    options.fixup(header, body)
+    options.fixup(decodedJwt.header, decodedJwt.body)
   }
 
-  let signAlgo = null
-  let hmacAlgo = null
+  // Verify the header and body again after fixup
+  checkJwt(decodedJwt)
 
-  // TODO: Same switch as for decoding?
-  switch (header.alg) {
-    case 'RS256': {
-      signAlgo = 'RSA-SHA256'
-      break
-    }
-    case 'RS384': {
-      signAlgo = 'RSA-SHA384'
-      break
-    }
-    case 'RS512': {
-      signAlgo = 'RSA-SHA512'
-      break
-    }
-    case 'ES256': {
-      signAlgo = 'sha256'
-      break
-    }
-    case 'ES384': {
-      signAlgo = 'sha384'
-      break
-    }
-    case 'ES512': {
-      signAlgo = 'sha512'
-      break
-    }
-    case 'HS256': {
-      hmacAlgo = 'sha256'
-      break
-    }
-    case 'HS384': {
-      hmacAlgo = 'sha384'
-      break
-    }
-    case 'HS512': {
-      hmacAlgo = 'sha512'
-      break
-    }
-    default: {
-      throw new JwtVerifyError(
-        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
-      )
-    }
+  const { header, body } = decodedJwt
+  const { signAlgo, hmacAlgo } = getAlgorithms(header.alg)
+
+  if (signAlgo === null && hmacAlgo === null) {
+    throw new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
   }
 
   if (!body.iss) {
@@ -118,16 +84,13 @@ export function decode(
 
   // Find public key
   let pubkeyOrSharedKey =
-    typeof header.kid === 'string'
-      ? (issuer[`${header.kid}@${header.alg}`] as string)
-      : (issuer[`default@${header.alg}`] as string)
+    typeof header.kid === 'string' ? issuer[`${header.kid}@${header.alg}`] : issuer[`default@${header.alg}`]
 
-  let issuerOptions = {} as DecodingOptions
+  let issuerOptions: Partial<PublicKey> = {}
 
-  if (typeof pubkeyOrSharedKey === 'object' && pubkeyOrSharedKey !== null && pubkeyOrSharedKey['publicKey']) {
-    // FIX: Type is never
+  if (typeof pubkeyOrSharedKey === 'object' && pubkeyOrSharedKey !== null && 'publicKey' in pubkeyOrSharedKey) {
     issuerOptions = pubkeyOrSharedKey
-    pubkeyOrSharedKey = pubkeyOrSharedKey['publicKey']
+    pubkeyOrSharedKey = pubkeyOrSharedKey.publicKey
   }
 
   if (!pubkeyOrSharedKey) {
@@ -180,13 +143,13 @@ export function decode(
 }
 
 function validateNotBefore(body: JwtBody, unixNow: number, options: DecodingOptions): void {
-  if (body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
+  if (options.nbfIatSkew && body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
     throw new JwtVerifyError(`Not before in the future by more than ${options.nbfIatSkew} seconds`)
   }
 }
 
 function validateIssuedAt(body: JwtBody, unixNow: number, options: DecodingOptions): void {
-  if (body.iat && body.iat > unixNow + options.nbfIatSkew) {
+  if (options.nbfIatSkew && body.iat && body.iat > unixNow + options.nbfIatSkew) {
     throw new JwtVerifyError(`Issued at in the future by more than ${options.nbfIatSkew} seconds`)
   }
 }
@@ -201,6 +164,7 @@ function validateAudience(body: JwtBody, audiences: string[]): void {
 
 function validateExpires(body: JwtBody, unixNow: number, options: DecodingOptions): void {
   const notBefore = body.iat || body.nbf || unixNow
+
   if (options.expiresMax && body.exp && body.exp > notBefore + options.expiresMax) {
     throw new JwtVerifyError(`Expires in the future by more than ${options.expiresMax} seconds`)
   }

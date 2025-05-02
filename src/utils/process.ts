@@ -67,14 +67,7 @@ export async function runProcessAsync(command: string, args: string[], options: 
       .catch(reject)
   })
 
-  return promise.then((result: ProcessResult) => {
-    return {
-      code: result['code'],
-      signal: result['signal'],
-      stdout: result['stdout'],
-      stderr: result['stderr']
-    }
-  })
+  return promise.then((result: ProcessResult) => result)
 }
 
 async function readAllAsync(fd: Readable, maxSize: number): Promise<Buffer> {

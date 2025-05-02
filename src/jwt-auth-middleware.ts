@@ -17,7 +17,7 @@ export type Mapper = (
   response: Response
 ) => void | Record<string, unknown> | Promise<string | Record<string, unknown>>
 
-export type JwtAuthMiddlewareOptions = {
+export interface JwtAuthMiddlewareOptions {
   allowAnonymous?: boolean
 }
 
@@ -82,13 +82,13 @@ export function JwtAuthMiddleware(
         body: decodedJwtBody
       }
 
-      // Handle async
       let result: ReturnType<Mapper> | null = null
 
       if (typeof mapper === 'function') {
         result = mapper(request.user, request, response)
       }
 
+      // Handle async
       if (isPromise(result)) {
         const promiseResult = result as Promise<Record<string, unknown>>
 

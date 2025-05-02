@@ -62,13 +62,13 @@ export class JwtServiceAuth {
     options: JwtServiceAuthOptions = {}
   ): Promise<AccessToken> {
     const expires = options.expires ? options.expires : 600
-
-    // Create JWT auth token
     const unixNow = Math.floor(new Date().getTime() / 1000)
+
     const jwtHeader: JwtHeader = {
       typ: 'JWT',
       alg: 'RS256'
     }
+
     const jwtBody = {
       iat: unixNow,
       exp: unixNow + expires,
@@ -84,10 +84,10 @@ export class JwtServiceAuth {
     }
 
     // Fetch access token for installation
-    const response = await this.requestHandler('POST', endpoint, headers, undefined)
+    const response = (await this.requestHandler('POST', endpoint, headers)) as AxiosResponse<GithubAccessTokenResponse>
 
     if (response && response.status === 201) {
-      const authResponse = response.data as GithubAccessTokenResponse
+      const authResponse = response.data
       const now = new Date().getTime()
       const expiresAt = new Date(authResponse.expires_at).getTime()
 
@@ -97,7 +97,7 @@ export class JwtServiceAuth {
         expiresAt
       }
     } else {
-      throw new JwtServiceAuthError(`Fetching github access token returned no response`)
+      throw new JwtServiceAuthError('Fetching github access token returned no response')
     }
   }
 
@@ -158,7 +158,6 @@ export class JwtServiceAuth {
       throw new Error('Only supports service account keyFiles')
     }
 
-    // Create JWT auth token
     const unixNow = Math.floor(new Date().getTime() / 1000)
     const jwtHeader: JwtHeader = {
       typ: 'JWT',
@@ -193,6 +192,8 @@ export class JwtServiceAuth {
     }
 
     // Be pessimistic with expiry time so start time before doing the request
+    const now = new Date().getTime()
+
     // Fetch access token
     const response = (await httpRequestHandler(
       'POST',
@@ -202,15 +203,13 @@ export class JwtServiceAuth {
     )) as AxiosResponse<GoogleAccessTokenResponse>
 
     if (response && response.status === 200) {
-      const now = new Date().getTime()
-
       return {
         accessToken: response.data.access_token,
         expiresIn: response.data.expires_in,
         expiresAt: now + response.data.expires_in * 1000
       }
     } else {
-      throw new JwtServiceAuthError(`Fetching google access token returned no response`)
+      throw new JwtServiceAuthError('Fetching google access token returned no response')
     }
   }
 }

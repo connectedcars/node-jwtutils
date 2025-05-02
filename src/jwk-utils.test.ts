@@ -33,12 +33,12 @@ describe('jwk-utils', () => {
   })
 
   it('ecPublicJwkToPem P-256', () => {
-    const jwk = {
+    const jwk: JwkBody = {
       crv: 'P-256',
       kty: 'EC',
       x: 'gh9MmXjtmcHFesofqWZ6iuxSdAYgoPVvfJqpv1818lo',
       y: '3BDZHsNvKUb5VbyGPqcAFf4FGuPhJ2Xy215oWDw_1jc'
-    } as JwkBody
+    }
     const expected =
       '-----BEGIN PUBLIC KEY-----\n' +
       'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEgh9MmXjtmcHFesofqWZ6iuxSdAYg\n' +
@@ -50,12 +50,12 @@ describe('jwk-utils', () => {
   })
 
   it('ecPublicJwkToPem P-384', () => {
-    const jwk = {
+    const jwk: JwkBody = {
       crv: 'P-384',
       kty: 'EC',
       x: 'QIRvRhN2MpnTQ4teO4Y_RYFaK2Qlvc2lbhC0vALwrFOy33kUihkNUvHiTaUsp2W3',
       y: 'vSA1sCKKzT4UOavStUL2WpwcCflEyDshzy3dc1IZtACUngU2xMDDMsi0gDL9jLiU'
-    } as JwkBody
+    }
     const expected =
       '-----BEGIN PUBLIC KEY-----\n' +
       'MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEQIRvRhN2MpnTQ4teO4Y/RYFaK2Qlvc2l\n' +
@@ -68,12 +68,12 @@ describe('jwk-utils', () => {
   })
 
   it('ecPublicJwkToPem P-521', () => {
-    const jwk = {
+    const jwk: JwkBody = {
       crv: 'P-521',
       kty: 'EC',
       x: 'AFqLf9vO672gS-Lv_BabqzKoedNLQgZkCemRZuzYu4KJjHgPBZ5fs3S05MoRXl4e7lR026XDDNPXawySVDXta9KF',
       y: 'APbUNzQ7IP_Mi0XwLN_RWZcIyHI43MJIAEn7O-KS0r8lvxjnVXeoopWAdqfTX_fCHXpYN1Ux1soOWujXb1uCEb7G'
-    } as JwkBody
+    }
     const expected =
       '-----BEGIN PUBLIC KEY-----\n' +
       'MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAWot/287rvaBL4u/8FpurMqh500tC\n' +

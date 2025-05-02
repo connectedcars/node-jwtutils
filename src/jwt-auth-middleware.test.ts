@@ -5,15 +5,15 @@ import { JwtAuthMiddlewareTestServer } from './test/jwt-auth-middleware/jwt-auth
 import { ecPrivateKey } from './test/test-resources'
 import type { JwtBody, JwtHeader } from './types'
 
-const jwtHeader = {
+const jwtHeader: JwtHeader = {
   typ: 'JWT',
   alg: 'ES256',
   kid: '1'
-} as unknown as JwtHeader
+}
 
 const unixNow = Math.floor(Date.now() / 1000)
 
-const jwtBody = {
+const jwtBody: JwtBody = {
   aud: 'http://localhost/',
   iss: 'http://localhost/oauth/token',
   jti: 'jtiValid',
@@ -22,7 +22,7 @@ const jwtBody = {
   scope: ['http://stuff', 'http://stuff2'],
   sub: 'subject@domain.tld',
   email: 'test@domain.tld'
-} as unknown as JwtBody
+}
 
 describe('jwt-auth-middleware', () => {
   let server: JwtAuthMiddlewareTestServer
@@ -74,7 +74,7 @@ describe('jwt-auth-middleware', () => {
   })
 
   it('should fail for anonymous with invalid token', async () => {
-    const customJwtBody = {
+    const customJwtBody: JwtBody = {
       aud: 'http://localhost/',
       jti: 'jtiValid',
       iat: unixNow,
@@ -82,7 +82,7 @@ describe('jwt-auth-middleware', () => {
       scope: ['http://stuff', 'http://stuff2'],
       sub: 'subject@domain.tld',
       email: 'test@domain.tld'
-    } as unknown as JwtBody
+    }
 
     const jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
 
@@ -108,7 +108,7 @@ describe('jwt-auth-middleware', () => {
   })
 
   it('should fail because of missing sub', async () => {
-    const customJwtBody = {
+    const customJwtBody: JwtBody = {
       aud: 'http://localhost/',
       iss: 'http://localhost/oauth/token',
       jti: 'jtiValid',
@@ -116,7 +116,7 @@ describe('jwt-auth-middleware', () => {
       exp: unixNow + 600,
       scope: ['http://stuff', 'http://stuff2'],
       email: 'test@domain.tld'
-    } as unknown as JwtBody
+    }
 
     const jwt = jwtUtils.encode(ecPrivateKey, jwtHeader, customJwtBody)
 
