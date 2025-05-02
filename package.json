@@ -11,7 +11,7 @@
     "jwtdecode": "./bin/jwtdecode.js"
   },
   "scripts": {
-    "build": "build src",
+    "build": "build src bin",
     "test": "USE_INTEGRATION_TEST_CHECKOUTS=true jest",
     "lint": "eslint './src/**/*.ts'",
     "lint:fix": "eslint './src/**/*.ts' --fix",

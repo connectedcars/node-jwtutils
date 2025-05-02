@@ -4,7 +4,7 @@ import type { JwtBody, JwtHeader } from '../types'
 import * as base64UrlSafe from '../utils/base64-urlsafe'
 
 export function encode(
-  privateKey: crypto.KeyObject | string | null,
+  privateKey: crypto.KeyObject | Buffer | string | null,
   header: JwtHeader,
   body: JwtBody,
   privateKeyPassword: string | null = null
@@ -64,7 +64,7 @@ export function encode(
     // Sign with privatekey
     if (privateKeyPassword !== null) {
       signatureBuffer = sign.sign({
-        key: typeof privateKey === 'string' ? privateKey : privateKey.export(),
+        key: typeof privateKey === 'string' || Buffer.isBuffer(privateKey) ? privateKey : privateKey.export(),
         passphrase: privateKeyPassword
       })
     } else {

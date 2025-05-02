@@ -11,7 +11,7 @@ export interface PublicKey {
   validators?: Record<string, () => boolean>
 }
 
-export type PublicKeys = Record<string, Record<string, string | PublicKey>>
+export type PublicKeys = Record<string, Record<string, string | Buffer | PublicKey>>
 
 interface JwkOptions {
   expiresSkew?: number
