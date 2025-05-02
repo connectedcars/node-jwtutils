@@ -4,7 +4,7 @@
   "description": "Zero dependency JWT encoding/decoding for Node",
   "main": "src/index.js",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "bin": {
     "jwtencode": "./bin/jwtencode.js",
@@ -16,7 +16,7 @@
     "lint": "eslint './src/**/*.ts'",
     "lint:fix": "eslint './src/**/*.ts' --fix",
     "cov": "jest --coverage",
-    "coveralls": "jest --coverage --coverageReporters=lcov",
+    "coveralls": "jest --coverage --coverageReporters=lcov | coveralls",
     "ci-tsc": "checks tsc",
     "ci-jest": "USE_INTEGRATION_TEST_CHECKOUTS=true checks jest",
     "ci-audit": "checks audit",
