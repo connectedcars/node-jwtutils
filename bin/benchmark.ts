@@ -1,8 +1,8 @@
-'use strict'
+import * as Benchmark from 'benchmark'
+import crypto from 'crypto'
 
-const Benchmark = require('benchmark')
-const jwtUtils = require('./src/index')
-const crypto = require('crypto')
+import { jwtUtils } from '../src'
+import { PublicKeys } from '../src/pubkeys-helper'
 
 const rsaPrivateKeyEncrypted =
   '-----BEGIN RSA PRIVATE KEY-----\n' +
@@ -79,7 +79,8 @@ const rsaPublicKey =
   '-----END PUBLIC KEY-----\n'
 
 const audiences = ['https://host/oauth/token']
-const pubKeys = {
+
+const pubKeys: PublicKeys = {
   'test@test.com': {
     '1@RS256': rsaPublicKey,
     '1@RS384': rsaPublicKey,
@@ -87,7 +88,7 @@ const pubKeys = {
   }
 }
 
-const pubKeys2 = {
+const pubKeys2: PublicKeys = {
   'test@test.com': {
     '1@RS256': rsaPrivateKeyObject,
     '1@RS384': rsaPrivateKeyObject,
@@ -111,14 +112,9 @@ const jwtBody = {
   scope: ['http://stuff', 'http://stuff2']
 }
 
-let suite = new Benchmark.Suite()
+const suite = new Benchmark.Suite()
 
-let testToken = jwtUtils.encode(
-  rsaPrivateKeyEncrypted,
-  jwtHeader,
-  jwtBody,
-  'Qwerty1234'
-)
+const testToken = jwtUtils.encode(rsaPrivateKeyEncrypted, jwtHeader, jwtBody, 'Qwerty1234')
 
 suite
   .add('Encode with encrypted RSA key at RS256', () => {
@@ -137,7 +133,8 @@ suite
     jwtUtils.decode(testToken, pubKeys2, audiences)
   })
   // add listeners
-  .on('cycle', function(event) {
+  .on('cycle', function (event: { target: unknown }) {
+    // eslint-disable-next-line no-console
     console.log(String(event.target))
   })
   // run async

@@ -1,4 +1,5 @@
 import { AxiosResponse } from 'axios'
+import crypto from 'crypto'
 
 import * as RequestHandler from './default-http-request-handler'
 import * as jwkUtils from './jwk-utils'
@@ -11,7 +12,7 @@ export interface PublicKey {
   validators?: Record<string, () => boolean>
 }
 
-export type PublicKeys = Record<string, Record<string, string | Buffer | PublicKey>>
+export type PublicKeys = Record<string, Record<string, string | Buffer | crypto.KeyObject | PublicKey>>
 
 interface JwkOptions {
   expiresSkew?: number
