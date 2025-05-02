@@ -43,7 +43,6 @@ export function decode(
 
   const header = JSON.parse(base64UrlSafe.decode(parts[0]).toString('utf8')) as unknown
 
-  // TODO: Check correct type of header
   if (!isJwtHeader(header)) {
     throw new JwtVerifyError('Invalid header')
   }

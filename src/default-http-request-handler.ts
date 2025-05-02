@@ -1,18 +1,20 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosError, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 
 import { JwtServiceAuthError } from './jwt-service-auth-error'
+
+type Headers = AxiosRequestConfig['headers']
 
 export type HttpRequestHandler = (
   method: string,
   url: string,
-  headers?: Record<string, string | number>,
+  headers?: Headers,
   body?: unknown
 ) => Promise<AxiosResponse>
 
 export async function defaultHttpRequestHandler(
   method: string,
   url: string,
-  headers?: Record<string, string | number>,
+  headers?: Headers,
   body?: unknown
 ): Promise<AxiosResponse> {
   try {
