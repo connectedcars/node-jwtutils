@@ -1,5 +1,5 @@
 import { jwtUtils, JwtVerifyError, type PublicKeys } from './index'
-import type { DecodingOptions } from './jwt-utils/jwt-decode'
+import type { DecodingOptions, ValidatorOptions } from './jwt-utils/decode-validators'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './test/test-resources'
 import type { JwtBody, JwtHeader } from './types'
 
@@ -184,7 +184,8 @@ describe('index', () => {
           '1@RS256': {
             publicKey: rsaPublicKey,
             validators: {
-              exp: () => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              exp: (_body: JwtBody, _unixNow: number, _options: ValidatorOptions) => {
                 throw new JwtVerifyError('Always expired')
               }
             }

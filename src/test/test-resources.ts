@@ -1,4 +1,4 @@
-import { JwkBody } from '../types'
+import type { JwkBody } from '../types'
 
 export const rsaPublicKey =
   '-----BEGIN PUBLIC KEY-----\n' +

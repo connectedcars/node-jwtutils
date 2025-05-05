@@ -1,6 +1,8 @@
 import { HttpServer } from '@connectedcars/test'
 
-const jwkResponse = {
+import type { JwkBody } from '../../types'
+
+const jwkResponse: { keys: JwkBody[] } = {
   keys: [
     {
       kty: 'RSA',

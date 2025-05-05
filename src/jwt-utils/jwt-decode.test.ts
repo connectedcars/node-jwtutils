@@ -1,7 +1,6 @@
 import { JwtVerifyError } from '../jwt-verify-error'
 import type { PublicKeys } from '../pubkeys-helper'
-import type { DecodingOptions } from './jwt-decode'
-import { decode } from './jwt-decode'
+import { decode, type DecodingOptions } from '.'
 
 const audiences: string[] = []
 

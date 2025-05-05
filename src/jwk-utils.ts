@@ -154,11 +154,9 @@ export function formatPemPublicKey(bytes: Uint8Array): string {
     .toString('base64')
     .match(/.{1,64}/g)
 
-  let pemBase64 = ''
-
-  if (pemBase64Match) {
-    pemBase64 = pemBase64Match.join('\n')
+  if (!pemBase64Match) {
+    throw new Error('Did not find base64-encoded PEM match in bytes')
   }
 
-  return `-----BEGIN PUBLIC KEY-----\n${pemBase64}\n-----END PUBLIC KEY-----`
+  return `-----BEGIN PUBLIC KEY-----\n${pemBase64Match.join('\n')}\n-----END PUBLIC KEY-----`
 }

@@ -1,12 +1,12 @@
 import type { AxiosResponse } from 'axios'
 import querystring from 'querystring'
 
-import * as RequestHandler from './default-http-request-handler'
+import { defaultHttpRequestHandler, type HttpRequestHandler } from './default-http-request-handler'
 import { JwtServiceAuthError, jwtUtils } from './index'
 import type { JwtBody, JwtHeader } from './types'
 import { runProcessAsync } from './utils/process'
 
-interface JwtServiceAuthOptions {
+export interface JwtServiceAuthOptions {
   endpoint?: string
   expires?: number
   impersonate?: string
@@ -44,12 +44,12 @@ interface KeyData {
 }
 
 export class JwtServiceAuth {
-  private requestHandler: RequestHandler.HttpRequestHandler
+  private requestHandler: HttpRequestHandler
   private authEndpoint: string | null
   private command: string
 
-  public constructor(httpRequestHandler?: RequestHandler.HttpRequestHandler, options: JwtServiceAuthOptions = {}) {
-    this.requestHandler = httpRequestHandler ?? RequestHandler.defaultHttpRequestHandler
+  public constructor(httpRequestHandler?: HttpRequestHandler, options: JwtServiceAuthOptions = {}) {
+    this.requestHandler = httpRequestHandler ?? defaultHttpRequestHandler
     this.authEndpoint = options.endpoint || null
     this.command = options.command || 'gcloud'
   }
@@ -131,7 +131,7 @@ export class JwtServiceAuth {
   }
 
   private async _getGoogleAccessToken(
-    httpRequestHandler: RequestHandler.HttpRequestHandler,
+    httpRequestHandler: HttpRequestHandler,
     keyFileData: string,
     scopes: string[] | number | null,
     options: JwtServiceAuthOptions = {}
@@ -142,9 +142,7 @@ export class JwtServiceAuth {
       if (options !== null && typeof options === 'object') {
         options.expires = scopes
       } else {
-        options = {
-          expires: scopes
-        }
+        options = { expires: scopes }
       }
 
       scopes = null
@@ -159,11 +157,13 @@ export class JwtServiceAuth {
     }
 
     const unixNow = Math.floor(new Date().getTime() / 1000)
+
     const jwtHeader: JwtHeader = {
       typ: 'JWT',
       alg: 'RS256',
       kid: keyData.private_key_id
     }
+
     const jwtBody: JwtBody = {
       aud: 'https://www.googleapis.com/oauth2/v4/token',
       iss: keyData.client_email,

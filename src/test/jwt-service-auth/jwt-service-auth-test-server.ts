@@ -29,24 +29,20 @@ export class JwtServiceAuthTestServer extends HttpServer {
 
           if (!body) {
             res.statusCode = 400
-            res.end(JSON.stringify('Expected valid string body'))
+            res.end(JSON.stringify('not valid'))
 
             return
           }
 
-          if (body) {
-            const token = querystring.unescape(body.replace(/^.+assertion=([^&]+).*?$/, '$1'))
-            const decodedBody = jwtUtils.decode(token, pubKeys, ['https://www.googleapis.com/oauth2/v4/token'])
-            if (decodedBody.scope !== '') {
-              res.statusCode = 200
-              res.end(JSON.stringify({ access_token: 'ok', expires_in: 3600 }))
-            } else {
-              res.statusCode = 400
-              res.end(JSON.stringify({ error: 'scopes not set' }))
-            }
+          const token = querystring.unescape(body.replace(/^.+assertion=([^&]+).*?$/, '$1'))
+          const decodedBody = jwtUtils.decode(token, pubKeys, ['https://www.googleapis.com/oauth2/v4/token'])
+
+          if (decodedBody.scope !== '') {
+            res.statusCode = 200
+            res.end(JSON.stringify({ access_token: 'ok', expires_in: 3600 }))
           } else {
             res.statusCode = 400
-            res.end(JSON.stringify({ error: 'not valid' }))
+            res.end(JSON.stringify({ error: 'scopes not set' }))
           }
 
           return res

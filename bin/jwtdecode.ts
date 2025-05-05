@@ -17,6 +17,7 @@ const algo = process.argv[4]
 const issuer = process.argv[5]
 const audiences = process.argv[6].split(',')
 
+const jwtRegex = /(?:^|\n)\s*?([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)\s*?(?:$|\n)/g
 const publicKey = fs.readFileSync(publicKeyPath)
 
 const pubKeys: PublicKeys = {
@@ -40,12 +41,13 @@ process.stdin.on('end', function () {
 })
 
 function processJwts(buffer: string): string {
-  return buffer.replace(/(?:^|\n)\s*?([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)\s*?(?:$|\n)/g, (match, jwt) => {
+  return buffer.replace(jwtRegex, (_match, jwt) => {
     try {
       console.log(JSON.stringify(jwtUtils.decode(jwt, pubKeys, audiences), null, 2))
-    } catch (e) {
-      console.error(e.message)
+    } catch (error) {
+      console.error(error.message)
     }
+
     return ''
   })
 }

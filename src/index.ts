@@ -1,11 +1,20 @@
 export * as jwkUtils from './jwk-utils'
-export { JwtAuthMiddleware, type RevokedToken } from './jwt-auth-middleware'
-export { JwtServiceAuth } from './jwt-service-auth'
+export {
+  createJwtAuthMiddlewareHandler,
+  type JwtAuthMiddlewareHandler,
+  type JwtAuthMiddlewareOptions,
+  type ResultMapper,
+  type RevokedToken
+} from './jwt-auth-middleware'
+export { JwtServiceAuth, type JwtServiceAuthOptions } from './jwt-service-auth'
 export { JwtServiceAuthError } from './jwt-service-auth-error'
 export * as jwtUtils from './jwt-utils'
 export { JwtVerifyError } from './jwt-verify-error'
-export { type FormattedPublicKeys, PubkeysHelper, type PublicKey, type PublicKeys } from './pubkeys-helper'
-export { JwtAuthMiddlewareTestServer } from './test/jwt-auth-middleware/jwt-auth-middleware-test-server'
+export { type FormattedPublicKeys, type JwkOptions, PubkeysHelper, type PublicKeys } from './pubkeys-helper'
+export {
+  JwtAuthMiddlewareTestServer,
+  type JwtAuthMiddlewareTestServerOptions
+} from './test/jwt-auth-middleware/jwt-auth-middleware-test-server'
 export { JwtServiceAuthTestServer } from './test/jwt-service-auth/jwt-service-auth-test-server'
 export { PubkeysHelperTestServer } from './test/pubkeys-helper/pubkeys-helper-test-server'
 export { isJwkBody, isJwtBody, isJwtHeader, type JwkBody, type JwtBody, type JwtHeader } from './types'

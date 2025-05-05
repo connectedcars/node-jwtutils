@@ -5,7 +5,7 @@ import * as base64UrlSafe from '../utils/base64-urlsafe'
 import { getAlgorithms } from './get-algorithms'
 
 export function encode(
-  privateKey: crypto.KeyObject | Buffer | string | null,
+  privateKey: Buffer | string | null,
   header: JwtHeader,
   body: JwtBody,
   privateKeyPassword: string | null = null
@@ -30,14 +30,15 @@ export function encode(
     }
 
     const sign = crypto.createSign(signAlgo)
+
     // Add header and body of JWT to sign
     sign.update(headerBodyBase64, 'utf8')
     sign.end()
 
-    // Sign with privatekey
+    // Sign with private key
     if (privateKeyPassword !== null) {
       signatureBuffer = sign.sign({
-        key: typeof privateKey === 'string' || Buffer.isBuffer(privateKey) ? privateKey : privateKey.export(),
+        key: privateKey,
         passphrase: privateKeyPassword
       })
     } else {

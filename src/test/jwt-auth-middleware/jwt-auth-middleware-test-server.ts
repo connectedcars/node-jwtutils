@@ -1,8 +1,8 @@
-import express, { Request, Response } from 'express'
+import express, { type NextFunction, type Request, type Response } from 'express'
 import http from 'http'
 
 import type { PublicKeys } from '../../index'
-import { JwtAuthMiddleware } from '../../jwt-auth-middleware'
+import { createJwtAuthMiddlewareHandler } from '../../jwt-auth-middleware'
 import { JwtVerifyError } from '../../jwt-verify-error'
 import { ecPublicKey } from '../test-resources'
 
@@ -27,7 +27,7 @@ const revokedTokens = {
 
 const audiences = ['http://localhost/']
 
-interface JwtAuthMiddlewareTestServerOptions {
+export interface JwtAuthMiddlewareTestServerOptions {
   port: number
   requestTimeout?: number
 }
@@ -44,7 +44,7 @@ export class JwtAuthMiddlewareTestServer {
 
     this.app.use(
       '/mapped',
-      JwtAuthMiddleware(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
+      createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
         if (user.issuer === 'http://localhost/oauth/token') {
           // Map claims
           user.eMail = (user.body as { email: string }).email
@@ -54,7 +54,7 @@ export class JwtAuthMiddlewareTestServer {
 
     this.app.use(
       '/async',
-      JwtAuthMiddleware(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
+      createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
         if (user.subject === 'error') {
           return Promise.reject(new JwtVerifyError('Async error'))
         } else {
@@ -65,12 +65,12 @@ export class JwtAuthMiddlewareTestServer {
 
     this.app.use(
       '/anonymous',
-      JwtAuthMiddleware(pubKeys, revokedTokens, audiences, null, {
+      createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences, null, {
         allowAnonymous: true
       })
     )
 
-    this.app.use('/', JwtAuthMiddleware(pubKeys, revokedTokens, audiences))
+    this.app.use('/', createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences))
 
     this.app.get('/anonymous', function (_req: Request, res: Response) {
       res.send(`Hello anonymous`)
@@ -93,7 +93,7 @@ export class JwtAuthMiddlewareTestServer {
     })
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    this.app.use((err: Error, _req: Request, res: Response, _next: (err?: Error | null) => void) => {
+    this.app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
       if (err instanceof JwtVerifyError) {
         res.status(401).send(err.message)
       } else {

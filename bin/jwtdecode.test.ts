@@ -30,7 +30,7 @@ describe('jwtdecode', () => {
     const pathToExecutable = `${__dirname}/../build/dist/bin/jwtdecode.js`
 
     if (!fs.existsSync(pathToExecutable)) {
-      throw new Error('Could not find jwtdecode executable, build the project first (npm run build)')
+      throw new Error('Could not find jwtdecode executable, build the project first')
     }
 
     const jwtDecode = spawn(pathToExecutable, [
@@ -50,20 +50,21 @@ describe('jwtdecode', () => {
 
       // Read stderr
       let stderrStr = ''
-      const errorData: any[] = []
+      const errorData: (Buffer | string)[] = []
 
       jwtDecode.stderr.on('data', data => {
         errorData.push(data)
       })
 
       jwtDecode.stderr.on('end', () => {
-        stderrStr = Buffer.concat(errorData).toString('utf8')
+        const data = typeof errorData[0] === 'string' ? errorData.join('') : Buffer.concat(errorData as Buffer[])
+        stderrStr = data.toString('utf8')
       })
 
       // Read token
       let stdoutStr = ''
       let error: Error
-      const decodedData: any[] = []
+      const decodedData: (Buffer | string)[] = []
 
       jwtDecode.stdout.on('data', data => {
         decodedData.push(data)
@@ -73,7 +74,10 @@ describe('jwtdecode', () => {
 
       jwtDecode.stdout.on('end', () => {
         try {
-          stdoutStr = Buffer.concat(decodedData).toString('utf8').trim()
+          const data =
+            typeof decodedData[0] === 'string' ? decodedData.join('') : Buffer.concat(decodedData as Buffer[])
+
+          stdoutStr = data.toString('utf8').trim()
           decodedBody = JSON.parse(stdoutStr) as JwtBody
         } catch (_error) {
           error = _error

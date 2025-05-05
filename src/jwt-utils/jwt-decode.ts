@@ -1,20 +1,19 @@
 import crypto from 'crypto'
 
 import { JwtVerifyError } from '../jwt-verify-error'
-import type { PublicKey, PublicKeys } from '../pubkeys-helper'
+import type { PublicKeys } from '../pubkeys-helper'
 import { isJwtBody, isJwtHeader, type JwtBody, type JwtHeader } from '../types'
 import * as base64UrlSafe from '../utils/base64-urlsafe'
+import type { PublicKey } from './decode-validators'
+import {
+  DecodeValidators,
+  type DecodingOptions,
+  validateAudience,
+  validateExpires,
+  validateIssuedAt,
+  validateNotBefore
+} from './decode-validators'
 import { getAlgorithms } from './get-algorithms'
-
-export type Fixup = (header: JwtHeader, body: JwtBody) => void
-
-export interface DecodingOptions {
-  expiresSkew?: number
-  expiresMax?: number
-  nbfIatSkew?: number
-  fixup?: Fixup
-  validators?: Record<string, () => boolean>
-}
 
 const defaultDecodingOptions: DecodingOptions = {
   expiresSkew: 0,
@@ -124,52 +123,21 @@ export function decode(
   }
 
   const unixNow = Math.floor(Date.now() / 1000)
-  const defaultValidators = {
+
+  const defaultValidators: Required<PublicKey['validators']> = {
     aud: validateAudience,
     exp: validateExpires,
     iat: validateIssuedAt,
     nbf: validateNotBefore
   }
 
-  const validators = { ...defaultValidators, ...issuerOptions.validators, ...options.validators }
-  const validationOptions = { ...options, ...issuerOptions }
+  const validators = { ...defaultValidators, ...issuerOptions.validators, ...options.validators } as DecodeValidators
+  const validationOptions: DecodingOptions & Partial<PublicKey> = { ...options, ...issuerOptions }
 
-  validators.aud(body, audiences)
-  validators.iat(body, unixNow, validationOptions)
-  validators.nbf(body, unixNow, validationOptions)
-  validators.exp(body, unixNow, validationOptions)
+  validators.aud?.(body, audiences)
+  validators.iat?.(body, unixNow, validationOptions)
+  validators.nbf?.(body, unixNow, validationOptions)
+  validators.exp?.(body, unixNow, validationOptions)
 
   return body
-}
-
-function validateNotBefore(body: JwtBody, unixNow: number, options: DecodingOptions): void {
-  if (options.nbfIatSkew && body.nbf && body.nbf > unixNow + options.nbfIatSkew) {
-    throw new JwtVerifyError(`Not before in the future by more than ${options.nbfIatSkew} seconds`)
-  }
-}
-
-function validateIssuedAt(body: JwtBody, unixNow: number, options: DecodingOptions): void {
-  if (options.nbfIatSkew && body.iat && body.iat > unixNow + options.nbfIatSkew) {
-    throw new JwtVerifyError(`Issued at in the future by more than ${options.nbfIatSkew} seconds`)
-  }
-}
-
-function validateAudience(body: JwtBody, audiences: string[]): void {
-  const auds = (Array.isArray(body.aud) ? body.aud : [body.aud]) as string[]
-
-  if (!auds.some(aud => audiences.includes(aud))) {
-    throw new JwtVerifyError(`Unknown audience '${auds.join(',')}'`)
-  }
-}
-
-function validateExpires(body: JwtBody, unixNow: number, options: DecodingOptions): void {
-  const notBefore = body.iat || body.nbf || unixNow
-
-  if (options.expiresMax && body.exp && body.exp > notBefore + options.expiresMax) {
-    throw new JwtVerifyError(`Expires in the future by more than ${options.expiresMax} seconds`)
-  }
-
-  if (body.exp && body.exp + (options.expiresSkew || 0) <= unixNow) {
-    throw new JwtVerifyError('Token has expired')
-  }
 }

@@ -37,12 +37,12 @@ describe('jwt-auth-middleware', () => {
     return `http://localhost:${address.port}`
   }
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     server = new JwtAuthMiddlewareTestServer({ port: 0 })
     await server.start()
   })
 
-  afterEach(async function () {
+  afterEach(async () => {
     if (server) {
       await server.stop()
     }

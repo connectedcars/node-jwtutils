@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import http from 'http'
 
 import { jwtUtils } from './index'
@@ -11,7 +11,7 @@ export interface RevokedToken {
   revokedAt: Date
 }
 
-export type Mapper = (
+export type ResultMapper = (
   user: Record<string, unknown>,
   request: Request,
   response: Response
@@ -27,21 +27,21 @@ interface JwtAuthMiddlewareHandlerRequest extends Request {
   headers: http.IncomingHttpHeaders
 }
 
-type JwtAuthMiddlewareHandler = (
+export type JwtAuthMiddlewareHandler = (
   request: JwtAuthMiddlewareHandlerRequest,
   response: Response,
-  next: (err?: Error | null) => void
+  next: NextFunction
 ) => void
 
 function isPromise<T>(value: T): boolean {
   return typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function'
 }
 
-export function JwtAuthMiddleware(
+export function createJwtAuthMiddlewareHandler(
   pubKeys: PublicKeys,
   revokedTokens: Record<string, RevokedToken>,
   audiences: string[],
-  mapper: Mapper | null = null,
+  mapper: ResultMapper | null = null,
   options: JwtAuthMiddlewareOptions = {}
 ): JwtAuthMiddlewareHandler {
   return function (request, response, next) {
@@ -49,7 +49,9 @@ export function JwtAuthMiddleware(
       return next() // Skip authentication if we are already authenticated
     }
 
-    if (!(request.headers.authorization || '').startsWith('Bearer ')) {
+    const authorization = request.headers.authorization || ''
+
+    if (!authorization.startsWith('Bearer ')) {
       if (options.allowAnonymous) {
         request.jwtAuthMiddlewareProcessed = true
         return next()
@@ -58,12 +60,8 @@ export function JwtAuthMiddleware(
       return next(new JwtVerifyError('Not allowed'))
     }
 
-    if (!request.headers.authorization) {
-      return next(new JwtVerifyError('Missing authorization'))
-    }
-
     try {
-      const jwt = request.headers.authorization.substring(7)
+      const jwt = authorization.substring(7)
       const decodedJwtBody = jwtUtils.decode(jwt, pubKeys, audiences)
 
       if (!decodedJwtBody.sub) {
@@ -82,7 +80,7 @@ export function JwtAuthMiddleware(
         body: decodedJwtBody
       }
 
-      let result: ReturnType<Mapper> | null = null
+      let result: ReturnType<ResultMapper> | null = null
 
       if (typeof mapper === 'function') {
         result = mapper(request.user, request, response)

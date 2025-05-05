@@ -36,7 +36,7 @@ describe('jwtencode', () => {
     const pathToExecutable = `${__dirname}/../build/dist/bin/jwtencode.js`
 
     if (!fs.existsSync(pathToExecutable)) {
-      throw new Error('Could not find jwtencode executable, build the project first (npm run build)')
+      throw new Error('Could not find jwtencode executable, build the project first')
     }
 
     const jwtEncode = spawn(pathToExecutable, [`${__dirname}/jwtencode.test.key`])
@@ -47,14 +47,15 @@ describe('jwtencode', () => {
       jwtEncode.stdin.write(tokenStr)
       jwtEncode.stdin.end()
 
-      const errorData: any[] = []
+      const errorData: (Buffer | string)[] = []
 
       jwtEncode.stderr.on('data', data => {
         errorData.push(data)
       })
 
       jwtEncode.stderr.on('data', () => {
-        const error = Buffer.concat(errorData).toString('utf8')
+        const error =
+          typeof errorData[0] === 'string' ? errorData.join('') : Buffer.concat(errorData as Buffer[]).toString('utf8')
 
         if (error != '') {
           reject(new Error(error))
@@ -62,14 +63,15 @@ describe('jwtencode', () => {
       })
 
       // Read token
-      const tokenData: any[] = []
+      const tokenData: (Buffer | string)[] = []
 
       jwtEncode.stdout.on('data', data => {
         tokenData.push(data)
       })
 
       jwtEncode.stdout.on('end', () => {
-        const jwt = Buffer.concat(tokenData).toString('utf8').trim()
+        const data = typeof tokenData[0] === 'string' ? tokenData.join('') : Buffer.concat(tokenData as Buffer[])
+        const jwt = data.toString('utf8').trim()
 
         resolve(jwtUtils.decode(jwt, pubKeys, audiences))
       })

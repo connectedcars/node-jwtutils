@@ -2,18 +2,12 @@ import { AxiosResponse } from 'axios'
 
 import * as RequestHandler from './default-http-request-handler'
 import * as jwkUtils from './jwk-utils'
+import type { PublicKey } from './jwt-utils/decode-validators'
 import type { JwkBody } from './types'
-
-export interface PublicKey {
-  publicKey: string
-  expiresSkew?: number
-  expiresMax?: number
-  validators?: Record<string, () => boolean>
-}
 
 export type PublicKeys = Record<string, Record<string, string | Buffer | PublicKey>>
 
-interface JwkOptions {
+export interface JwkOptions {
   expiresSkew?: number
   defaultAlgorithms?: string[]
 }
