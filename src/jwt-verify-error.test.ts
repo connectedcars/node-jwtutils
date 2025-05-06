@@ -2,9 +2,14 @@ import { JwtVerifyError } from '.'
 
 describe('JwtVerifyError', () => {
   it('constructs a JwtVerifyError', () => {
-    const error = new JwtVerifyError('')
+    const error1 = new JwtVerifyError('')
+    expect(error1.name).toBe('JwtVerifyError')
+    expect(error1.message).toBe('')
+    expect(error1.innerError).toBeNull()
 
-    expect(error.name).toBe('JwtVerifyError')
-    expect(error.context).toEqual({})
+    const error2 = new JwtVerifyError('message', new Error('Oh noes'))
+    expect(error2.name).toBe('JwtVerifyError')
+    expect(error2.message).toBe('message')
+    expect(error2.innerError).toEqual(new Error('Oh noes'))
   })
 })

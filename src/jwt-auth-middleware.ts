@@ -104,7 +104,7 @@ export function createJwtAuthMiddlewareHandler(
       if (error instanceof JwtVerifyError) {
         return next(error)
       } else {
-        return next(new JwtVerifyError('Unknown error', error as Record<string, unknown>))
+        return next(new JwtVerifyError('Unknown error', error as Error))
       }
     }
   }
