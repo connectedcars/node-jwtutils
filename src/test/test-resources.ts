@@ -151,7 +151,7 @@ export const localhostCertificate =
   '-----END CERTIFICATE-----'
 
 export const localhostPrivateKey =
-  '-----BEGIN PRIVATE KEY-----\n' + // NOSONAR
+  '-----BEGIN PRIVATE KEY-----\n' +
   'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCl1ZksucCvSNG3\n' +
   'soZAqPnX8ZsEOMg3Xoj87hmUkfGvM6eSjE6tKb6aSH6FMvEQrCwLM9yU/8xODhKk\n' +
   'WzLKGIXywF+ikH8oyZDU6hPrlwbSZlMK/1y/j1JO9DZuQR8J29RZA2n1hfkcE2pF\n' +

@@ -5,7 +5,7 @@ import { jwtUtils } from '../src'
 import { PublicKeys } from '../src/pubkeys-helper'
 
 const rsaPrivateKeyEncrypted =
-  '-----BEGIN RSA PRIVATE KEY-----\n' + // NOSONAR
+  '-----BEGIN RSA PRIVATE KEY-----\n' +
   'Proc-Type: 4,ENCRYPTED\n' +
   'DEK-Info: AES-256-CBC,F8DFFBFC89ACC93CC604E18608B412C4\n' +
   '\n' +
@@ -37,7 +37,7 @@ const rsaPrivateKeyEncrypted =
   '-----END RSA PRIVATE KEY-----\n'
 
 const rsaPrivateKey =
-  '-----BEGIN RSA PRIVATE KEY-----\n' + // NOSONAR
+  '-----BEGIN RSA PRIVATE KEY-----\n' +
   'MIIEpAIBAAKCAQEAqFvlHi5dBWLyDNsspY3cOHdK8UNhuyFJHQJ3qjVQqpc2W7LD\n' +
   'NKbsC3YUxShH9j8HyRYz3kbEPvEHT2dV2jqG0jvDRFldqri963FFk+0K8quOAezn\n' +
   'gbp51/x64w7DQjDp8SIYWkvYFpaAS7AU4AM5AzUsftbsxDo4QpNtadY9Xh1p6vWK\n' +
