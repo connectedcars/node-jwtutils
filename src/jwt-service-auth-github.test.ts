@@ -14,7 +14,7 @@ describe('JwtServiceAuth', () => {
 
   beforeAll(async () => {
     await server.start()
-    baseUrl = `http://localhost:${server.listenPort}`
+    baseUrl = server.listenUrl
     httpRequestHandler = RequestHandler.defaultHttpRequestHandler
     clock = sinon.useFakeTimers()
   })

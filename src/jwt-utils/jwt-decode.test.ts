@@ -2,7 +2,7 @@ import { JwtVerifyError } from '../jwt-verify-error'
 import type { PublicKeys } from '../pubkeys-helper'
 import { decode, type DecodingOptions } from '.'
 
-const audiences: string[] = []
+const audiences = ['https://host/oauth/token']
 
 const publicKey =
   '-----BEGIN PUBLIC KEY-----\n' +
@@ -41,6 +41,9 @@ const testJwtInvalidBodyIatIsString =
 const testJwtInvalidBodyAudienceArrayOfNumbers =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJhdWQiOlsxLDJdLCJpc3MiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0Ijoib2siLCJleHAiOjE1MDMzMzU3NjksInNjb3BlIjpbImh0dHA6Ly9zdHVmZiIsImh0dHA6Ly9zdHVmZjIiXX0K.zO278VV6NzwsvBrAIc15mOfwza-FkmLCV28NRXnrI550xw1S1145cS1UsZP5zXxcrk5f4oEgB91Jt6ble76yK5nU68fALUXtfe7xPUkhcOUIw92q_x_Iaaw4z6a71NtyishCfJlbmwkXXEq5YCVAvX3KNDtyPf_fQrAqjzsbgQc'
 
+const testJwtMissingExp =
+  'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJhdWQiOiJodHRwczovL2hvc3Qvb2F1dGgvdG9rZW4iLCJpc3MiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNTAzMzM1MTY5LCJzY29wZSI6WyJodHRwOi8vc3R1ZmYiLCJodHRwOi8vc3R1ZmYyIl19.CKrHVSoEHxW0qOSudH7IkAUmwIakRQ98wUaBR3CN9C96Tddsvtq4GEzEp19ccZk0uFhJVeI8jM9jW-zNPGY8z6Jtv1b6e_Fe68fpfxccJZHJ_rGkuF8KIv_UGUykLLro3DR12XNeQCfj-JOO9wdeZVrIltXuJALqmzPZ63_G4eY'
+
 const testJwtWrongAlg =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzEyOCJ9.eyJhdWQiOiJodHRwczovL2hvc3Qvb2F1dGgvdG9rZW4iLCJpc3MiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNTAzMzM2NzU5LCJleHAiOjE1MDMzMzczNTksInNjb3BlIjpbImh0dHA6Ly9zdHVmZiIsImh0dHA6Ly9zdHVmZjIiXX0.12co2gXwBxmZ2uLJecd26bfteCLBx7jgu_9rp2hhKAHWA4qFKm1HcQOZXqDvHkjflQDtNAQ1ZUUf3U8kntUUAmMOjhHx0BspC-xuaTFylZWqj--A2_w9e7JSk46TF_x3e_hZLB3rtyuSEAPMh_nOCsmM-4A2fnQx0Y5p-Bwbt0I'
 
@@ -72,6 +75,10 @@ describe('jwt-decode', () => {
       expect(() => decode(testJwtInvalidBodyAudienceArrayOfNumbers, pubKeys, audiences)).toThrow(
         new JwtVerifyError('Invalid body')
       )
+    })
+
+    it('checks for missing exp field', async () => {
+      expect(() => decode(testJwtMissingExp, pubKeys, audiences)).toThrow(new JwtVerifyError('No expires set on token'))
     })
 
     it('checks for a valid header after fixup', async () => {

@@ -83,8 +83,8 @@ async function readAllAsync(fd: Readable, maxSize: number): Promise<Buffer | str
       dataLength += chunk.length
 
       if (dataLength > maxSize) {
-        reject(new Error(`Data size larger than maxsize: ${dataLength} > ${maxSize}`))
         fd.destroy()
+        reject(new Error(`Data size larger than maxsize: ${dataLength} > ${maxSize}`))
       }
 
       data.push(chunk)

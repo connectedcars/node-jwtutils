@@ -48,6 +48,10 @@ export function validateAudience(body: JwtBody, audiences: string[]): void | nev
 }
 
 export function validateExpires(body: JwtBody, unixNow: number, options: ValidatorOptions): void | never {
+  if (!body.exp) {
+    throw new JwtVerifyError('No expires set on token')
+  }
+
   const notBefore = body.iat || body.nbf || unixNow
 
   if (options.expiresMax && body.exp && body.exp > notBefore + options.expiresMax) {
