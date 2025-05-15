@@ -54,6 +54,26 @@ export class JwtServiceAuth {
     this.command = options.command || 'gcloud'
   }
 
+  public static async getGoogleAccessTokenFromGCloudHelper(): Promise<AccessToken> {
+    return JwtServiceAuth.getGoogleAccessTokenFromGCloudHelperImpl('gcloud')
+  }
+
+  private static async getGoogleAccessTokenFromGCloudHelperImpl(command: string): Promise<AccessToken> {
+    const result = await runProcessAsync(command, ['config', 'config-helper', '--format=json'], {
+      closeStdin: true
+    })
+
+    const config = JSON.parse(result.stdout) as GoogleAccessTokenOutput
+    const now = new Date().getTime()
+    const expiresAt = new Date(config.credential.token_expiry).getTime()
+
+    return {
+      accessToken: config.credential.access_token,
+      expiresIn: Math.ceil((expiresAt - now) / 1000),
+      expiresAt
+    }
+  }
+
   public async getGithubAccessToken(
     privateKey: string,
     appId: number,
@@ -102,19 +122,7 @@ export class JwtServiceAuth {
   }
 
   public async getGoogleAccessTokenFromGCloudHelper(): Promise<AccessToken> {
-    const result = await runProcessAsync(this.command, ['config', 'config-helper', '--format=json'], {
-      closeStdin: true
-    })
-
-    const config = JSON.parse(result.stdout) as GoogleAccessTokenOutput
-    const now = new Date().getTime()
-    const expiresAt = new Date(config.credential.token_expiry).getTime()
-
-    return {
-      accessToken: config.credential.access_token,
-      expiresIn: Math.ceil((expiresAt - now) / 1000),
-      expiresAt
-    }
+    return JwtServiceAuth.getGoogleAccessTokenFromGCloudHelperImpl(this.command)
   }
 
   public async getGoogleAccessToken(

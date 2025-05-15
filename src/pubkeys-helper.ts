@@ -1,11 +1,12 @@
 import { AxiosResponse } from 'axios'
+import crypto from 'crypto'
 
 import * as RequestHandler from './default-http-request-handler'
 import * as jwkUtils from './jwk-utils'
 import type { PublicKey } from './jwt-utils/decode-validators'
 import type { JwkBody } from './types'
 
-export type PublicKeys = Record<string, Record<string, string | Buffer | PublicKey>>
+export type PublicKeys = Record<string, Record<string, string | Buffer | PublicKey | crypto.KeyObject>>
 
 export interface JwkOptions {
   expiresSkew?: number
@@ -21,32 +22,11 @@ export class PubkeysHelper {
     this.requestHandler = httpRequestHandler ?? RequestHandler.defaultHttpRequestHandler
   }
 
-  public async fetchJwkKeys(url: string, options: JwkOptions = {}): Promise<FormattedPublicKeys | null> {
-    const defaultAlgorithms = options.defaultAlgorithms ?? []
-    delete options.defaultAlgorithms
-
-    const updatedOptions: Pick<JwkOptions, 'expiresSkew'> = {}
-
-    if (options.expiresSkew != undefined) {
-      updatedOptions.expiresSkew = options.expiresSkew
-    }
-
-    const result = (await this.requestHandler('GET', url, {}, null)) as AxiosResponse<string>
-
-    if (!result) {
-      return null
-    }
-
-    const pubKeys = this.formatPublicKeys(result, url, defaultAlgorithms, updatedOptions)
-
-    if (!pubKeys) {
-      return null
-    }
-
-    return pubKeys
+  public static async fetchJwkKeys(url: string, options: JwkOptions = {}): Promise<FormattedPublicKeys | null> {
+    return PubkeysHelper.fetchJwkKeysImpl(RequestHandler.defaultHttpRequestHandler, url, options)
   }
 
-  private formatPublicKeys(
+  private static formatPublicKeys(
     response: AxiosResponse<string>,
     url: string,
     defaultAlgorithms: string[],
@@ -79,5 +59,38 @@ export class PubkeysHelper {
     }
 
     return pubKeys
+  }
+
+  private static async fetchJwkKeysImpl(
+    requestHandler: RequestHandler.HttpRequestHandler,
+    url: string,
+    options: JwkOptions = {}
+  ): Promise<FormattedPublicKeys | null> {
+    const defaultAlgorithms = options.defaultAlgorithms ?? []
+    delete options.defaultAlgorithms
+
+    const updatedOptions: Pick<JwkOptions, 'expiresSkew'> = {}
+
+    if (options.expiresSkew != undefined) {
+      updatedOptions.expiresSkew = options.expiresSkew
+    }
+
+    const result = (await requestHandler('GET', url, {}, null)) as AxiosResponse<string>
+
+    if (!result) {
+      return null
+    }
+
+    const pubKeys = this.formatPublicKeys(result, url, defaultAlgorithms, updatedOptions)
+
+    if (!pubKeys) {
+      return null
+    }
+
+    return pubKeys
+  }
+
+  public async fetchJwkKeys(url: string, options: JwkOptions = {}): Promise<FormattedPublicKeys | null> {
+    return PubkeysHelper.fetchJwkKeysImpl(this.requestHandler, url, options)
   }
 }

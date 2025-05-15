@@ -76,7 +76,7 @@ export async function runProcessAsync(
 
 async function readAllAsync(fd: Readable, maxSize: number): Promise<Buffer | string> {
   return new Promise((resolve, reject) => {
-    const data: (Buffer | string)[] = []
+    const data: Buffer[] = []
     let dataLength = 0
 
     fd.on('data', (chunk: Buffer | string) => {
@@ -87,15 +87,9 @@ async function readAllAsync(fd: Readable, maxSize: number): Promise<Buffer | str
         reject(new Error(`Data size larger than maxsize: ${dataLength} > ${maxSize}`))
       }
 
-      data.push(chunk)
+      data.push(Buffer.from(chunk))
     })
 
-    fd.on('end', () => {
-      if (typeof data[0] === 'string') {
-        resolve(data.join(''))
-      } else {
-        resolve(Buffer.concat(data as Buffer[]))
-      }
-    })
+    fd.on('end', () => resolve(Buffer.concat(data)))
   })
 }
