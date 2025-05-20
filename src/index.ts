@@ -15,6 +15,25 @@ export {
   JwtAuthMiddlewareTestServer,
   type JwtAuthMiddlewareTestServerOptions
 } from './test/jwt-auth-middleware/jwt-auth-middleware-test-server'
-export { JwtServiceAuthTestServer } from './test/jwt-service-auth/jwt-service-auth-test-server'
+export {
+  JwtServiceAuthTestServer,
+  type JwtServiceAuthTestServerOptions
+} from './test/jwt-service-auth/jwt-service-auth-test-server'
 export { PubkeysHelperTestServer } from './test/pubkeys-helper/pubkeys-helper-test-server'
+export {
+  ecPrivateKey,
+  ecPublicKey,
+  ecPublicKeyJwk,
+  localhostCertificate,
+  localhostPrivateKey,
+  rsaOtherPublicKey,
+  rsaPrivateKey,
+  rsaPrivateKeyEncrypted,
+  rsaPublicKey,
+  rsaPublicKey4096,
+  rsaPublicKey4096Jwk,
+  rsaPublicKeyEncrypted,
+  rsaPublicKeyEncryptedJwk,
+  rsaPublicKeyJwk
+} from './test/test-resources'
 export { isJwkBody, isJwtBody, isJwtHeader, type JwkBody, type JwtBody, type JwtHeader } from './types'
