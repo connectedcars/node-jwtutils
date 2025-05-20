@@ -1,4 +1,4 @@
-import { jwtUtils, JwtVerifyError, type PublicKeys } from './index'
+import { jwtUtils, JwtVerifyError, type PublicKeys } from './'
 import type { DecodingOptions, ValidatorOptions } from './jwt-utils/decode-validators'
 import { ecPrivateKey, ecPublicKey, rsaOtherPublicKey, rsaPrivateKey, rsaPublicKey } from './test/test-resources'
 import type { JwtBody, JwtHeader } from './types'

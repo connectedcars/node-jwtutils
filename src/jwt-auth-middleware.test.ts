@@ -1,5 +1,5 @@
+import { jwtUtils } from './'
 import * as RequestHandler from './default-http-request-handler'
-import { jwtUtils } from './index'
 import { JwtServiceAuthError } from './jwt-service-auth-error'
 import { JwtAuthMiddlewareTestServer } from './test/jwt-auth-middleware/jwt-auth-middleware-test-server'
 import { ecPrivateKey } from './test/test-resources'

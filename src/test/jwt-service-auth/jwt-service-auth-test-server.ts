@@ -1,7 +1,7 @@
 import { HttpServer } from '@connectedcars/test'
 import querystring from 'querystring'
 
-import { jwtUtils, type PublicKeys } from '../../index'
+import { jwtUtils, type PublicKeys } from '../../'
 import { rsaPublicKey } from '../test-resources'
 
 export interface JwtServiceAuthTestServerOptions {
