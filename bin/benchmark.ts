@@ -65,6 +65,8 @@ const rsaPrivateKey =
   '1qEwFwH2Z6Z4CsUf6h4rUbUopt0SmryGOhu5cseLVBTTH4XiC3dipA==\n' +
   '-----END RSA PRIVATE KEY-----\n'
 
+const rsaPrivateKeyObject = crypto.createPrivateKey(rsaPrivateKey)
+
 const rsaPublicKey =
   '-----BEGIN PUBLIC KEY-----\n' +
   'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqFvlHi5dBWLyDNsspY3c\n' +
@@ -88,9 +90,9 @@ const pubKeys: PublicKeys = {
 
 const pubKeys2: PublicKeys = {
   'test@test.com': {
-    '1@RS256': rsaPrivateKey,
-    '1@RS384': rsaPrivateKey,
-    '1@RS512': rsaPrivateKey
+    '1@RS256': rsaPrivateKeyObject,
+    '1@RS384': rsaPrivateKeyObject,
+    '1@RS512': rsaPrivateKeyObject
   }
 }
 
@@ -123,6 +125,9 @@ suite
   })
   .add('Decode encrypted RSA key at RS256', () => {
     jwtUtils.decode(testToken, pubKeys, audiences)
+  })
+  .add('Encode with unencrypted RSA KeyObject at RS256', () => {
+    jwtUtils.encode(rsaPrivateKeyObject, jwtHeader, jwtBody)
   })
   .add('Decode encrypted RSA KeyObject at RS256', () => {
     jwtUtils.decode(testToken, pubKeys2, audiences)

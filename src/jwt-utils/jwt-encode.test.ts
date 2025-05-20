@@ -1,6 +1,8 @@
+import crypto from 'crypto'
+
 import { JwtVerifyError } from '../jwt-verify-error'
 import type { PublicKeys } from '../pubkeys-helper'
-import { rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../test/test-resources'
+import { rsaPrivateKey, rsaPrivateKeyEncrypted, rsaPublicKeyEncrypted } from '../test/test-resources'
 import type { JwtBody, JwtHeader } from '../types'
 import { decode } from './jwt-decode'
 import { encode } from './jwt-encode'
@@ -66,6 +68,12 @@ describe('jwt-encode', () => {
     it('should fail with missing key for hmac algorithm', () => {
       expect(() => encode('', { alg: 'HS256' }, {}, null)).toThrow(
         new JwtVerifyError('privateKeyPassword can not be null for HS256')
+      )
+    })
+
+    it('should fail when passing a crypto.KeyObject and a private key password', () => {
+      expect(() => encode(crypto.createPrivateKey(rsaPrivateKey), { alg: 'RS256' }, {}, 'secret')).toThrow(
+        new JwtVerifyError('Cannot pass both privateKey as crypto.KeyObject and privateKeyPassword')
       )
     })
   })

@@ -5,7 +5,7 @@ import * as base64UrlSafe from '../utils/base64-urlsafe'
 import { getAlgorithms } from './get-algorithms'
 
 export function encode(
-  privateKey: Buffer | string | null,
+  privateKey: crypto.KeyObject | Buffer | string | null,
   header: JwtHeader,
   body: JwtBody,
   privateKeyPassword: string | null = null
@@ -37,6 +37,10 @@ export function encode(
 
     // Sign with private key
     if (privateKeyPassword !== null) {
+      if (privateKey instanceof crypto.KeyObject) {
+        throw new Error('Cannot pass both privateKey as crypto.KeyObject and privateKeyPassword')
+      }
+
       signatureBuffer = sign.sign({
         key: privateKey,
         passphrase: privateKeyPassword
