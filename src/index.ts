@@ -6,7 +6,7 @@ export {
   type ResultMapper,
   type RevokedToken
 } from './jwt-auth-middleware'
-export { JwtServiceAuth, type JwtServiceAuthOptions } from './jwt-service-auth'
+export { type AccessToken, JwtServiceAuth, type JwtServiceAuthOptions } from './jwt-service-auth'
 export { JwtServiceAuthError } from './jwt-service-auth-error'
 export * as jwtUtils from './jwt-utils'
 export { JwtVerifyError } from './jwt-verify-error'
