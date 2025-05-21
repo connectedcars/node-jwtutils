@@ -1,10 +1,15 @@
 import { HttpServer } from '@connectedcars/test'
 import querystring from 'querystring'
 
-import { jwtUtils, type PublicKeys } from '../../index'
+import { jwtUtils, type PublicKeys } from '../../'
 import { rsaPublicKey } from '../test-resources'
 
-const pubKeys: PublicKeys = {
+export interface JwtServiceAuthTestServerOptions {
+  publicKeys?: PublicKeys
+  audiences?: string[]
+}
+
+const defaultPublicKeys: PublicKeys = {
   'buildstatus@nversion-168820.iam.gserviceaccount.com': {
     '76d81ae69ce620a517b140fc73dbae61e88b34bc@RS256': rsaPublicKey
   },
@@ -21,8 +26,11 @@ const pubKeys: PublicKeys = {
 }
 
 export class JwtServiceAuthTestServer extends HttpServer {
-  public constructor() {
+  public constructor(options?: JwtServiceAuthTestServerOptions) {
     super({}, async (req, res) => {
+      const audiences = options?.audiences ?? ['https://www.googleapis.com/oauth2/v4/token']
+      const publicKeys = options?.publicKeys ?? defaultPublicKeys
+
       switch (req.url) {
         case '/oauth2/v4/token': {
           const body = this.getLastTextRequest()?.body
@@ -35,7 +43,7 @@ export class JwtServiceAuthTestServer extends HttpServer {
           }
 
           const token = querystring.unescape(body.replace(/^.+assertion=([^&]+).*?$/, '$1'))
-          const decodedBody = jwtUtils.decode(token, pubKeys, ['https://www.googleapis.com/oauth2/v4/token'])
+          const decodedBody = jwtUtils.decode(token, publicKeys, audiences)
 
           if (decodedBody.scope !== '') {
             res.statusCode = 200
@@ -55,7 +63,7 @@ export class JwtServiceAuthTestServer extends HttpServer {
           }
 
           const token = req.headers['authorization'].replace(/^Bearer (.+)$/, '$1')
-          const decodedBody = jwtUtils.decode(token, pubKeys, [])
+          const decodedBody = jwtUtils.decode(token, publicKeys, [])
 
           if (!decodedBody) {
             res.statusCode = 400

@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import http from 'http'
 
-import { jwtUtils } from './index'
+import { jwtUtils } from './'
 import { JwtVerifyError } from './jwt-verify-error'
 import type { PublicKeys } from './pubkeys-helper'
 

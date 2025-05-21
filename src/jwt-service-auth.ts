@@ -13,7 +13,7 @@ export interface JwtServiceAuthOptions {
   command?: string
 }
 
-interface AccessToken {
+export interface AccessToken {
   accessToken: string
   expiresIn: number
   expiresAt: number

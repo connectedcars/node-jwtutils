@@ -1,7 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from 'express'
 import http from 'http'
 
-import type { PublicKeys } from '../../index'
+import type { PublicKeys } from '../../'
 import { createJwtAuthMiddlewareHandler } from '../../jwt-auth-middleware'
 import { JwtVerifyError } from '../../jwt-verify-error'
 import { ecPublicKey } from '../test-resources'
