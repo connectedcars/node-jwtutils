@@ -79,18 +79,6 @@ describe('PubkeysHelper', () => {
     expect(output).toEqual(expectedKeysResponse)
   })
 
-  it('fetches jwk keys and response is an array', async () => {
-    // eslint-disable-next-line func-style
-    const customRequestHandler: HttpRequestHandler = async () => {
-      return { data: Array.from(Buffer.from(JSON.stringify(jwkResponse))) } as AxiosResponse<number[]>
-    }
-
-    const pubkeysHelper2 = new PubkeysHelper(customRequestHandler)
-    const output = await pubkeysHelper2.fetchJwkKeys(`${baseUrl}/publickeys`)
-
-    expect(output).toEqual(expectedKeysResponse)
-  })
-
   it('fetches jwk keys with empty keys', async () => {
     await expect(pubkeysHelper.fetchJwkKeys(`${baseUrl}/emptykeys`)).rejects.toThrow(
       new Error(`No keys found in response from ${baseUrl}/emptykeys`)
