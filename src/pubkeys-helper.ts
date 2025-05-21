@@ -27,13 +27,21 @@ export class PubkeysHelper {
   }
 
   private static formatPublicKeys(
-    response: AxiosResponse<string>,
+    response: AxiosResponse<string | { keys: JwkBody[] }>,
     url: string,
     defaultAlgorithms: string[],
     options: Pick<JwkOptions, 'expiresSkew'> = {}
   ): FormattedPublicKeys {
-    const pubkeysResponse = JSON.parse(Buffer.from(response.data).toString('utf8')) as {
-      keys: JwkBody[]
+    let pubkeysResponse: { keys: JwkBody[] }
+
+    // Axios requests automatically convert json responses to objects but a
+    // custom request handler might return something else
+    if (typeof response.data === 'string') {
+      pubkeysResponse = JSON.parse(Buffer.from(response.data).toString('utf8')) as {
+        keys: JwkBody[]
+      }
+    } else {
+      pubkeysResponse = response.data
     }
 
     if (!Array.isArray(pubkeysResponse.keys)) {
@@ -75,7 +83,7 @@ export class PubkeysHelper {
       updatedOptions.expiresSkew = options.expiresSkew
     }
 
-    const result = (await requestHandler('GET', url, {}, null)) as AxiosResponse<string>
+    const result = (await requestHandler('GET', url, {}, null)) as AxiosResponse<string | { keys: JwkBody[] }>
 
     if (!result) {
       return null

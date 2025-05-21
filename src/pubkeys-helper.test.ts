@@ -1,5 +1,8 @@
+import { type AxiosResponse } from 'axios'
+
+import { HttpRequestHandler } from './default-http-request-handler'
 import { PubkeysHelper } from './pubkeys-helper'
-import { PubkeysHelperTestServer } from './test/pubkeys-helper/pubkeys-helper-test-server'
+import { jwkResponse, PubkeysHelperTestServer } from './test/pubkeys-helper/pubkeys-helper-test-server'
 
 const expectedKeysResponse = {
   '26c018b233fe2eef47fedbbdd9398170fc9b29d8@RS256': {
@@ -56,8 +59,22 @@ describe('PubkeysHelper', () => {
     })
   })
 
-  it('fetches jwk keys', async () => {
+  it('fetches jwk keys and response is a string', async () => {
+    // The test server wraps responses in two JSON.stringify calls, so after one
+    // JSON.parse the response is still a string
     const output = await pubkeysHelper.fetchJwkKeys(`${baseUrl}/publickeys`)
+
+    expect(output).toEqual(expectedKeysResponse)
+  })
+
+  it('fetches jwk keys and response is an object', async () => {
+    // eslint-disable-next-line func-style
+    const customRequestHandler: HttpRequestHandler = async () => {
+      return { data: jwkResponse } as AxiosResponse<unknown>
+    }
+
+    const pubkeysHelper2 = new PubkeysHelper(customRequestHandler)
+    const output = await pubkeysHelper2.fetchJwkKeys(`${baseUrl}/publickeys`)
 
     expect(output).toEqual(expectedKeysResponse)
   })
