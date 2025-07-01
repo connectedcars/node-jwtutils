@@ -92,9 +92,7 @@ describe('JwtServiceAuth', () => {
     it('should fail with bad input', async () => {
       const jwtServiceAuth = new JwtServiceAuth(httpRequestHandler, { endpoint: `${baseUrl}/oauth2/v4/token` })
 
-      await expect(jwtServiceAuth.getGoogleAccessToken('{}')).rejects.toThrow(
-        new JwtServiceAuthError('Only supports service account keyFiles')
-      )
+      await expect(jwtServiceAuth.getGoogleAccessToken('{}')).rejects.toThrow('Only supports service account keyFiles')
     })
 
     it('should succeed with ok token and impersonate', async () => {
