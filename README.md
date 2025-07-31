@@ -224,20 +224,34 @@ async function getAccessTokens() {
 * Github App: https://developer.github.com/apps/building-github-apps/authentication-options-for-github-apps/
 * Google Service Account: https://developers.google.com/identity/protocols/OAuth2ServiceAccount
 
-## Generate own keypair
 
-Generate private RSA key:
+
+## Generate own keypair
+This section describes how to generate the keypair to be used by node-jwtutils.
+The following explanation is verified to work on openssl version:
+```
+$ openssl version
+OpenSSL 3.5.0 8 Apr 2025 (Library: OpenSSL 3.5.0 8 Apr 2025)
+```
+
+1. Generate private RSA key:
 
 ``` bash
 # Here the key is encrypted with aes256
-openssl genrsa -aes256 -out private.pem 2048
+openssl genrsa -aes256 -out private-encrypted.pem 2048
 ```
 
-Generate public key from private key:
+2. Generate public key from private key:
 
 ``` bash
-openssl rsa -in private.pem -outform PEM -pubout -out public.pem
+openssl rsa -in private-encrypted.pem -outform PEM -pubout -out public.pem
 ```
+
+#### Unencrypting the private key
+```
+openssl rsa -in private-encrypted.pem -out private-unencrypted.pem
+```
+
 
 ## Command line helper utils
 
