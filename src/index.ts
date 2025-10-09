@@ -9,6 +9,7 @@ export {
 export { type AccessToken, JwtServiceAuth, type JwtServiceAuthOptions } from './jwt-service-auth'
 export { JwtServiceAuthError } from './jwt-service-auth-error'
 export * as jwtUtils from './jwt-utils'
+export { type PublicKey } from './jwt-utils/decode-validators'
 export { JwtVerifyError } from './jwt-verify-error'
 export { type FormattedPublicKeys, type JwkOptions, PubkeysHelper, type PublicKeys } from './pubkeys-helper'
 export {
