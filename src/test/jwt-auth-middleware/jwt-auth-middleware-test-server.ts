@@ -44,7 +44,7 @@ export class JwtAuthMiddlewareTestServer {
 
     this.app.use(
       '/mapped',
-      createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
+      createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences, user => {
         if (user.issuer === 'http://localhost/oauth/token') {
           // Map claims
           user.eMail = (user.body as { email: string }).email
@@ -54,7 +54,7 @@ export class JwtAuthMiddlewareTestServer {
 
     this.app.use(
       '/async',
-      createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences, (user: Record<string, unknown>) => {
+      createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences, user => {
         if (user.subject === 'error') {
           return Promise.reject(new JwtVerifyError('Async error'))
         } else {

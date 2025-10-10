@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import http from 'http'
 
-import { jwtUtils } from './'
+import { type JwtBody, jwtUtils } from './'
 import { JwtVerifyError } from './jwt-verify-error'
 import type { PublicKeys } from './pubkeys-helper'
 
@@ -12,7 +12,7 @@ export interface RevokedToken {
 }
 
 export type ResultMapper = (
-  user: Record<string, unknown>,
+  user: JwtAuthMiddlewareHandlerRequestUser,
   request: Request,
   response: Response
 ) => void | Record<string, unknown> | Promise<string | Record<string, unknown>>
@@ -21,8 +21,17 @@ export interface JwtAuthMiddlewareOptions {
   allowAnonymous?: boolean
 }
 
+export interface JwtAuthMiddlewareHandlerRequestUser {
+  [key: string]: unknown
+  audience: JwtBody['aud']
+  issuer: JwtBody['iss']
+  subject: JwtBody['sub']
+  authenticated: true
+  body: JwtBody
+}
+
 interface JwtAuthMiddlewareHandlerRequest extends Request {
-  user?: Record<string, unknown>
+  user?: JwtAuthMiddlewareHandlerRequestUser
   jwtAuthMiddlewareProcessed?: boolean
   headers: http.IncomingHttpHeaders
 }
