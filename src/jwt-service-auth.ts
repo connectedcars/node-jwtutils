@@ -1,8 +1,9 @@
 import type { AxiosResponse } from 'axios'
 import querystring from 'querystring'
 
-import { JwtServiceAuthError, jwtUtils } from '.'
 import { defaultHttpRequestHandler, type HttpRequestHandler } from './default-http-request-handler'
+import { JwtServiceAuthError } from './jwt-service-auth-error'
+import { encode } from './jwt-utils/jwt-encode'
 import type { JwtBody, JwtHeader } from './types'
 import { runProcessAsync } from './utils/process'
 
