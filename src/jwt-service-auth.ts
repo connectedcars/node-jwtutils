@@ -44,7 +44,7 @@ interface KeyData {
   client_email: string
 }
 
-async function _getGoogleAccessToken(
+async function getGoogleAccessToken(
   httpRequestHandler: HttpRequestHandler,
   keyFileData: string,
   scopes: string[] | number | null,
@@ -147,7 +147,7 @@ export class JwtServiceAuth {
     scopes: string[] | number | null = null,
     options: JwtServiceAuthOptions = {}
   ): Promise<AccessToken> {
-    return _getGoogleAccessToken(defaultHttpRequestHandler, keyFileData, scopes, options)
+    return getGoogleAccessToken(defaultHttpRequestHandler, keyFileData, scopes, options)
   }
 
   private static async getGoogleAccessTokenFromGCloudHelperImpl(command: string): Promise<AccessToken> {
@@ -227,6 +227,6 @@ export class JwtServiceAuth {
       endpoint: this.authEndpoint || 'https://www.googleapis.com/oauth2/v4/token'
     }
 
-    return _getGoogleAccessToken(this.requestHandler, keyFileData, scopes, mergedConfig)
+    return getGoogleAccessToken(this.requestHandler, keyFileData, scopes, mergedConfig)
   }
 }
