@@ -34,7 +34,7 @@ export interface JwtHeader {
  * @property exp            Timestamp for expiry
  * @property iat            Timestamp for issuing date
  * @property nbf            Timestamp which this token should not be used before
- * @property clt            Current life time counting number of refresshes in this session
+ * @property clt            Current life time counting number of refreshes in this session
  * @property email          End-User's preferred e-mail address
  * @property email_verified True if the End-User's e-mail address has been verified; otherwise false
  */
