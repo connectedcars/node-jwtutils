@@ -1,4 +1,4 @@
-export function getAlgorithms(alg: string | undefined): { signAlgo: string | null; hmacAlgo: string | null } {
+export function getAlgorithms(alg?: string | null): { signAlgo: string | null; hmacAlgo: string | null } {
   let signAlgo = null
   let hmacAlgo = null
 

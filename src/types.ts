@@ -8,9 +8,10 @@
  * @property kid Key ID parameter which is used to match a specific key
  */
 export interface JwtHeader {
-  typ?: string
-  alg?: string
-  kid?: string // Not mentioned in the RFC spec
+  typ?: string | null
+  alg?: string | null
+  // Not mentioned in the RFC spec but mentioned here: https://www.rfc-editor.org/rfc/rfc7515#section-4.1.4
+  kid?: string | null
 }
 
 /**
@@ -39,24 +40,24 @@ export interface JwtHeader {
  * @property email_verified True if the End-User's e-mail address has been verified; otherwise false
  */
 export interface JwtBody {
-  iss?: string
-  ons?: string
-  sub?: string
-  aud?: string | string[]
-  acr?: string
-  jti?: string
-  sid?: string
-  amr?: string[]
-  exp?: number
-  iat?: number
-  nbf?: number
-  clt?: number
-  email?: string
-  email_verified?: boolean
+  iss?: string | null
+  ons?: string | null
+  sub?: string | null
+  aud?: string | string[] | null
+  acr?: string | null
+  jti?: string | null
+  sid?: string | null
+  amr?: string[] | null
+  exp?: number | null
+  iat?: number | null
+  nbf?: number | null
+  clt?: number | null
+  email?: string | null
+  email_verified?: boolean | null
 
   // NOTE: According to the specs, this is a space-separated list of scopes but
   // is also used in this package as an array as well
-  scope?: string | string[]
+  scope?: string | string[] | null
 }
 
 /**
@@ -75,15 +76,15 @@ export interface JwtBody {
  * @property y   Base64-encoded y coordinate for elliptic curve keys
  */
 export interface JwkBody {
-  kid?: string
+  kid?: string | null
   kty: string
-  use?: string
-  alg?: string
-  e?: string
-  n?: string
-  crv?: string
-  x?: string
-  y?: string
+  use?: string | null
+  alg?: string | null
+  e?: string | null
+  n?: string | null
+  crv?: string | null
+  x?: string | null
+  y?: string | null
 }
 
 function isArrayOfType<T>(obj: unknown, type: string): obj is T[] {
@@ -105,15 +106,15 @@ export function isJwtHeader(obj: unknown): obj is JwtHeader {
     return false
   }
 
-  if ('typ' in obj && typeof obj.typ !== 'string') {
+  if ('typ' in obj && obj.typ != null && typeof obj.typ !== 'string') {
     return false
   }
 
-  if ('alg' in obj && typeof obj.alg !== 'string') {
+  if ('alg' in obj && obj.alg != null && typeof obj.alg !== 'string') {
     return false
   }
 
-  if ('kid' in obj && typeof obj.kid !== 'string') {
+  if ('kid' in obj && obj.kid != null && typeof obj.kid !== 'string') {
     return false
   }
 
@@ -125,63 +126,68 @@ export function isJwtBody(obj: unknown): obj is JwtBody {
     return false
   }
 
-  if ('iss' in obj && typeof obj.iss !== 'string') {
+  if ('iss' in obj && obj.iss != null && typeof obj.iss !== 'string') {
     return false
   }
 
-  if ('ons' in obj && typeof obj.ons !== 'string') {
+  if ('ons' in obj && obj.ons != null && typeof obj.ons !== 'string') {
     return false
   }
 
-  if ('sub' in obj && typeof obj.sub !== 'string') {
+  if ('sub' in obj && obj.sub != null && typeof obj.sub !== 'string') {
     return false
   }
 
-  if ('aud' in obj && typeof obj.aud !== 'string' && !isArrayOfType<string>(obj.aud, 'string')) {
+  if ('aud' in obj && obj.aud != null && typeof obj.aud !== 'string' && !isArrayOfType<string>(obj.aud, 'string')) {
     return false
   }
 
-  if ('acr' in obj && typeof obj.acr !== 'string') {
+  if ('acr' in obj && obj.acr != null && typeof obj.acr !== 'string') {
     return false
   }
 
-  if ('jti' in obj && typeof obj.jti !== 'string') {
+  if ('jti' in obj && obj.jti != null && typeof obj.jti !== 'string') {
     return false
   }
 
-  if ('sid' in obj && typeof obj.sid !== 'string') {
+  if ('sid' in obj && obj.sid != null && typeof obj.sid !== 'string') {
     return false
   }
 
-  if ('amr' in obj && !isArrayOfType<string>(obj.amr, 'string')) {
+  if ('amr' in obj && obj.amr != null && !isArrayOfType<string>(obj.amr, 'string')) {
     return false
   }
 
-  if ('exp' in obj && typeof obj.exp !== 'number') {
+  if ('exp' in obj && obj.exp != null && typeof obj.exp !== 'number') {
     return false
   }
 
-  if ('iat' in obj && typeof obj.iat !== 'number') {
+  if ('iat' in obj && obj.iat != null && typeof obj.iat !== 'number') {
     return false
   }
 
-  if ('nbf' in obj && typeof obj.nbf !== 'number') {
+  if ('nbf' in obj && obj.nbf != null && typeof obj.nbf !== 'number') {
     return false
   }
 
-  if ('clt' in obj && typeof obj.clt !== 'number') {
+  if ('clt' in obj && obj.clt != null && typeof obj.clt !== 'number') {
     return false
   }
 
-  if ('email' in obj && typeof obj.email !== 'string') {
+  if ('email' in obj && obj.email != null && typeof obj.email !== 'string') {
     return false
   }
 
-  if ('email_verified' in obj && typeof obj.email_verified !== 'boolean') {
+  if ('email_verified' in obj && obj.email_verified != null && typeof obj.email_verified !== 'boolean') {
     return false
   }
 
-  if ('scope' in obj && typeof obj.scope !== 'string' && !isArrayOfType<string>(obj.scope, 'string')) {
+  if (
+    'scope' in obj &&
+    obj.scope != null &&
+    typeof obj.scope !== 'string' &&
+    !isArrayOfType<string>(obj.scope, 'string')
+  ) {
     return false
   }
 
@@ -193,39 +199,39 @@ export function isJwkBody(obj: unknown): obj is JwkBody {
     return false
   }
 
-  if ('kid' in obj && typeof obj.kid !== 'string') {
+  if ('kid' in obj && obj.kid != null && typeof obj.kid !== 'string') {
     return false
   }
 
-  if ('kty' in obj && typeof obj.kty !== 'string') {
+  if (!('kty' in obj) || typeof obj.kty !== 'string') {
     return false
   }
 
-  if ('use' in obj && typeof obj.use !== 'string') {
+  if ('use' in obj && obj.use != null && typeof obj.use !== 'string') {
     return false
   }
 
-  if ('alg' in obj && typeof obj.alg !== 'string') {
+  if ('alg' in obj && obj.alg != null && typeof obj.alg !== 'string') {
     return false
   }
 
-  if ('e' in obj && typeof obj.e !== 'string') {
+  if ('e' in obj && obj.e != null && typeof obj.e !== 'string') {
     return false
   }
 
-  if ('n' in obj && typeof obj.n !== 'string') {
+  if ('n' in obj && obj.n != null && typeof obj.n !== 'string') {
     return false
   }
 
-  if ('crv' in obj && typeof obj.crv !== 'string') {
+  if ('crv' in obj && obj.crv != null && typeof obj.crv !== 'string') {
     return false
   }
 
-  if ('x' in obj && typeof obj.x !== 'string') {
+  if ('x' in obj && obj.x != null && typeof obj.x !== 'string') {
     return false
   }
 
-  if ('y' in obj && typeof obj.y !== 'string') {
+  if ('y' in obj && obj.y != null && typeof obj.y !== 'string') {
     return false
   }
 

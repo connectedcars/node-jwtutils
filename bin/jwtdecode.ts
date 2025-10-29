@@ -32,7 +32,7 @@ process.stdin.setEncoding('utf8')
 let buffer = ''
 
 process.stdin.on('data', function (chunk) {
-  buffer += chunk
+  buffer += chunk.toString('utf8')
   buffer = processJwts(buffer)
 })
 
