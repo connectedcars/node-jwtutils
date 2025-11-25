@@ -13,10 +13,6 @@ export { type PublicKey } from './jwt-utils/decode-validators'
 export { JwtVerifyError } from './jwt-verify-error'
 export { type FormattedPublicKeys, type JwkOptions, PubkeysHelper, type PublicKeys } from './pubkeys-helper'
 export {
-  JwtAuthMiddlewareTestServer,
-  type JwtAuthMiddlewareTestServerOptions
-} from './test/jwt-auth-middleware/jwt-auth-middleware-test-server'
-export {
   JwtServiceAuthTestServer,
   type JwtServiceAuthTestServerOptions
 } from './test/jwt-service-auth/jwt-service-auth-test-server'
