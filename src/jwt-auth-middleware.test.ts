@@ -1,8 +1,9 @@
-import express, { type NextFunction, type Request, type Response } from 'express'
+import express from 'express'
 import http from 'http'
 
 import { jwtUtils } from './'
 import * as RequestHandler from './default-http-request-handler'
+import type { ExpressNextFunction, ExpressRequest, ExpressResponse } from './express-types'
 import { createJwtAuthMiddlewareHandler } from './jwt-auth-middleware'
 import { JwtServiceAuthError } from './jwt-service-auth-error'
 import { JwtVerifyError } from './jwt-verify-error'
@@ -95,34 +96,35 @@ class JwtAuthMiddlewareTestServer {
 
     this.app.use('/', createJwtAuthMiddlewareHandler(pubKeys, revokedTokens, audiences))
 
-    this.app.get('/anonymous', function (_req: Request, res: Response) {
-      res.send(`Hello anonymous`)
+    this.app.get('/anonymous', function (_req: ExpressRequest, res: ExpressResponse) {
+      res.statusCode = 200
+      res.end('Hello anonymous')
     })
 
-    this.app.get('/', function (req: Request & { user?: Record<string, unknown> }, res: Response) {
+    this.app.get('/', function (req: ExpressRequest & { user?: Record<string, unknown> }, res: ExpressResponse) {
       if (req.user) {
-        res.send(`Hello ${req.user.subject as string}`)
+        res.end(`Hello ${req.user.subject as string}`)
       }
     })
 
-    this.app.get('/mapped', function (req: Request & { user?: Record<string, unknown> }, res: Response) {
+    this.app.get('/mapped', function (req: ExpressRequest & { user?: Record<string, unknown> }, res: ExpressResponse) {
       if (req.user) {
-        res.send(`Hello ${req.user.eMail as string}`)
+        res.end(`Hello ${req.user.eMail as string}`)
       }
     })
 
-    this.app.get('/async', function (_req: Request, res: Response) {
-      res.send(`Async response`)
+    this.app.get('/async', function (_req: ExpressRequest, res: ExpressResponse) {
+      res.end(`Async response`)
     })
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    this.app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    this.app.use((err: Error, _req: ExpressRequest, res: ExpressResponse, _next: ExpressNextFunction) => {
       if (err instanceof JwtVerifyError) {
-        res.status(401).send(err.message)
+        res.statusCode = 401
+        res.end(err.message)
       } else {
-        // eslint-disable-next-line no-console
-        console.log('i am here')
-        res.status(500).send('Unknown error')
+        res.statusCode = 500
+        res.end('Unknown error')
       }
     })
   }

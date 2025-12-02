@@ -1,7 +1,7 @@
-import type { NextFunction, Request, Response } from 'express'
 import http from 'http'
 
 import { type JwtBody, jwtUtils } from './'
+import type { ExpressNextFunction, ExpressRequest, ExpressResponse } from './express-types'
 import { JwtVerifyError } from './jwt-verify-error'
 import type { PublicKeys } from './pubkeys-helper'
 
@@ -13,8 +13,8 @@ export interface RevokedToken {
 
 export type ResultMapper = (
   user: JwtAuthMiddlewareHandlerRequestUser,
-  request: Request,
-  response: Response
+  request: ExpressRequest,
+  response: ExpressResponse
 ) => void | Record<string, unknown> | Promise<string | Record<string, unknown>>
 
 export interface JwtAuthMiddlewareOptions {
@@ -30,7 +30,7 @@ export interface JwtAuthMiddlewareHandlerRequestUser {
   body: JwtBody
 }
 
-interface JwtAuthMiddlewareHandlerRequest extends Request {
+interface JwtAuthMiddlewareHandlerRequest extends ExpressRequest {
   user?: JwtAuthMiddlewareHandlerRequestUser
   jwtAuthMiddlewareProcessed?: boolean
   headers: http.IncomingHttpHeaders
@@ -38,8 +38,8 @@ interface JwtAuthMiddlewareHandlerRequest extends Request {
 
 export type JwtAuthMiddlewareHandler = (
   request: JwtAuthMiddlewareHandlerRequest,
-  response: Response,
-  next: NextFunction
+  response: ExpressResponse,
+  next: ExpressNextFunction
 ) => void
 
 function isPromise<T>(value: T): boolean {
