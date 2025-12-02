@@ -1,6 +1,6 @@
 # node-jwtutils
 
-[![Build Status](https://travis-ci.org/connectedcars/node-jwtutils.svg?branch=master)](https://travis-ci.org/connectedcars/node-jwtutils)
+[![Build Status](https://img.shields.io/github/check-runs/connectedcars/node-jwtutils/master)](https://img.shields.io/github/check-runs/connectedcars/node-jwtutils/master)
 [![Coverage Status](https://coveralls.io/repos/github/connectedcars/node-jwtutils/badge.svg?branch=master)](https://coveralls.io/github/connectedcars/node-jwtutils?branch=master)
 
 Zero dependency JWT encoding and decoding for Node.
