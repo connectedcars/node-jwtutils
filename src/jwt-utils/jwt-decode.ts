@@ -65,7 +65,7 @@ export function decode(
   checkJwt(decodedJwt)
 
   const { header, body } = decodedJwt
-  const { signAlgo, hmacAlgo } = getAlgorithms(header.alg)
+  const { signAlgo, hmacAlgo, canStream, algorithmFromKey } = getAlgorithms(header.alg)
 
   if (signAlgo === null && hmacAlgo === null) {
     throw new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
@@ -98,15 +98,27 @@ export function decode(
 
   const signatureOrHash = base64UrlSafe.decode(parts[2])
 
-  /* istanbul ignore else */
   if (signAlgo) {
+    let verified: boolean
+
     // Validate signature
-    const verifier = crypto.createVerify(signAlgo)
+    if (canStream) {
+      const verifier = crypto.createVerify(signAlgo)
 
-    verifier.write(`${parts[0]}.${parts[1]}`, 'utf8')
-    verifier.end()
+      verifier.write(`${parts[0]}.${parts[1]}`, 'utf8')
+      verifier.end()
+      verified = verifier.verify(pubkeyOrSharedKey, signatureOrHash)
+    } else {
+      // Some algorithms like ed25519 do not the crypto.Verify streaming api
+      verified = crypto.verify(
+        algorithmFromKey ? null : signAlgo,
+        Buffer.from(`${parts[0]}.${parts[1]}`, 'utf8'),
+        pubkeyOrSharedKey,
+        signatureOrHash
+      )
+    }
 
-    if (!verifier.verify(pubkeyOrSharedKey, signatureOrHash)) {
+    if (!verified) {
       throw new JwtVerifyError(`Signature verification failed with algorithm '${header.alg}'`)
     }
   } else if (hmacAlgo) {

@@ -8,7 +8,7 @@ Zero dependency JWT encoding and decoding for Node.
 Features:
 
 * Encode and decode any JWT tokens
-* Supported asymmetric algorithmes (RS256, RS384, RS512, ES256, ES384 and ES512)
+* Supported asymmetric algorithmes (RS256, RS384, RS512, ES256, ES384, ES512, and ED25519)
 * Supported symmetric algorithmes (HS256, HS384 and HS512)
 * Support for multiple issuers and keys per issuer.
 * Import keys from JWK endpoints

@@ -10,7 +10,7 @@ export function encode(
   body: JwtBody,
   privateKeyPassword: string | null = null
 ): string {
-  const { signAlgo, hmacAlgo } = getAlgorithms(header.alg)
+  const { signAlgo, hmacAlgo, canStream, algorithmFromKey } = getAlgorithms(header.alg)
 
   if (signAlgo === null && hmacAlgo === null) {
     throw new Error('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
@@ -23,30 +23,48 @@ export function encode(
 
   let signatureBuffer: Buffer
 
-  /* istanbul ignore else */
   if (signAlgo) {
     if (!privateKey) {
       throw new Error(`privateKey can not be null for ${header.alg}`)
     }
 
-    const sign = crypto.createSign(signAlgo)
+    const resolvedSignAlgo = algorithmFromKey ? null : signAlgo
+    const dataBuffer = Buffer.from(headerBodyBase64, 'utf8')
 
-    // Add header and body of JWT to sign
-    sign.update(headerBodyBase64, 'utf8')
-    sign.end()
+    if (!canStream) {
+      if (privateKeyPassword !== null) {
+        if (privateKey instanceof crypto.KeyObject) {
+          // TODO: Why not? Still applicable here?
+          throw new Error('Cannot pass both privateKey as crypto.KeyObject and privateKeyPassword')
+        }
 
-    // Sign with private key
-    if (privateKeyPassword !== null) {
-      if (privateKey instanceof crypto.KeyObject) {
-        throw new Error('Cannot pass both privateKey as crypto.KeyObject and privateKeyPassword')
+        signatureBuffer = crypto.sign(resolvedSignAlgo, dataBuffer, {
+          key: privateKey,
+          passphrase: privateKeyPassword
+        })
+      } else {
+        signatureBuffer = crypto.sign(resolvedSignAlgo, dataBuffer, privateKey)
       }
-
-      signatureBuffer = sign.sign({
-        key: privateKey,
-        passphrase: privateKeyPassword
-      })
     } else {
-      signatureBuffer = sign.sign(privateKey)
+      const sign = crypto.createSign(signAlgo)
+
+      // Add header and body of JWT to sign
+      sign.update(headerBodyBase64, 'utf8')
+      sign.end()
+
+      // Sign with private key
+      if (privateKeyPassword !== null) {
+        if (privateKey instanceof crypto.KeyObject) {
+          throw new Error('Cannot pass both privateKey as crypto.KeyObject and privateKeyPassword')
+        }
+
+        signatureBuffer = sign.sign({
+          key: privateKey,
+          passphrase: privateKeyPassword
+        })
+      } else {
+        signatureBuffer = sign.sign(privateKey)
+      }
     }
   } else if (hmacAlgo) {
     if (!privateKeyPassword) {

@@ -15,7 +15,7 @@ describe('process', () => {
 
     await fs.writeFile(
       `${tmpdir.name}/sleep`,
-      `#!${process.argv[0]}\nsetTimeout(()=> {}, process.argv[1] * 1000)\nconsole.error('Done sleeping')`
+      `#!${process.argv[0]}\nsetTimeout(()=> {}, process.argv[2] * 1000)\nconsole.error('Done sleeping')`
     )
 
     await fs.chmod(`${tmpdir.name}/sleep`, '755')
@@ -28,7 +28,7 @@ describe('process', () => {
   })
 
   it('should generate stderr', async () => {
-    await expect(runProcessAsync(`${tmpdir.name}/sleep`, [])).resolves.toMatchObject({ stderr: 'Done sleeping\n' })
+    await expect(runProcessAsync(`${tmpdir.name}/sleep`, ['1'])).resolves.toMatchObject({ stderr: 'Done sleeping\n' })
   })
 
   it('should overflow', async () => {
