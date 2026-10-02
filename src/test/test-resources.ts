@@ -206,7 +206,7 @@ gHXz2wRA7auFIvK+8uB61ECncjHOb9+2qmwf2L5rgvQa4r6/ucNzgNK3E4vZTSxv
 2jm2CZ1mksYm8YuCPLpN9glnjuGQUA==
 -----END ENCRYPTED PRIVATE KEY-----`
 
-// Extract public key from private key. Run this and enter the password ('foobar'):
+// Extract public key from private key. Run this and enter the password (e.g. 'foobar'):
 // openssl pkey -in <private-key-filename>.pem -pubout -out <public-key-filename>.pem
 export const ed25519PublicKeyFromPassword = `
 -----BEGIN PUBLIC KEY-----

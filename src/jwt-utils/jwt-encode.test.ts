@@ -20,8 +20,8 @@ const pubKeys: PublicKeys = {
     '1@RS256': rsaPublicKeyEncrypted,
     '1@RS384': rsaPublicKeyEncrypted,
     '1@RS512': rsaPublicKeyEncrypted,
-    '2@EdDSA': ed25519PublicKey,
-    '3@EdDSA': ed25519PublicKeyFromPassword
+    '2@Ed25519': ed25519PublicKey,
+    '3@Ed25519': ed25519PublicKeyFromPassword
   }
 }
 
@@ -59,13 +59,13 @@ describe('jwt-encode', () => {
       customJwtHeader.alg = 'HS128'
 
       expect(() => encode('', customJwtHeader, jwtBody)).toThrow(
-        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
+        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384, HS512, and Ed25519 are supported'
       )
     })
 
     it('should fail with empty header and body', () => {
       expect(() => encode('', {}, {})).toThrow(
-        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported'
+        'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384, HS512, and Ed25519 are supported'
       )
     })
 
@@ -84,7 +84,7 @@ describe('jwt-encode', () => {
     })
 
     it('should succeed with ed25519 private key', async () => {
-      const customJwtHeader = Object.assign({}, jwtHeader, { alg: 'EdDSA', kid: '2' })
+      const customJwtHeader = Object.assign({}, jwtHeader, { alg: 'Ed25519', kid: '2' })
       const jwt = encode(ed25519PrivateKey, customJwtHeader, jwtBody)
       const decodedJwtBody = decode(jwt, pubKeys, ['https://host/oauth/token'])
 
@@ -92,7 +92,7 @@ describe('jwt-encode', () => {
     })
 
     it('should succeed with encrypted ed25519 private key', async () => {
-      const customJwtHeader = Object.assign({}, jwtHeader, { alg: 'EdDSA', kid: '3' })
+      const customJwtHeader = Object.assign({}, jwtHeader, { alg: 'Ed25519', kid: '3' })
       const jwt = encode(ed25519PrivateKeyEncrypted, customJwtHeader, jwtBody, ed25519Password)
       const decodedJwtBody = decode(jwt, pubKeys, ['https://host/oauth/token'])
 
@@ -100,7 +100,7 @@ describe('jwt-encode', () => {
     })
 
     it('should fail when passing a crypto.KeyObject and a private key password for ed25519', () => {
-      expect(() => encode(crypto.createPrivateKey(ed25519PrivateKey), { alg: 'EdDSA' }, {}, 'secret')).toThrow(
+      expect(() => encode(crypto.createPrivateKey(ed25519PrivateKey), { alg: 'Ed25519' }, {}, 'secret')).toThrow(
         'Cannot pass both privateKey as crypto.KeyObject and privateKeyPassword'
       )
     })

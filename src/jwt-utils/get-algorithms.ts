@@ -1,6 +1,6 @@
 /**
  * @property signAlgo Signing algorithm
- * @property hmacAlgo HMAC () algorithm
+ * @property hmacAlgo HMAC (hash-based message authentication code) algorithm
  * @property canStream True if the algorithm supports the crypto module stream (.update) api
  * @property algorithmFromKey True if the algorithm is automatically derived from
  *                            the private key (true for e.g. ed25519)
@@ -43,8 +43,10 @@ export function getAlgorithms(alg?: string | null): AlgorithmSpec {
       signAlgo = 'sha512'
       break
     }
-    case 'EdDSA': {
-      signAlgo = 'ed25519'
+    case 'Ed25519': {
+      // SHA-512 is used but automatically derived from the private key. This
+      // is just set to signal that the function returns valid values
+      signAlgo = 'sha512'
       canStream = false
       algorithmFromKey = true
       break

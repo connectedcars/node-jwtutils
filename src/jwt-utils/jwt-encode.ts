@@ -13,7 +13,7 @@ export function encode(
   const { signAlgo, hmacAlgo, canStream, algorithmFromKey } = getAlgorithms(header.alg)
 
   if (signAlgo === null && hmacAlgo === null) {
-    throw new Error('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
+    throw new Error('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384, HS512, and Ed25519 are supported')
   }
 
   // Base64 encode header and body
