@@ -179,3 +179,36 @@ export const localhostPrivateKey =
   'tf3PO/1A+cD/vOd4Kcg98uIIgmMdVxCZaBjzsRb1wp9AKTWIMCvBEii9XmXGkXi2\n' +
   'eG8Nor88jMLTDJoCfYWy+So=\n' +
   '-----END PRIVATE KEY-----'
+
+export const ed25519Password = 'foobar'
+
+// Generate a private key:
+// openssl genpkey -algorithm ed25519 -out <private-key-filename>.pem
+export const ed25519PrivateKey = `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEID4EStVb2n5tA5+7XdlJCvLj0xi8N0TbAngrdNKaLbQS
+-----END PRIVATE KEY-----`
+
+// Extract public key from private key:
+// openssl pkey -in <private-key-filename>.pem -pubout -out <public-key-filename>.pem
+export const ed25519PublicKey = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAN36wUW0OcPy/jb29GQ5d++QZkkAxKl4CDB4bcrIQEH4=
+-----END PUBLIC KEY-----`
+
+// Generate a private key with a password ('foobar' in this case using aes256 encryption):
+// openssl genpkey -algorithm ed25519 -out <private-key-filename>.pem -aes256 -pass pass:foobar
+//
+// Password 'foobar' was used for the private key below
+export const ed25519PrivateKeyEncrypted = `
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIGjMF8GCSqGSIb3DQEFDTBSMDEGCSqGSIb3DQEFDDAkBBDDKrRRM3NcLJuSDC8l
+z52OAgIIADAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQnQOVOHeKzOwdAxez
+gHXz2wRA7auFIvK+8uB61ECncjHOb9+2qmwf2L5rgvQa4r6/ucNzgNK3E4vZTSxv
+2jm2CZ1mksYm8YuCPLpN9glnjuGQUA==
+-----END ENCRYPTED PRIVATE KEY-----`
+
+// Extract public key from private key. Run this and enter the password (e.g. 'foobar'):
+// openssl pkey -in <private-key-filename>.pem -pubout -out <public-key-filename>.pem
+export const ed25519PublicKeyFromPassword = `
+-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEATHUU+TkZTu+Z3j56KRCMCgbLk8Bfn+ZE4HIJd9HoseY=
+-----END PUBLIC KEY-----`

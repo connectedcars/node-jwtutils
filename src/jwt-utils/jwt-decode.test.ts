@@ -1,5 +1,6 @@
 import { JwtVerifyError } from '../jwt-verify-error'
 import type { PublicKeys } from '../pubkeys-helper'
+import { ed25519PublicKey, ed25519PublicKeyFromPassword } from '../test/test-resources'
 import { decode, type DecodingOptions } from '.'
 
 const audiences = ['https://host/oauth/token']
@@ -15,7 +16,9 @@ const publicKey =
 const pubKeys: PublicKeys = {
   'test@test.com': {
     '1@RS256': publicKey,
-    'default@RS256': publicKey
+    'default@RS256': publicKey,
+    '2@Ed25519': ed25519PublicKey,
+    '3@Ed25519': ed25519PublicKeyFromPassword
   }
 }
 
@@ -46,6 +49,12 @@ const testJwtMissingExp =
 
 const testJwtWrongAlg =
   'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzEyOCJ9.eyJhdWQiOiJodHRwczovL2hvc3Qvb2F1dGgvdG9rZW4iLCJpc3MiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNTAzMzM2NzU5LCJleHAiOjE1MDMzMzczNTksInNjb3BlIjpbImh0dHA6Ly9zdHVmZiIsImh0dHA6Ly9zdHVmZjIiXX0.12co2gXwBxmZ2uLJecd26bfteCLBx7jgu_9rp2hhKAHWA4qFKm1HcQOZXqDvHkjflQDtNAQ1ZUUf3U8kntUUAmMOjhHx0BspC-xuaTFylZWqj--A2_w9e7JSk46TF_x3e_hZLB3rtyuSEAPMh_nOCsmM-4A2fnQx0Y5p-Bwbt0I'
+
+const testJwtWithEd25519 =
+  'eyJraWQiOiIyIiwiYWxnIjoiRWQyNTUxOSIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2hvc3Qvb2F1dGgvdG9rZW4iLCJleHAiOjE1MDMzMzU3NjksImlhdCI6MTUwMzMzNTE2OSwiaXNzIjoidGVzdEB0ZXN0LmNvbSIsInNjb3BlIjpbImh0dHA6Ly9zdHVmZiIsImh0dHA6Ly9zdHVmZjIiXX0.L_3pPlPy6tp1Gni1jvB8xcDyTAXDMylGz1fbPgZKgBx46oIBzMmIQXZTDBYRazZXPVXeZcFNiXQU3cyT-euwDg'
+
+const testJwtWithEd25519AndPassword =
+  'eyJraWQiOiIzIiwiYWxnIjoiRWQyNTUxOSIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2hvc3Qvb2F1dGgvdG9rZW4iLCJleHAiOjE1MDMzMzU3NjksImlhdCI6MTUwMzMzNTE2OSwiaXNzIjoidGVzdEB0ZXN0LmNvbSIsInNjb3BlIjpbImh0dHA6Ly9zdHVmZiIsImh0dHA6Ly9zdHVmZjIiXX0.zfS35vFp2rhkOlzcSGtL1ZSgGmDO8rreH2O4AO8whWygxw93ZTy0Qf7OpDIZABwNdDjap2oi3Svwn6wBlbPPCA'
 
 describe('jwt-decode', () => {
   describe('decode', () => {
@@ -109,8 +118,30 @@ describe('jwt-decode', () => {
 
     it('checks for wrong alg', () => {
       expect(() => decode(testJwtWrongAlg, pubKeys, audiences)).toThrow(
-        new JwtVerifyError('Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384 and HS512 are supported')
+        new JwtVerifyError(
+          'Only alg RS256, RS384, RS512, ES256, ES384, ES512, HS256, HS384, HS512, and Ed25519 are supported'
+        )
       )
+    })
+
+    it('supports ed25519', () => {
+      expect(decode(testJwtWithEd25519, pubKeys, audiences, defaultOptions)).toEqual({
+        aud: 'https://host/oauth/token',
+        exp: 1503335769,
+        iat: 1503335169,
+        iss: 'test@test.com',
+        scope: ['http://stuff', 'http://stuff2']
+      })
+    })
+
+    it('supports ed25519 with password', () => {
+      expect(decode(testJwtWithEd25519AndPassword, pubKeys, audiences, defaultOptions)).toEqual({
+        aud: 'https://host/oauth/token',
+        exp: 1503335769,
+        iat: 1503335169,
+        iss: 'test@test.com',
+        scope: ['http://stuff', 'http://stuff2']
+      })
     })
   })
 })
